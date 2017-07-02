@@ -1,8 +1,52 @@
+# kesako?
+
+* Gitlab instance
+* Gitlab Runner wih Docker socket binding 
+* NodeJs API
+* VueJs UI
+
+
+## responsibilities
+
+### Gitlab
+* old conf as code
+* trigger runner 
+
+### Runner
+* build/push/pull/deploy using Docker
+* on commit
+  * read modified files
+  * for each docker-compose-*.yml
+    * read status (added, modifier, removed)
+    * apply docker stack deploy/remove on modifier files
+
+### API
+* GET 
+  * /stacks queries Docker API
+  * /stackDefinitions read repo
+* PUT 
+  * generate docker-compose json file from template (repo) and custom options (put json body)
+  * git pull; git add; git commit; git push
+* POST 
+  * verify request
+    * how to make Gitlab check compose file as json ?
+  * update file, git pull; git commit; git push
+* DELETE
+  * git pull; git delete; git commit; git push
+
+
+### UI
+* POST custom options from arguments list
+* PUT updated docker-compose as json
+
+
 # install and config
 
 ```
 docker-compose up -d
 sed -i 's/# external_url 'GENERATED_EXTERNAL_URL'/external_url 'http://gitlab/'/g' gitlab/config/gitlab.rb
+registry_external_url 'https://registry.gitlab:4567'
+
 # get runner registration token and edit config.toml or gitlab-runner register
 ```
 
@@ -31,7 +75,7 @@ check_interval = 0
     network_mode = "gitlab_network"
     shm_size = 0
   [runners.cache]
-
+```
 
 
 # TODO
@@ -41,8 +85,11 @@ check_interval = 0
 * ~~name gitlab container (not gitlab_gitlab_1)		==> to test~~
 * ~~configure runner from docker-compose env (manually add token in config.toml) OR config.toml is defined as it and loaded into the runners that are not configured at all~~
 
-* add registry (via gitlab)
-* build from docker install node
+* _add registry (via gitlab) ==> need domain name, postponed_
+* build from docker:latest (job base image) install node
+  * ~~from docker, add node OR from node add docker~~
+  * can dockerode deploy stack with compose file ?
+  * find a lib to read commit (which file ?, create/udpdate/delete ?)
 * node script with docker api
 * deploy stack from dcoker compose as json file (on commit for this one, read htat with node)
 

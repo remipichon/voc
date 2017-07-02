@@ -23,6 +23,16 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '~/srv/gitlab-runner/config:/etc/gitlab-runner'
 
+  node_docker:
+    image: 'nodedocker'
+    container_name: 'nodedocker'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - './app/app.js:/root/app/app.js'
+    build:
+      context: .
+      dockerfile: Dockerfile-node-docker
+
+
 networks:
   network:
-

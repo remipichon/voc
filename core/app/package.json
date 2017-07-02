@@ -1,0 +1,14 @@
+{
+  "name": "git-docker-file",
+  "version": "1.0.0",
+  "description": "Script base with Git,Docker API and File API",
+  "main": "app.js",
+  "author": "https://github.com/remipichon/voc",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser":"*",
+    "multer":"*",
+    "dockerode":"*",
+    "docker-events": "*"
+  }
+}

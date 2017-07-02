@@ -1,0 +1,10 @@
+FROM docker:latest
+
+RUN apk update; apk add --update nodejs nodejs-npm && npm install npm@latest -g
+
+
+COPY app/package.json /root/app/package.json
+RUN cd /root/app/; npm install;
+COPY app /root/app/
+
+ENTRYPOINT node /root/app/app.js
