@@ -7,7 +7,7 @@ services:
     image: 'gitlab/gitlab-ce:latest'
     container_name: 'gitlab'
     ports:
-      - '80:80'
+      - '81:80'
       - '443:443'
       - '22:22'
     volumes:
@@ -19,16 +19,20 @@ services:
     networks: 
       - network
     image: 'gitlab/gitlab-runner:latest'
+    container_name: 'host_docker_runner'
+    depends_on:
+      - gitlab
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '~/srv/gitlab-runner/config:/etc/gitlab-runner'
 
   node_docker:
     image: 'nodedocker'
-    container_name: 'nodedocker'
+    container_name: 'node_docker'
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - './app/app.js:/root/app/app.js'
+      - './example/:/root/configuration/'
     build:
       context: .
       dockerfile: Dockerfile-node-docker

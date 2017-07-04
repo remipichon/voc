@@ -47,7 +47,8 @@ docker-compose up -d
 sed -i 's/# external_url 'GENERATED_EXTERNAL_URL'/external_url 'http://gitlab/'/g' gitlab/config/gitlab.rb
 registry_external_url 'https://registry.gitlab:4567'
 
-# get runner registration token and edit config.toml or gitlab-runner register
+# get runner registration token and edit config.toml or 
+gitlab-runner register --config "/etc/gitlab-runner/config.toml"
 ```
 
 # to automate install and config
@@ -62,20 +63,20 @@ concurrent = 1
 check_interval = 0
 
 [[runners]]
-  name = "host_docker"
+  name = "node_host_docker"
   url = "http://gitlab"
-  token = "d40649f8dadafc74038ebb8bab4d60"
+  token = "47fd4c172b3b789d349bea2f99e122"
   executor = "docker"
   [runners.docker]
+    network_mode = "core_network"
     tls_verify = false
-    image = "docker:latest"
+    image = "vocproject/nodedocker"
     privileged = true
     disable_cache = false
-    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
-    network_mode = "gitlab_network"
+    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
     shm_size = 0
   [runners.cache]
-```
+``` 
 
 
 # TODO
@@ -85,13 +86,27 @@ check_interval = 0
 * ~~name gitlab container (not gitlab_gitlab_1)		==> to test~~
 * ~~configure runner from docker-compose env (manually add token in config.toml) OR config.toml is defined as it and loaded into the runners that are not configured at all~~
 
-* _add registry (via gitlab) ==> need domain name, postponed_
-* build from docker:latest (job base image) install node
+* add registry (via gitlab) ==> find cert in gitlab data folder
+* ~~build from docker:latest (job base image) install node~~
   * ~~from docker, add node OR from node add docker~~
-  * can dockerode deploy stack with compose file ?
-  * find a lib to read commit (which file ?, create/udpdate/delete ?)
-* node script with docker api
-* deploy stack from dcoker compose as json file (on commit for this one, read htat with node)
+  * ~~can dockerode deploy stack with compose file ?~~
+  * ~~find a lib to read commit (which file ?, create/udpdate/delete ?)~~
+* ~~node script with docker api~~
+  * __(~~docker exec with compose file ~~OR docker API with compose json)__
+
+* what Gilab can do
+  * provision (build, ~~provision, update, delete~~) a stack from a Docker Compose file ~~(yml)~~ (json)
+     * compose as json: docker-compose-ID.yml
+     * ~~stack-ID.json~~ to describe the stack to deploy
+        * ~~enable/disable~~
+        * initiator
+        * description
+  * build a lone image and push it somewhere (build, tag, push)
+  * periodically garbage collect
+  * custom action 
+    * backup data
+    * restart services/containers
+
 
 * node server KoaJs 
 * api to POST stack as docker compose json file
@@ -101,4 +116,6 @@ check_interval = 0
 
 
 
+curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 
+MacBook-Pro-de-Remi:test remi$ sudo lsof -iTCP -sTCP:LISTEN -n -P
