@@ -86,23 +86,23 @@ check_interval = 0
 * ~~name gitlab container (not gitlab_gitlab_1)		==> to test~~
 * ~~configure runner from docker-compose env (manually add token in config.toml) OR config.toml is defined as it and loaded into the runners that are not configured at all~~
 
-* add registry (via gitlab) ==> find cert in gitlab data folder
+* __add registry (via gitlab) ==> find cert in gitlab data folder__
 * ~~build from docker:latest (job base image) install node~~
   * ~~from docker, add node OR from node add docker~~
   * ~~can dockerode deploy stack with compose file ?~~
   * ~~find a lib to read commit (which file ?, create/udpdate/delete ?)~~
 * ~~node script with docker api~~
-  * __(~~docker exec with compose file ~~OR docker API with compose json)__
+  * __(~~docker exec with compose file~~ OR docker API with compose json)__
 
 * what Gilab can do
   * provision (build, ~~provision, update, delete~~) a stack from a Docker Compose file ~~(yml)~~ (json)
-     * compose as json: docker-compose-ID.yml
+     * compose as json: docker-compose-ID.json
      * ~~stack-ID.json~~
         * ~~enable/disable~~
   * ~~traiter le resultat du job~~
       * ~~https://docs.gitlab.com/ce/ci/yaml/README.html#artifacts~~
-  * build a lone image and push it somewhere (build, tag, push)
-    * Dockerfile + config json
+  * ~~build a lone image and~~ push it somewhere (~~build~~, ~~tag~~, push) ==> add registry
+    * ~~Dockerfile + config json~~
   * periodically garbage collect
   * custom action 
     * backup data
