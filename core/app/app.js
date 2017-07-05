@@ -3,12 +3,16 @@ var exec = require('child_process').exec;
 // var execSync = require('child_process').execSync;
 var fs = require('fs');
 var path = require('path')
-
 require("dockerode/package.json"); // dockerode is a peer dependency.
 var Docker = require('dockerode');
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
+
+//config var
 var prefix = 'curl --unix-socket /var/run/docker.sock ';
 var containers = prefix + ' http:/v1.27/containers/json';
+var repoFolder = "/builds/root/test-runner/";
+var artifactDir = "/job-result/";
+var resultFile = "result.json";
 
 console.log("Starting...  ...");
 
@@ -29,7 +33,7 @@ function manageStack(fileState) {
             composeFile = fileState.fileName.replace("stack", "docker-compose").replace(".json", ".yml")
         }
 
-        var configFile = path.join("/builds/root/test-runner/", stackConfig);
+        var configFile = path.join(repoFolder, stackConfig);
         fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
             if (!err) {
                 console.log('Config for', composeFile, data);
@@ -69,7 +73,7 @@ function manageImage(fileState) {
             Dockerfile = fileState.fileName.replace("image", "Dockerfile").replace(".json", "")
         }
 
-        var configFile = path.join("/builds/root/test-runner/", imageConfig);
+        var configFile = path.join(repoFolder, imageConfig);
         fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
             if (!err) {
                 console.log('Config for', Dockerfile, data);
@@ -84,7 +88,7 @@ function manageImage(fileState) {
 }
 
 function getGitDiffModifiedFile() {
-    var modifiedFiles = "cd /builds/root/test-runner/; git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
+    var modifiedFiles = "cd ; " + repoFolder + " git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
     execCmd(modifiedFiles, function (error, stdout) {
         if (stdout) {
             var files = stdout.split("\n");
@@ -115,8 +119,8 @@ function getGitDiffModifiedFile() {
 }
 
 function writeResult(key, value) {
-    var resultFile = "job-result/result.json";
-    var pathResult = path.join("/builds/root/test-runner/", resultFile);
+    var resultFile = artifactDir + resultFile;
+    var pathResult = path.join(repoFolder, resultFile);
 
     var resultJson = {};
     if (fs.existsSync(pathResult)) {
@@ -132,8 +136,8 @@ function writeResult(key, value) {
         resultJson[key].push(value);
     } else
         resultJson[key] = value;
-    if (!fs.existsSync("/builds/root/test-runner/job-result")) {
-        fs.mkdirSync("/builds/root/test-runner/job-result");
+    if (!fs.existsSync(repoFolder + artifactDir)) {
+        fs.mkdirSync(repoFolder + artifactDir);
     }
     console.log("resultJson", resultJson);
     var contents = fs.writeFileSync(pathResult, JSON.stringify(resultJson));
@@ -175,7 +179,7 @@ function isDockerfile(fileName) {
 function deployStack(composeFile, action, stackName) {
     var shDockerStackDeploy
     if (action == "create" || action == "update") {
-        shDockerStackDeploy = "docker stack deploy --compose-file /builds/root/test-runner/" + composeFile + ' ' + stackName;
+        shDockerStackDeploy = "docker stack deploy --compose-file " + repoFolder + composeFile + ' ' + stackName;
     } else if (action == "remove") {
         shDockerStackDeploy = "docker deploy rm " + stackName;
     } else {
