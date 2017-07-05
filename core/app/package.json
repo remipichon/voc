@@ -6,11 +6,8 @@
   "author": "https://github.com/remipichon/voc",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "*",
-    "multer": "*",
     "dockerode": "*",
     "http": "*",
-    "docker-events": "*",
     "sync-exec": "*",
     "fs": "*"
   }

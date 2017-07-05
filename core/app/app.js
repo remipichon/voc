@@ -1,7 +1,3 @@
-var bodyParser = require('body-parser');
-var multer = require('multer'); // v1.0.5
-var upload = multer(); // for parsing multipart/form-data
-var stream = require('stream');
 // var http = require('http');
 var exec = require('child_process').exec;
 // var execSync = require('child_process').execSync;
@@ -10,14 +6,11 @@ var path = require('path')
 
 require("dockerode/package.json"); // dockerode is a peer dependency.
 var Docker = require('dockerode');
-var DockerEvents = require('docker-events');
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
-
-console.log("Starting...  ...");
-
-
 var prefix = 'curl --unix-socket /var/run/docker.sock ';
 var containers = prefix + ' http:/v1.27/containers/json';
+
+console.log("Starting...  ...");
 
 function manageStack(fileState) {
     var stackName = getStackName(fileState.fileName);
