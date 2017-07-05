@@ -97,6 +97,32 @@ function getGitDiffModifiedFile() {
     });
 }
 
+function writeResult(key,value) {
+    var resultFile = "job-result/result.json";
+    var pathResult = path.join("/builds/root/test-runner/", resultFile);
+
+    var resultJson = {};
+    if(fs.existsSync(pathResult)){
+        var resultTest = fs.readFileSync(resultFile).toString();
+        resultJson = JSON.parse(resultTest);
+    }
+    console.log("resultJson",resultJson);
+    if(resultJson[key]){
+        if(!Array.isArray(resultJson[key])){
+            var previous = resultJson[key];
+            resultJson[key] = [];
+            resultJson[key].push(previous)
+        }
+        resultJson[key].push(value);
+    } else
+        resultJson[key] = value;
+    console.log("resultJson",resultJson);
+    if (!fs.existsSync("/builds/root/test-runner/job-result")){
+        fs.mkdirSync("/builds/root/test-runner/job-result");
+    }
+    var contents = fs.writeFileSync(pathResult, JSON.stringify(resultJson));
+
+}
 function getStackName(fileName) {
     var split = fileName.split("/");
     var last = split[split.length - 1];
@@ -124,12 +150,24 @@ function deployStack(composeFile, action, stackName) {
     if (action == "create" || action == "update") {
         shDockerStackDeploy = "docker stack deploy --compose-file /builds/root/test-runner/" + composeFile + ' ' + stackName;
     } else if (action == "remove") {
-        shDockerStackDeploy = "docker stack rm " + stackName;
+        shDockerStackDeploy = "docker deploy rm " + stackName;
     } else {
+        writeResult(stackName,{error:"Action was not defined for stack"});
         console.error("Action not any of create, update or remove for ", stackName);
         return;
     }
-    execCmd(shDockerStackDeploy)
+    execCmd(shDockerStackDeploy,function (error, stdout, stderr) {
+        if (error) console.error("error", error)
+        console.log(stdout)
+        if (stderr) console.error("stderr", stderr)
+        var state = {}
+        if(error){
+            state.error = stderr + " : " + JSON.stringify(error);
+        } else {
+            state.result = stdout || stderr;
+        }
+        writeResult(stackName,state);
+    })
 }
 
 

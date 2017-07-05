@@ -97,11 +97,12 @@ check_interval = 0
 * what Gilab can do
   * provision (build, ~~provision, update, delete~~) a stack from a Docker Compose file ~~(yml)~~ (json)
      * compose as json: docker-compose-ID.yml
-     * ~~stack-ID.json~~ to describe the stack to deploy
+     * ~~stack-ID.json~~
         * ~~enable/disable~~
-        * initiator
-        * description
+  * ~~traiter le resultat du job~~
+      * ~~https://docs.gitlab.com/ce/ci/yaml/README.html#artifacts~~
   * build a lone image and push it somewhere (build, tag, push)
+    * Dockerfile + config json
   * periodically garbage collect
   * custom action 
     * backup data
@@ -119,3 +120,10 @@ check_interval = 0
 curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 
 MacBook-Pro-de-Remi:test remi$ sudo lsof -iTCP -sTCP:LISTEN -n -P
+
+
+job:
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths: job-result/result.json
