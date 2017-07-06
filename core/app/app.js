@@ -1,15 +1,18 @@
 // var http = require('http');
-var exec = require('child_process').exec;
-// var execSync = require('child_process').execSync;
 var fs = require('fs');
 var path = require('path')
 require("dockerode/package.json"); // dockerode is a peer dependency.
 var Docker = require('dockerode');
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
 
+
+var utils = require("./utils");
+
 //config var
-var prefix = 'curl --unix-socket /var/run/docker.sock ';
-var containers = prefix + ' http:/v1.27/containers/json';
+var curlUnixDockerSocket = 'curl --unix-socket /var/run/docker.sock '
+var requestDockerApiVersion = ' http:/v1.30/';
+var containers = 'containers/json';
+
 var repoFolder = "/builds/root/test-runner/";
 var artifactDir = "/job-result/";
 var resultFile = "result.json";
@@ -20,15 +23,15 @@ function manageStack(fileState) {
     var stackName = getStackName(fileState.fileName);
 
     if (fileState.state == "D") {
-        console.log(fileState.fileName, "has been deleted, remove associated ", stackName);
+        console.log(fileState.fileName, "has been deleted, remove associated stack", stackName);
         deployStack(fileState.fileName, "remove", stackName);
     } else {
         var stackConfig;
         var composeFile;
-        if (isComposeFile(fileState.fileName)) {
+        if (utils.isComposeFile(fileState.fileName)) {
             composeFile = fileState.fileName;
             stackConfig = fileState.fileName.replace("docker-compose", "stack").replace(".yml", ".json")
-        } else if (isStackConfig(fileState.fileName)) {
+        } else if (utils.isStackConfig(fileState.fileName)) {
             stackConfig = fileState.fileName
             composeFile = fileState.fileName.replace("stack", "docker-compose").replace(".json", ".yml")
         }
@@ -36,7 +39,7 @@ function manageStack(fileState) {
         var configFile = path.join(repoFolder, stackConfig);
         fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
             if (!err) {
-                console.log('Config for', composeFile, data);
+                console.log('Config for\n', composeFile, "\n", data);
 
                 var config = JSON.parse(data);
                 var action;
@@ -60,15 +63,15 @@ function manageStack(fileState) {
 function manageImage(fileState) {
     if (fileState.state == "D") {
         console.log(fileState.fileName, "has been deleted, doint nothing, GC wil be there soon... ");
-        writeResult(fileState.fileName, {error: "has been deleted"});
+        utils.writeResult(artifactDir, resultFile, repoFolder, fileState.fileName, {result: "has been deleted"});
         return;
     } else {
         var imageConfig;
         var Dockerfile;
-        if (isDockerfile(fileState.fileName)) {
+        if (utils.isDockerfile(fileState.fileName)) {
             Dockerfile = fileState.fileName;
             imageConfig = fileState.fileName.replace("Dockerfile", "image") + ".json"
-        } else if (isImageConfig(fileState.fileName)) {
+        } else if (utils.isImageConfig(fileState.fileName)) {
             imageConfig = fileState.fileName;
             Dockerfile = fileState.fileName.replace("image", "Dockerfile").replace(".json", "")
         }
@@ -76,7 +79,7 @@ function manageImage(fileState) {
         var configFile = path.join(repoFolder, imageConfig);
         fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
             if (!err) {
-                console.log('Config for', Dockerfile, data);
+                console.log('Config for\n', Dockerfile, '\n', data);
                 var config = JSON.parse(data);
                 buildPushImage(Dockerfile, config);
             } else {
@@ -88,8 +91,8 @@ function manageImage(fileState) {
 }
 
 function getGitDiffModifiedFile() {
-    var modifiedFiles = "cd ; " + repoFolder + " git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
-    execCmd(modifiedFiles, function (error, stdout) {
+    var modifiedFiles = "cd " + repoFolder + "; git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
+    utils.execCmd(modifiedFiles, function (error, stdout) {
         if (stdout) {
             var files = stdout.split("\n");
             var filesState = [];
@@ -101,47 +104,21 @@ function getGitDiffModifiedFile() {
                     fileName: spec[1]
                 })
             });
-            console.log("Updated files", filesState);
+            console.log("Updated files\n", filesState);
 
             filesState.forEach(function (fileState) {
                 console.log(fileState.fileName, "has been", fileState.state);
 
-                if (isComposeFile(fileState.fileName) || isStackConfig(fileState.fileName)) {
+                if (utils.isComposeFile(fileState.fileName) || utils.isStackConfig(fileState.fileName)) {
                     manageStack(fileState);
                 }
 
-                if (isDockerfile(fileState.fileName) || isImageConfig(fileState.fileName)) {
+                if (utils.isDockerfile(fileState.fileName) || utils.isImageConfig(fileState.fileName)) {
                     manageImage(fileState)
                 }
             })
         }
     });
-}
-
-function writeResult(key, value) {
-    var resultFile = artifactDir + resultFile;
-    var pathResult = path.join(repoFolder, resultFile);
-
-    var resultJson = {};
-    if (fs.existsSync(pathResult)) {
-        var resultTest = fs.readFileSync(resultFile).toString();
-        resultJson = JSON.parse(resultTest);
-    }
-    if (resultJson[key]) {
-        if (!Array.isArray(resultJson[key])) {
-            var previous = resultJson[key];
-            resultJson[key] = [];
-            resultJson[key].push(previous)
-        }
-        resultJson[key].push(value);
-    } else
-        resultJson[key] = value;
-    if (!fs.existsSync(repoFolder + artifactDir)) {
-        fs.mkdirSync(repoFolder + artifactDir);
-    }
-    console.log("resultJson", resultJson);
-    var contents = fs.writeFileSync(pathResult, JSON.stringify(resultJson));
-
 }
 
 function getStackName(fileName) {
@@ -154,41 +131,22 @@ function getStackName(fileName) {
     }
 }
 
-function isResourceFile(resource, fileName) {
-    var split = fileName.split("/");
-    if (split[split.length - 1].indexOf(resource) !== -1) return true;
-    return false;
-}
-
-function isComposeFile(fileName) {
-    return isResourceFile("docker-compose", fileName);
-}
-
-function isStackConfig(fileName) {
-    return isResourceFile("stack", fileName);
-}
-
-function isImageConfig(fileName) {
-    return isResourceFile("image", fileName);
-}
-
-function isDockerfile(fileName) {
-    return isResourceFile("Dockerfile", fileName);
-}
-
 function deployStack(composeFile, action, stackName) {
-    var shDockerStackDeploy
+    var shDockerStackDeploy;
+    var curlDockerStackDeploy;
     if (action == "create" || action == "update") {
         shDockerStackDeploy = "docker stack deploy --compose-file " + repoFolder + composeFile + ' ' + stackName;
     } else if (action == "remove") {
         shDockerStackDeploy = "docker deploy rm " + stackName;
     } else {
-        writeResult(stackName, {error: "Action was not defined for stack"});
+        utils.writeResult(artifactDir, resultFile, repoFolder, stackName, {error: "Action was not defined for stack"});
         console.error("Action not any of create, update or remove for ", stackName);
         return;
     }
-    execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
-        writeResult(stackName, getState(error, stderr, stdout));
+    //if composeFile is yml => Docker API
+    //if composeFile is json => Docker HTTP API (doesn't support stack yet)
+    utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
+        utils.writeResult(artifactDir, resultFile, repoFolder, stackName, getState(error, stderr, stdout));
     })
 }
 
@@ -202,36 +160,29 @@ function getState(error, stderr, stdout) {
     return state;
 };
 
+function pushImage(config) {
+    var dockerTag = "docker tag " + config.tag + " " + config.push;
+    utils.execCmd(dockerTag, function (error, stdout, stderr) {
+        var dockerPush = "docker push " + config.push;
+        utils.execCmd(dockerPush, function (error, stdout, stderr) {
+            utils.writeResult(artifactDir, resultFile, repoFolder, config.push, getState(error, stderr, stdout));
+        })
+    })
+}
+
 function buildPushImage(Dockerfile, config) {
     if (!config.tag) {
         console.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
     }
 
     var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " . ";
-    execCmd(dockerBuild, function (error, stdout, stderr) {
-        writeResult(config.tag, getState(error, stderr, stdout));
+    utils.execCmd(dockerBuild, function (error, stdout, stderr) {
+        utils.writeResult(artifactDir, resultFile, repoFolder, config.tag, getState(error, stderr, stdout));
 
-        if (config.push) {
-            var dockerTag = "docker tag " + config.tag + " " + config.push;
-            execCmd(dockerTag, function (error, stdout, stderr) {
-                var dockerPush = "docker push " + config.push;
-                execCmd(dockerPush, function (error, stdout, stderr) {
-                    writeResult(config.push, getState(error, stderr, stdout));
-                })
-            })
-        }
+        if (config.push) pushImage(config);
     })
 }
 
-function execCmd(cmd, callback) {
-    exec(cmd, function (error, stdout, stderr) {
-        // command output is in stdout
-        if (error) console.error("error", error)
-        console.log(stdout)
-        if (stderr) console.error("stderr", stderr)
-        if (callback) callback(error, stdout, stderr)
-    });
-}
 
 getGitDiffModifiedFile();
 

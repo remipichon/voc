@@ -8,37 +8,60 @@
 
 ## responsibilities
 
-### Gitlab
+### Gitlab (ready)
 * old conf as code
 * trigger runner 
 
-### Runner
+### Runner (ready)
 * build/push/pull/deploy using Docker
 * on commit
   * read modified files
-  * for each docker-compose-*.yml
-    * read status (added, modifier, removed)
-    * apply docker stack deploy/remove on modifier files
+  * for each docker-compose-<stackName>.yml or stack-<stackName>.json
+    * read status (added, modified, removed)
+    * apply docker stack deploy/remove on modified stackName
 
-### API
-* GET 
-  * /stacks queries Docker API
-  * /stackDefinitions read repo
-* PUT 
-  * generate docker-compose json file from template (repo) and custom options (put json body)
+### API 
+#### /stacks
+* GET /stacks
+  * queries Docker API (exec, HTTP API doesn't support stack yet)
+    * per stack, gather 
+      * stack info
+      * stack's services info
+      * service's tasks info
+      * config (repo, json)
+* POST /stacks + JSON body
+  * body: 
+    * stackDefinition
+    * custom options
+  * generate docker-compose.yml file from custom options (PUT json body) injected into stackDefinition (repo, docker-compose-template file) 
+  * validate generated docker-compose: docker-compose -f docker-compose.yml config
   * git pull; git add; git commit; git push
-* POST 
-  * verify request
-    * how to make Gitlab check compose file as json ?
+* PUT /stacks/<stackName> + JSON body
+  * __body__:  ==> not sure
+    * __stackDefinition__
+    * __custom options__  
+  * validate generated docker-compose: docker-compose -f docker-compose.yml config
   * update file, git pull; git commit; git push
-* DELETE
+* DELETE /stacks/<stackName>
   * git pull; git delete; git commit; git push
 
+#### /stackDefinitions
+* GET
+  * read docker-compose template from repo 
 
 ### UI
-* POST custom options from arguments list
-* PUT updated docker-compose as json
+* deploy
+*   POST custom options from arguments list
+* update deploy
+*   __PUT ?????__
+* build
 
+
+### configuration
+* docker-compose-<stackName>.yml
+* stack-<stackName>.json
+* __???? stack-template ????__
+  * __?? custom options ??__
 
 # install and config
 
@@ -92,11 +115,11 @@ check_interval = 0
   * ~~can dockerode deploy stack with compose file ?~~
   * ~~find a lib to read commit (which file ?, create/udpdate/delete ?)~~
 * ~~node script with docker api~~
-  * __(~~docker exec with compose file~~ OR docker API with compose json)__
+  * (~~docker exec with compose file~~ ~~OR __docker API with compose json)__~~
 
 * what Gilab can do
-  * provision (build, ~~provision, update, delete~~) a stack from a Docker Compose file ~~(yml)~~ (json)
-     * compose as json: docker-compose-ID.json
+  * ~~provision (build, ~~provision, update, delete) a stack from a Docker Compose file ~~(yml) (json)~~
+     * ~~compose as json: docker-compose-ID.json~~
      * ~~stack-ID.json~~
         * ~~enable/disable~~
   * ~~traiter le resultat du job~~
@@ -105,8 +128,8 @@ check_interval = 0
     * ~~Dockerfile + config json~~
   * periodically garbage collect
   * custom action 
-    * backup data
-    * restart services/containers
+    * remove/kill services/tasks
+* review/comment/refact/documenet all Gitlab code
 
 
 * node server KoaJs 
@@ -114,16 +137,12 @@ check_interval = 0
   * git clone/git pull
   * add/update file
   * git commit; git push
+  
+  
+* Gitlab: fail job is one error  
 
 
 
 curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 
 MacBook-Pro-de-Remi:test remi$ sudo lsof -iTCP -sTCP:LISTEN -n -P
-
-
-job:
-  artifacts:
-    when: always
-    expire_in: 1 week
-    paths: job-result/result.json
