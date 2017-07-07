@@ -1,5 +1,7 @@
 # kesako?
 
+Build Docker images and deploy Docker stack from conf as code. 
+
 * Gitlab instance
 * Gitlab Runner wih Docker socket binding 
 * NodeJs API
@@ -9,7 +11,7 @@
 ## responsibilities
 
 ### Gitlab (ready)
-* old conf as code
+* hold conf as code
 * trigger runner 
 
 ### Runner (ready)
@@ -19,6 +21,8 @@
   * for each docker-compose-<stackName>.yml or stack-<stackName>.json
     * read status (added, modified, removed)
     * apply docker stack deploy/remove on modified stackName
+  * for each Dockerfile-<imageName> or image-<imageName>.json
+    * build image
 
 ### API 
 #### /stacks
@@ -37,29 +41,43 @@
   * validate generated docker-compose: docker-compose -f docker-compose.yml config
   * git pull; git add; git commit; git push
 * PUT /stacks/<stackName> + JSON body
-  * __body__:  ==> not sure
-    * __stackDefinition__
-    * __custom options__  
+  * body: 
+    * stackDefinition
+    * custom options (complete options, even those not updated)
+  * generate docker-compose file from template and custom options    
   * validate generated docker-compose: docker-compose -f docker-compose.yml config
   * update file, git pull; git commit; git push
 * DELETE /stacks/<stackName>
-  * git pull; git delete; git commit; git push
+  * git pull; git rm; git commit; git push
+  
+#### /images
+* GET /images
+  * queries Docker API (exec, HTTP API doesn't support stack yet)
+    * per image, gather 
+      * image info
+      * config (repo, json)
+      
+__which operations are available ??__      
 
 #### /stackDefinitions
 * GET
-  * read docker-compose template from repo 
+  * read docker-compose templates from repo 
 
 ### UI
 * deploy
 *   POST custom options from arguments list
 * update deploy
-*   __PUT ?????__
+*   PUT custom options from arguments list
 * build
 
 
 ### configuration
+
+#### dynamic stack
 * docker-compose-<stackName>.yml
 * stack-<stackName>.json
+
+#### stack definition
 * __???? stack-template ????__
   * __?? custom options ??__
 
@@ -127,20 +145,17 @@ check_interval = 0
   * ~~build a lone image and~~ push it somewhere (~~build~~, ~~tag~~, push) ==> add registry
     * ~~Dockerfile + config json~~
   * periodically garbage collect
+* review/comment/refact/document all Gitlab code
+
+# TODO apres Vieilles Charrues
+
+* Gitlab
   * custom action 
-    * remove/kill services/tasks
-* review/comment/refact/documenet all Gitlab code
-
-
-* node server KoaJs 
-* api to POST stack as docker compose json file
-  * git clone/git pull
-  * add/update file
-  * git commit; git push
-  
-  
-* Gitlab: fail job is one error  
-
+  * remove/kill services/tasks
+  * fail job is one error  
+* NodeJs API  
+  * node server KoaJs 
+ 
 
 
 curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
