@@ -1,0 +1,6 @@
+FROM nodedocker
+
+# copy cert
+COPY remoteDockerClientCert/*.pem /root/.docker/
+ENV DOCKER_HOST tcp://whatstat.remip.eu:2376
+ENV DOCKER_TLS_VERIFY=1

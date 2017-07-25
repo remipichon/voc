@@ -9,5 +9,3 @@ COPY app /root/app/
 
 # copy conf
 COPY example /root/configuration/
-
-#ENTRYPOINT node /root/app/app.js

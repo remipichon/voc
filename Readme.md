@@ -3,7 +3,7 @@
 Build Docker images and deploy Docker stack from conf as code. 
 
 * Gitlab instance
-* Gitlab Runner wih Docker socket binding 
+* Gitlab Runner wih Docker socket binding or Docker remote mode over TLS
 * NodeJs API
 * VueJs UI
 
@@ -81,54 +81,99 @@ __which operations are available ??__
 * __???? stack-template ????__
   * __?? custom options ??__
 
-# install and config
+# Install
 
-```
-docker-compose up -d
-sed -i 's/# external_url 'GENERATED_EXTERNAL_URL'/external_url 'http://gitlab/'/g' gitlab/config/gitlab.rb
-registry_external_url 'https://registry.gitlab:4567'
+Consider reading Config part before in order to get it right and configure quickly. 
+## Docker stack on a Swarm node
 
-# get runner registration token and edit config.toml or 
-gitlab-runner register --config "/etc/gitlab-runner/config.toml"
-```
+````
+git clone https://github.com/remipichon/voc.git
+mkdir -p ~/srv/{gitlab/{config,logs,data},gitlab-runner/config}
+docker stack deploy --compose-file voc/core/docker-compose.yml voc
+````
 
-# to automate install and config
+Visit localhost:81 or your server's ip/hostname to create an admin password. 
+In case of forgotten password, please refer to https://docs.gitlab.com/ee/security/reset_root_password.html
 
-* build custom image FROM gitlab/gitlab-ce and update its gitlab.rb  
-* build custom image FROM gitlab/gitlab-runner and create its config.toml  
+# Config
+
+## Gitlab
+
+Edit your hostname in core/gitlab/gitlab.rb. Default is gitlab, hostname that will only work within the voc Docker overlay network.
+If running locally, you will need to use 'localhost' hostname to add a git remote. Everything else work the same. 
+On a server, consider registering a DNS name even if it will work with an ip. It's uglier. 
 
 
-## config.toml
-```
-concurrent = 1
-check_interval = 0
+## Registry
+TODO
 
-[[runners]]
-  name = "node_host_docker"
-  url = "http://gitlab"
-  token = "47fd4c172b3b789d349bea2f99e122"
-  executor = "docker"
-  [runners.docker]
-    network_mode = "core_network"
-    tls_verify = false
-    image = "vocproject/nodedocker"
-    privileged = true
-    disable_cache = false
-    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
-    shm_size = 0
-  [runners.cache]
-``` 
+## Runners
+Runners are used by Gitlab to apply the state to the targeted Docker. Two type of runners exists:
+* host Docker runner: the sate will be applied to the same Docker Gitlab is running on 
+* remote Docker Runner: the state will be applied to a remote Docker over TLS
+
+Rely on _tags_ in _.gitlab-ci.yml_ to specify which runner and thus where the sate will be applied.
+
+
+### Add a runner
+
+### Host Docker 
+Image is _nodedocker_ and should be run with a runner that has the Docker socket mounted as a volume. 
+Image is built out of the box by Docker Compose. 
+
+````
+docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
+
+name=node_host_docker
+url=http://<HOSTNAME>
+token=<TOKEN>
+docker_network_mode=voc_network
+image=vocproject/nodedocker
+volumes=/var/run/docker.sock:/var/run/docker.sock
+
+gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
+
+#currently register doesn't support volume, add them by hand, do it it vim if another runner already exists. You would override its volumes.
+sed -i "/volumes/c\    volumes = [\"/cache\",\"$volumes\"]" /etc/gitlab-runner/config.toml
+````
+
+## Remote Docker
+Image is _noderemotedocker_. To build this image, first create yourself a set of certificates:
+https://docs.docker.com/engine/security/https/
+
+Copy the tsl ca certificate (ca.pem), the tsl certificate (cert.pem) and tsl key (key.pem) into _core/remoteDockerClientCert_.
+
+Docker Compose will build an image including the certificates. **Don't ever _push_ this image** to a non private Docker Registry as it contains everything to do everything as root on your remote host. 
+
+````
+docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
+
+name=node_remote_docker
+url=http://<HOSTNAME>
+token=<TOKEN>
+docker_network_mode=voc_network
+image=<private_or_local_registry>/noderemotedocker
+
+gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-image $image --docker-privileged true --docker-disable-cache false
+````
+
+
+### Several remote Docker
+So far not supported out of the box:
+* copy and adapt _Docker-node-remote-docker_
+* copy and adapt _node_remote_docker_ from _docker-compose.yml_ and adapt it (build context and image name)
+* add another runner using that image
+
 
 
 # TODO
 
+## Core
 * ~~external_url to gitlab compose (gitlab.rb) ==> to test~~
 * ~~name docker compose network (not gitlab_default) ==> to test~~
 * ~~name gitlab container (not gitlab_gitlab_1)		==> to test~~
 * ~~configure runner from docker-compose env (manually add token in config.toml) OR config.toml is defined as it and loaded into the runners that are not configured at all~~
 
-* review/comment/refact/document all Gitlab code
-* review/comment/refact/document all Gitlab code
 * ~~build from docker:latest (job base image) install node~~
   * ~~from docker, add node OR from node add docker~~
   * ~~can dockerode deploy stack with compose file ?~~
@@ -145,11 +190,14 @@ check_interval = 0
       * ~~https://docs.gitlab.com/ce/ci/yaml/README.html#artifacts~~
   * ~~build a lone image and~~ push it somewhere (~~build~~, ~~tag~~, push) ==> add registry
     * ~~Dockerfile + config json~~
-
-# TODO apres Vieilles Charrues
-
 * make nododocker be able to push to registry 
 * review/comment/refact/document all Gitlab code
+* ~~docker remote mode~~
+* ~~automate install~~
+==> install on server
+==> try out with Whatstat
+
+## UI and user friendliness
 * templating and definitons
 * Gitlab
   * periodically garbage collect
@@ -159,8 +207,15 @@ check_interval = 0
 * NodeJs API  
   * node server KoaJs 
  
+ 
+# to test app
+ add to runner 
+     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
 
 
+# for api to get docker state
 curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 
-MacBook-Pro-de-Remi:test remi$ sudo lsof -iTCP -sTCP:LISTEN -n -P
+#netstat for mac
+sudo lsof -iTCP -sTCP:LISTEN -n -P
+

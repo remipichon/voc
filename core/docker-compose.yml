@@ -4,38 +4,45 @@ services:
   gitlab:
     networks: 
       - network
-    image: 'gitlab/gitlab-ce:latest'
-    container_name: 'gitlab'
+    image: 'gitlab-custom:1.0'
+    build:
+      context: gitlab
     ports:
       - '81:80'
       - '443:443'
       - '22:22'
     volumes:
-      - '~/gitlab/config:/etc/gitlab'
+      #- '~/srv/gitlab/config:/etc/gitlab'
       - '~/srv/gitlab/logs:/var/log/gitlab'
       - '~/srv/gitlab/data:/var/opt/gitlab'
 
   host_docker_runner:
     networks: 
       - network
-    image: 'gitlab/gitlab-runner:latest'
-    container_name: 'host_docker_runner'
+    image: 'gitlab-runner:latest'
     depends_on:
       - gitlab
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
-      - '~/srv/gitlab-runner/config:/etc/gitlab-runner'
+      #- '~/srv/gitlab-runner/config:/etc/gitlab-runner'
 
   node_docker:
     image: 'nodedocker'
-    container_name: 'node_docker'
-    volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
-      - './app/app.js:/root/app/app.js'
-      - './example/:/root/configuration/'
+    deploy:
+      replicas: 0
     build:
       context: .
       dockerfile: Dockerfile-node-docker
+
+  node_remote_docker:
+     image: 'noderemotedocker'
+     deploy:
+       replicas: 0
+     depends_on:
+       - node_docker
+     build:
+       context: .
+       dockerfile: Dockerfile-node-remote-docker
 
 
 networks:
