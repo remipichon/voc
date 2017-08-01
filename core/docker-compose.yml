@@ -19,7 +19,7 @@ services:
   host_docker_runner:
     networks: 
       - network
-    image: 'gitlab-runner:latest'
+    image: 'gitlab/gitlab-runner:latest'
     depends_on:
       - gitlab
     volumes:

@@ -89,8 +89,11 @@ Consider reading Config part before in order to get it right and configure quick
 ````
 git clone https://github.com/remipichon/voc.git
 mkdir -p ~/srv/{gitlab/{config,logs,data},gitlab-runner/config}
-docker stack deploy --compose-file voc/core/docker-compose.yml voc
+cd voc/core; docker-compose build; 
+docker stack deploy --compose-file docker-compose.yml voc
 ````
+
+(it will not build if you don't read the config part)
 
 Visit localhost:81 or your server's ip/hostname to create an admin password. 
 In case of forgotten password, please refer to https://docs.gitlab.com/ee/security/reset_root_password.html
@@ -156,6 +159,9 @@ image=<private_or_local_registry>/noderemotedocker
 
 gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-image $image --docker-privileged true --docker-disable-cache false
 ````
+
+## Why is it not building ?
+If you don't need a remote docker, remove 'node_remote_docker' from docker-compose.yml to skip building the image
 
 
 ### Several remote Docker
