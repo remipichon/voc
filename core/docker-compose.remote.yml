@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  remote_docker_runner:
+    networks:
+      - network
+    image: 'gitlab/gitlab-runner:latest'
+    depends_on:
+      - gitlab
+
+  node_docker_builder: #only to build nodedocker that is used by noderemotedocker
+    image: 'nodedocker'
+    deploy:
+      replicas: 0
+    build:
+      context: .
+      dockerfile: Dockerfile-node-host-docker
+
+  node_remote_docker:
+     image: 'noderemotedocker'
+     deploy:
+       replicas: 0
+     depends_on:
+       - node_docker
+     build:
+       context: .
+       dockerfile: Dockerfile-node-remote-docker

@@ -86,16 +86,38 @@ __which operations are available ??__
 Consider reading Config part before in order to get it right and configure quickly. 
 ## Docker stack on a Swarm node
 
+##### prepare FS to build
 ````
 git clone https://github.com/remipichon/voc.git
 mkdir -p ~/srv/{gitlab/{config,logs,data},gitlab-runner/config}
-cd voc/core; docker-compose build; 
-docker stack deploy --compose-file docker-compose.yml voc
 ````
 
-(it will not build if you don't read the config part)
+##### build
+Select one of the DCF
+````
+cd voc/core; 
+# gitlab 
+DCF=' -f docker-compose.yml '
+# gitbal + host runner (to access local Docker daemon, the one on which Gitlab is running)
+DCF=' -f docker-compose.yml -f docker-compose.host.yml '
+# gitlab + remote runner (to access remote Docker daemon, needs to have certificates, see [Remote Docker](#Remote Docker)
+DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
+# gitlab + both host and remote runner
+DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
+# generate intermediate compose file
+docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
+# build needed image
+docker-compose -f docker-compose.intermediate.yml build
+````
+
+##### run stack
+````
+GITLAB_PUBLIC_PORT=8020    #optional, see default in compose file
+GITLAB_PUBLIC_PORT=$GITLAB_PUBLIC_PORT docker stack deploy --compose-file docker-compose.intermediate.yml voc
+````
 
 Visit localhost:81 or your server's ip/hostname to create an admin password. 
+
 In case of forgotten password, please refer to https://docs.gitlab.com/ee/security/reset_root_password.html
 
 # Config
@@ -104,7 +126,7 @@ In case of forgotten password, please refer to https://docs.gitlab.com/ee/securi
 
 Edit your hostname in core/gitlab/gitlab.rb. Default is gitlab, hostname that will only work within the voc Docker overlay network.
 If running locally, you will need to use 'localhost' hostname to add a git remote. Everything else work the same. 
-On a server, consider registering a DNS name even if it will work with an ip. It's uglier. 
+On a server, consider registering a DNS name even if it will work with an ip. 
 
 
 ## Registry
@@ -119,10 +141,14 @@ Rely on _tags_ in _.gitlab-ci.yml_ to specify which runner and thus where the sa
 
 
 ### Add a runner
+Runner are configured to use a specific image. You don't have to specify an image in the gitlab-ci.yml file. 
+
+Why? Host Docker Runner needs to have Docker socket binding while Remote Docker Runner needs to have certificates. 
+Different images, different runners. 
 
 ### Host Docker 
 Image is _nodedocker_ and should be run with a runner that has the Docker socket mounted as a volume. 
-Image is built out of the box by Docker Compose. 
+Image is built out of the box by Docker Compose but service has to be configured by hand. 
 
 ````
 docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
@@ -160,15 +186,11 @@ image=<private_or_local_registry>/noderemotedocker
 gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-image $image --docker-privileged true --docker-disable-cache false
 ````
 
-## Why is it not building ?
-If you don't need a remote docker, remove 'node_remote_docker' from docker-compose.yml to skip building the image
-
-
 ### Several remote Docker
 So far not supported out of the box:
-* copy and adapt _Docker-node-remote-docker_
-* copy and adapt _node_remote_docker_ from _docker-compose.yml_ and adapt it (build context and image name)
-* add another runner using that image
+* copy _Dockerfile-node-remote-docker_ and adapt 'remoteDockerClientCert/*.pem'
+* in _docker-compose.remote.yml_ copy _node_remote_docker_ and adapt 'context' and 'image' name.
+* add another runner using that image OR specify which remote image to use in .gitlab-ci.yml
 
 
 

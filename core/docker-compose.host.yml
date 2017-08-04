@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  host_docker_runner:
+    networks:
+      - network
+    image: 'gitlab/gitlab-runner:latest'
+    depends_on:
+      - gitlab
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+
+  node_host_docker:
+    image: 'nodedocker'
+    deploy:
+      replicas: 0
+    build:
+      context: .
+      dockerfile: Dockerfile-node-host-docker
