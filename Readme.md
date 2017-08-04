@@ -86,6 +86,11 @@ __which operations are available ??__
 Consider reading Config part before in order to get it right and configure quickly. 
 ## Docker stack on a Swarm node
 
+Prerequisites:
+* Docker 17.06.0-ce
+* Docker Compose 1.41.1
+* Swarm mode enabled
+
 ##### prepare FS to build
 ````
 git clone https://github.com/remipichon/voc.git
@@ -93,9 +98,8 @@ mkdir -p ~/srv/{gitlab/{config,logs,data},gitlab-runner/config}
 ````
 
 ##### build
-Select one of the DCF
+Select one of the DCF (docker compose files)
 ````
-cd voc/core; 
 # gitlab 
 DCF=' -f docker-compose.yml '
 # gitbal + host runner (to access local Docker daemon, the one on which Gitlab is running)
@@ -104,19 +108,24 @@ DCF=' -f docker-compose.yml -f docker-compose.host.yml '
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
 # gitlab + both host and remote runner
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
+````
+
+````
+cd voc/core; 
 # generate intermediate compose file
-docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
+GITLAB_PUBLIC_PORT=8020    #optional, see default in compose file
+GITLAB_PUBLIC_PORT=$GITLAB_PUBLIC_PORT docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
+
 # build needed image
 docker-compose -f docker-compose.intermediate.yml build
 ````
 
 ##### run stack
 ````
-GITLAB_PUBLIC_PORT=8020    #optional, see default in compose file
-GITLAB_PUBLIC_PORT=$GITLAB_PUBLIC_PORT docker stack deploy --compose-file docker-compose.intermediate.yml voc
+docker stack deploy --compose-file docker-compose.intermediate.yml voc
 ````
 
-Visit localhost:81 or your server's ip/hostname to create an admin password. 
+Visit localhost:81 or your server's ip/hostname to create a password for the 'root' user. 
 
 In case of forgotten password, please refer to https://docs.gitlab.com/ee/security/reset_root_password.html
 
