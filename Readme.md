@@ -129,6 +129,11 @@ Visit localhost:81 or your server's ip/hostname to create a password for the 'ro
 
 In case of forgotten password, please refer to https://docs.gitlab.com/ee/security/reset_root_password.html
 
+##### update stack
+build image with docker compose
+delete corresponding service
+docker stack deploy
+
 # Config
 
 ## Gitlab
@@ -137,6 +142,13 @@ Edit your hostname in core/gitlab/gitlab.rb. Default is gitlab, hostname that wi
 If running locally, you will need to use 'localhost' hostname to add a git remote. Everything else work the same. 
 On a server, consider registering a DNS name even if it will work with an ip. 
 
+To change hostname on a running Gitlab. Be aware that those changes will be lost if the container get killed
+````
+/etc/gitlab/gitlab.rb
+    external_url 'http://<new_host_name>/'
+    
+gitlab-ctl reconfigure; gitlab-ctl restart 
+````
 
 ## Registry
 TODO
@@ -163,8 +175,8 @@ Image is built out of the box by Docker Compose but service has to be configured
 docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
 
 name=node_host_docker
-url=http://<HOSTNAME>
-token=<TOKEN>
+url=http://vps1.remip.eu
+token=ErrysV73DDmBXdsWxyvv
 docker_network_mode=voc_network
 image=vocproject/nodedocker
 volumes=/var/run/docker.sock:/var/run/docker.sock
@@ -174,6 +186,8 @@ gitlab-runner register --non-interactive --name $name --url $url --registration-
 #currently register doesn't support volume, add them by hand, do it it vim if another runner already exists. You would override its volumes.
 sed -i "/volumes/c\    volumes = [\"/cache\",\"$volumes\"]" /etc/gitlab-runner/config.toml
 ````
+
+Go to <your_gitlab>/admin/runners/ to add _node_host_docker_ tag and use it in your gitlab-ci.yml file.
 
 ## Remote Docker
 Image is _noderemotedocker_. To build this image, first create yourself a set of certificates:
@@ -195,12 +209,15 @@ image=<private_or_local_registry>/noderemotedocker
 gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-image $image --docker-privileged true --docker-disable-cache false
 ````
 
+Go to <your_gitlab>/admin/runners/ to add _node_remote_docker_ tag and use it in your gitlab-ci.yml file.
+
 ### Several remote Docker
 So far not supported out of the box:
 * copy _Dockerfile-node-remote-docker_ and adapt 'remoteDockerClientCert/*.pem'
 * in _docker-compose.remote.yml_ copy _node_remote_docker_ and adapt 'context' and 'image' name.
 * add another runner using that image OR specify which remote image to use in .gitlab-ci.yml
 
+Runners configuration is in /etc/gitlab-runner/config.toml
 
 
 # TODO
