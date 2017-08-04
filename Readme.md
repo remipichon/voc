@@ -110,15 +110,17 @@ DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
 ````
 
+GITLAB_PUBLIC_PORT **has to be the same port defined in gitlab.rb**, else, runner will not work
 ````
 cd voc/core; 
 # generate intermediate compose file
-GITLAB_PUBLIC_PORT=8020    #optional, see default in compose file
+GITLAB_PUBLIC_PORT=80    #optional 
 GITLAB_PUBLIC_PORT=$GITLAB_PUBLIC_PORT docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
 
 # build needed image
 docker-compose -f docker-compose.intermediate.yml build
 ````
+
 
 ##### run stack
 ````
@@ -141,6 +143,8 @@ docker stack deploy
 Edit your hostname in core/gitlab/gitlab.rb. Default is gitlab, hostname that will only work within the voc Docker overlay network.
 If running locally, you will need to use 'localhost' hostname to add a git remote. Everything else work the same. 
 On a server, consider registering a DNS name even if it will work with an ip. 
+
+**if gitlab will be exposed on another port than 80, GITLAB_PUBLIC_PORT has to be the same port as the one specified in gitlab.rb**
 
 To change hostname on a running Gitlab. Be aware that those changes will be lost if the container get killed
 ````
@@ -175,13 +179,13 @@ Image is built out of the box by Docker Compose but service has to be configured
 docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
 
 name=node_host_docker
-url=http://vps1.remip.eu
+url=http://vps1.remip.eu:8020
 token=ErrysV73DDmBXdsWxyvv
 docker_network_mode=voc_network
-image=vocproject/nodedocker
+image=nodedocker
 volumes=/var/run/docker.sock:/var/run/docker.sock
 
-gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
+gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
 
 #currently register doesn't support volume, add them by hand, do it it vim if another runner already exists. You would override its volumes.
 sed -i "/volumes/c\    volumes = [\"/cache\",\"$volumes\"]" /etc/gitlab-runner/config.toml
@@ -204,9 +208,9 @@ name=node_remote_docker
 url=http://<HOSTNAME>
 token=<TOKEN>
 docker_network_mode=voc_network
-image=<private_or_local_registry>/noderemotedocker
+image=noderemotedocker
 
-gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-image $image --docker-privileged true --docker-disable-cache false
+gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false
 ````
 
 Go to <your_gitlab>/admin/runners/ to add _node_remote_docker_ tag and use it in your gitlab-ci.yml file.
