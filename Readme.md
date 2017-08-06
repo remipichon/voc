@@ -111,11 +111,25 @@ DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.
 ````
 
 GITLAB_PUBLIC_PORT **has to be the same port defined in gitlab.rb**, else, runner will not work
+
+
+have a DNS 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
+
+user defines HOSTNAME=remip.eu
+==> gitlab.rb external_url 'htt://gitlab.<HOSTNAME>' (port 80)
+==> docker compose doesn't map the port
+==> docker compose. gitlab EXPOSE 80 + env for nginx proxy
+==> plus de GITLAB_PUBLIC_PORT, tout passe par nginx proxy
+
 ````
 cd voc/core; 
 # generate intermediate compose file
-GITLAB_PUBLIC_PORT=80    #optional 
+HOSTNAME=gitlab.remip.eu
 GITLAB_PUBLIC_PORT=$GITLAB_PUBLIC_PORT docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
+
+# prepare Gitlab conf
+sed -i -e "s/HOSTNAME/$HOSTNAME/g" gitlab/gitlab.rb
+
 
 # build needed image
 docker-compose -f docker-compose.intermediate.yml build
@@ -140,7 +154,7 @@ docker stack deploy
 
 ## Gitlab
 
-Edit your hostname in core/gitlab/gitlab.rb. Default is gitlab, hostname that will only work within the voc Docker overlay network.
+Edit your HOSTNAME in core/gitlab/gitlab.rb. Default is gitlab, HOSTNAME that will only work within the voc Docker overlay network.
 If running locally, you will need to use 'localhost' hostname to add a git remote. Everything else work the same. 
 On a server, consider registering a DNS name even if it will work with an ip. 
 

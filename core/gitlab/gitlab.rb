@@ -1,1 +1,1 @@
-external_url 'http://gitlab/'
+external_url 'http://HOSTNAME/'
