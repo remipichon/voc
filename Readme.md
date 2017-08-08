@@ -122,7 +122,7 @@ user defines HOSTNAME=remip.eu
 cd voc/core; 
 # generate intermediate compose file
 HOSTNAME=gitlab.remip.eu
-GITLAB_PUBLIC_PORT=$GITLAB_PUBLIC_PORT docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
+HOSTNAME=$HOSTNAME docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
 
 # prepare Gitlab conf
 sed -i -e "s/HOSTNAME/$HOSTNAME/g" gitlab/gitlab.rb
