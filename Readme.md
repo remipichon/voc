@@ -267,11 +267,14 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 
 ## UI and user friendliness
 * templating and definitons
+  * support subdomain (DNS record needed)
+  * support public access (no DSN record, http://<hotname>/<publicAccess>)
 * Gitlab
   * periodically garbage collect
   * custom action 
   * remove/kill services/tasks
   * fail job is one error  
+  * gitlab-ci.yml base template
 * NodeJs API  
   * node server KoaJs 
  

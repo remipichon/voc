@@ -12,8 +12,12 @@ var utils = require("./utils");
 var curlUnixDockerSocket = 'curl --unix-socket /var/run/docker.sock '
 var requestDockerApiVersion = ' http:/v1.30/';
 var containers = 'containers/json';
-
-var repoFolder = "/builds/root/test-runner/";
+var projectName = process.env.PROJECT_NAME;
+if (!projectName) {
+    console.error("PROJECT_NAME is not defined or empty");
+    process.exit(1)
+}
+var repoFolder = `/builds/root/$projectName/`;
 var artifactDir = "/job-result/";
 var resultFile = "result.json";
 
