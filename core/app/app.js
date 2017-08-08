@@ -141,7 +141,7 @@ function deployStack(composeFile, action, stackName) {
     if (action == "create" || action == "update") {
         shDockerStackDeploy = "docker stack deploy --compose-file " + repoFolder + composeFile + ' ' + stackName;
     } else if (action == "remove") {
-        shDockerStackDeploy = "docker deploy rm " + stackName;
+        shDockerStackDeploy = "docker stack rm " + stackName;
     } else {
         utils.writeResult(artifactDir, resultFile, repoFolder, stackName, {error: "Action was not defined for stack"});
         console.error("Action not any of create, update or remove for ", stackName);
