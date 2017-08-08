@@ -135,7 +135,7 @@ docker-compose -f docker-compose.intermediate.yml build
 
 ##### run stack
 ````
-docker stack deploy --compose-file docker-compose.intermediate.yml voc
+
 ````
 
 Visit localhost:81 or your server's ip/hostname to create a password for the 'root' user. 
@@ -190,13 +190,12 @@ Image is built out of the box by Docker Compose but service has to be configured
 docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
 
 name=node_host_docker
-url=http://vps1.remip.eu:8020
+url=http://gitlab.remip.eu
 token=ErrysV73DDmBXdsWxyvv
-docker_network_mode=voc_network
 image=nodedocker
 volumes=/var/run/docker.sock:/var/run/docker.sock
 
-gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
+gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
 
 #currently register doesn't support volume, add them by hand, do it it vim if another runner already exists. You would override its volumes.
 sed -i "/volumes/c\    volumes = [\"/cache\",\"$volumes\"]" /etc/gitlab-runner/config.toml
