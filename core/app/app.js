@@ -17,7 +17,7 @@ if (!projectName) {
     console.error("PROJECT_NAME is not defined or empty");
     process.exit(1)
 }
-var repoFolder = `/builds/root/$projectName/`;
+var repoFolder = `/builds/root/${projectName}/`;
 var artifactDir = "/job-result/";
 var resultFile = "result.json";
 

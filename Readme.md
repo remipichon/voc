@@ -135,7 +135,7 @@ docker-compose -f docker-compose.intermediate.yml build
 
 ##### run stack
 ````
-
+docker stack deploy --compose-file docker-compose.intermediate.yml voc
 ````
 
 Visit localhost:81 or your server's ip/hostname to create a password for the 'root' user. 
