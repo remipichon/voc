@@ -110,13 +110,13 @@ DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
 ````
 
-have a DNS 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
+have a DNS like 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
 
-user defines HOSTNAME=remip.eu
-==> gitlab.rb external_url 'htt://gitlab.<HOSTNAME>' (port 80)
+user defines HOSTNAME=gitlab.remip.eu
+==> gitlab.rb external_url 'htt://<HOSTNAME>' (port 80)
 ==> docker compose doesn't map the port
-==> docker compose. gitlab EXPOSE 80 + env for nginx proxy
-==> plus de GITLAB_PUBLIC_PORT, tout passe par nginx proxy
+==> docker compose EXPOSE 80 + env for nginx proxy
+==> plus de GITLAB_PUBLIC_PORT, tout passe par nginx proxy  (expect for debug)
 
 ````
 cd voc/core; 

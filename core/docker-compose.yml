@@ -21,7 +21,10 @@ services:
   nginx-proxy:
       networks:
         - network
-      image: jwilder/nginx-proxy
+      #image: jwilder/nginx-proxy
+      image: 'nginx-proxy'
+          build:
+            context: nginx-proxy
       deploy:
          replicas: 1
       ports:
