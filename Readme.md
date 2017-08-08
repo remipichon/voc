@@ -110,9 +110,6 @@ DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
 ````
 
-GITLAB_PUBLIC_PORT **has to be the same port defined in gitlab.rb**, else, runner will not work
-
-
 have a DNS 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
 
 user defines HOSTNAME=remip.eu

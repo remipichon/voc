@@ -8,7 +8,6 @@ services:
     build:
       context: gitlab
     ports:
-      #- '${GITLAB_PUBLIC_PORT:-80}:${GITLAB_PUBLIC_PORT:-80}'
       - '443:443'
       - '22:22'
     volumes:
@@ -22,8 +21,8 @@ services:
       networks:
         - network
       image: jwilder/nginx-proxy
-       deploy:
-            replicas: 1
+      deploy:
+         replicas: 1
       ports:
         - "80:80"
       volumes:
