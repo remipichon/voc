@@ -19,6 +19,8 @@ services:
         - VIRTUAL_HOST=${HOSTNAME:-gitlab.local}
 
   nginx-proxy:
+      networks:
+        - network
       image: jwilder/nginx-proxy
        deploy:
             replicas: 1
