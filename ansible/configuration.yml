@@ -31,3 +31,10 @@
         mode: 0755
       with_items:
         - "{{ directories }}"
+
+    - name: Clone the project from Github
+      git:
+        repo: "{{ repo_url }}"
+        dest: "/home/{{ username }}/voc"
+        version: "{{ repo_version }}"
+      become_user: "{{ username }}"
