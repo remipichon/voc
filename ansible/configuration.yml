@@ -1,5 +1,6 @@
 ---
-- hosts:
+- hosts: my_vps
+  become: yes
   tasks:
     - name: Make sure we have a 'wheel' group
       group:
@@ -10,13 +11,23 @@
       lineinfile:
         dest: /etc/sudoers
         state: present
-        regexp: '^%wheel'
-        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        regexp: "^%wheel"
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
         validate: visudo -cf %s
 
     - name: Add user to wheel group
       user:
         name: "{{ username }}"
         groups: wheel
-        shell: '/bin/bash'
+        shell: "/bin/bash"
         append: yes
+
+    - name: Create FS
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: 0755
+      with_items:
+        - "{{ directories }}"

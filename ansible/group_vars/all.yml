@@ -1,5 +1,11 @@
 ---
 username: 'voc'
 
-
+directories:
+  - "/home/{{ username }}/gitlab"
+  - "/home/{{ username }}/gitlab/config"
+  - "/home/{{ username }}/gitlab/logs"
+  - "/home/{{ username }}/gitlab/data"
+  - "/home/{{ username }}/gitlab-runner"
+  - "/home/{{ username }}/gitlab-runner/config"
 
