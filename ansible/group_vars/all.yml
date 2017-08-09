@@ -14,3 +14,6 @@ directories:
 repo_url: "https://github.com/remipichon/voc.git"
 repo_version: "HEAD"
 
+
+docker_compose_version: "1.15.0"
+

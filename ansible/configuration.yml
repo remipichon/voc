@@ -37,6 +37,20 @@
       with_items:
         - "{{ directories }}"
 
+    - name: Get kernel name
+      shell: "uname -s"
+      register: kernel
+
+    - name: Get architecture name
+      shell: "uname -m"
+      register: architecture
+
+    - name: Install Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ kernel.stdout }}-{{ architecture.stdout }}"
+        dest: "/usr/local/bin/docker-compose"
+        mode: 0744
+
     - name: Clone the project from Github
       git:
         repo: "{{ repo_url }}"
