@@ -2,6 +2,11 @@
 - hosts: my_vps
   become: yes
   tasks:
+    - name: Check if 'mode' var is defined
+      fail:
+        msg: "You need to define '-e mode={host, remote, both}'"
+      when: mode is undefined
+
     - name: Make sure we have a 'wheel' group
       group:
         name: wheel
@@ -38,3 +43,11 @@
         dest: "/home/{{ username }}/voc"
         version: "{{ repo_version }}"
       become_user: "{{ username }}"
+
+    - name: Generate intermediate compose file in mode '{{ mode }}'
+      shell: "docker-compose -f docker-compose.yml -f docker-compose.{{ mode }}.yml config > docker-compose.intermediate.yml"
+      when: mode in ['server','remote']
+
+    - name: Generate intermediate compose file in mode '{{ mode }}'
+      shell: docker-compose -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml config > docker-compose.intermediate.yml
+      when: mode in ['both]
