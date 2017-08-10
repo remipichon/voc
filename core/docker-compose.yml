@@ -19,17 +19,18 @@ services:
         - VIRTUAL_HOST=${HOSTNAME:-gitlab.local}
 
   nginx-proxy:
-      networks:
-        - network
-      #image: jwilder/nginx-proxy
-      image: 'nginx-proxy'
-          build:
-            context: nginx-proxy
-      deploy:
-         replicas: 1
-      ports:
-        - "80:80"
-      volumes:
-        - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - network
+    #image: jwilder/nginx-proxy
+    image: 'nginx-proxy'
+    build:
+      context: nginx-proxy
+    deploy:
+      replicas: 1
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
 networks:
   network:
