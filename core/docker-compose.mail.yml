@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  mailing-mediation:
+    networks: 
+      - network
+    image: 'mailin-mediation:1.0'
+    build:
+      context: mailin
+    ports:
+      - '25:25'
+    environment:
+      - TEST_WEBHOOK=test-mail-webhook:80   #can be dynamically added, has to be internal

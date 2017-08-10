@@ -133,6 +133,8 @@ DCF=' -f docker-compose.yml -f docker-compose.host.yml '
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
 # gitlab + both host and remote runner
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
+# add mail server
+DCF=' $DCF -f docker-compose.mail.yml '
 ````
 
 HOSTNAME is where Gitlab will be publicly accessible. It is required to provide the git clone URL as well as to establish

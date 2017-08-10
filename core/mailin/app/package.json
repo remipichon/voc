@@ -1,0 +1,12 @@
+{
+  "name": "mailin-mediation-app",
+  "version": "1.0.0",
+  "description": "Script to redirect mail according to the recipient",
+  "main": "app.js",
+  "author": "https://github.com/remipichon/voc",
+  "license": "ISC",
+  "dependencies": {
+    "mailin": "*",
+    "http": "*"
+  }
+}
