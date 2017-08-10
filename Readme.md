@@ -96,11 +96,11 @@ Consider reading Config part before in order to get it right and configure quick
 ## Docker stack on a Swarm node
 
 Prerequisites:
-* Docker 17.06.0-ce
-* Docker Compose 1.41.1
-* Swarm mode enabled
+* Docker 17.06.0-ce [https://docs.docker.com/engine/installation/](https://docs.docker.com/engine/installation/)
+* Docker Compose 1.41.1 [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
+* Swarm mode enabled (_docker swarm init_)
 
-##### install Docker
+##### copy-paste ready for Ubuntu
 ````
 apt-get update
 apt-get install -y apt-transport-https ca-certificates curl software-properties-common
@@ -108,22 +108,11 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
 apt-get install -y docker-ce
-# assert
-docker --version 
-````
-
-##### install Compose
-````
 curl -L https://github.com/docker/compose/releases/download/1.14.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
-# assert
-docker-compose --version
-````
-
-##### prepare swarm
-````
 docker swarm init
-# assert
+docker --version 
+docker-compose --version
 docker node ls
 ````
 
