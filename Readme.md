@@ -290,3 +290,9 @@ curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 #netstat for mac
 sudo lsof -iTCP -sTCP:LISTEN -n -P
 
+
+
+#Some questions :)
+
+1. Gitlab files will be stored on ~/voc/core/gitlab or ~/gitlab ? Would say ~/gitlab for having a beautiful tree, but above you said "sed -i -e "s/HOSTNAME/$HOSTNAME/g" **gitlab/gitlab.rb**"
+
