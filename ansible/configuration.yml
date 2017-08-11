@@ -58,6 +58,8 @@
         version: "{{ repo_version }}"
       become_user: "{{ username }}"
 
+    - include: install_docker.yml
+
     - name: Generate intermediate compose file in mode '{{ mode }}'
       shell: "docker-compose -f docker-compose.yml -f docker-compose.{{ mode }}.yml config > docker-compose.intermediate.yml"
       when: mode in ['server','remote']
