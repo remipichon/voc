@@ -1,5 +1,5 @@
 ---
-- hosts: my_vps
+- hosts: app
   become: yes
   tasks:
     - name: Check if 'mode' var is defined
