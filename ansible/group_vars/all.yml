@@ -9,6 +9,8 @@ directories:
   - "/home/{{ username }}/gitlab-runner"
   - "/home/{{ username }}/gitlab-runner/config"
 
+main_dir: "/home/{{ username }}/voc/core/"
+
 
 repo_url: "https://github.com/remipichon/voc.git"
 repo_version: "HEAD"

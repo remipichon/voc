@@ -61,14 +61,17 @@
     - include: install_docker.yml
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
-      shell: "docker-compose -f docker-compose.yml -f docker-compose.{{ mode }}.yml config > docker-compose.intermediate.yml"
+      shell: "docker-compose -f {{ main_dir }}/docker-compose.yml -f {{ main_dir }}/docker-compose.{{ mode }}.yml config > docker-compose.intermediate.yml"
       when: mode in ['server','remote']
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
-      shell: docker-compose -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml config > docker-compose.intermediate.yml
-      when: mode in ['both]
+      shell: docker-compose -f {{ main_dir }}/docker-compose.yml -f {{ main_dir }}/docker-compose.remote.yml -f {{ main_dir }}/docker-compose.host.yml config > {{ main_dir }}/docker-compose.intermediate.yml
+      when: mode in ['both']
 
     - name: Edit Gitlab.conf
       template:
         src: gitlab.rb.j2
         dest: "/home/{{ username }}/gitlab/config/gitlab.rb"
+
+    - name: Build it
+      command: docker-compose -f {{ main_dir }}/docker-compose.intermediate.yml build

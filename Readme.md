@@ -295,4 +295,6 @@ sudo lsof -iTCP -sTCP:LISTEN -n -P
 #Some questions :)
 
 1. Gitlab files will be stored on ~/voc/core/gitlab or ~/gitlab ? Would say ~/gitlab for having a beautiful tree, but above you said "sed -i -e "s/HOSTNAME/$HOSTNAME/g" **gitlab/gitlab.rb**"
-
+2. I think we should split the dev and system code. All the system part (Gitlab, Docker, Runner, Registry, nginx) should be handle by ansible, so into /voc/ansible.
+   And then, all the JS code relative to the app should be stored into /voc/core. What do you think ?
+   If you agree, we have to move all the files from core to ansible except app which is the JS code.
