@@ -83,40 +83,15 @@ __which operations are available ??__
 
 # Install
 
-## DNS entries
-Not required but it's fancier to have a nice name instead of an IP
-
-Let's say you have a domain name _cooldomain.eu_. You will need two records
-* an A record for Gitlab _gitlab.cooldomain.eu A the.ip.address.of.your.server_
-* an A record for Registry _registry.cooldomain.eu A the.ip.address.of.your.server_
-
-_nginx-proxy_ will take care of the redirection. 
-
 Consider reading Config part before in order to get it right and configure quickly. 
 ## Docker stack on a Swarm node
 
 Prerequisites:
-* Docker 17.06.0-ce [https://docs.docker.com/engine/installation/](https://docs.docker.com/engine/installation/)
-* Docker Compose 1.41.1 [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
-* Swarm mode enabled (_docker swarm init_)
+* Docker 17.06.0-ce
+* Docker Compose 1.41.1
+* Swarm mode enabled
 
-##### copy-paste ready for Ubuntu
-````
-apt-get update
-apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-apt-get update
-apt-get install -y docker-ce
-curl -L https://github.com/docker/compose/releases/download/1.14.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-docker swarm init
-docker --version 
-docker-compose --version
-docker node ls
-````
-
-##### prepare FS for build
+##### prepare FS to build
 ````
 git clone https://github.com/remipichon/voc.git
 mkdir -p ~/srv/{gitlab/{config,logs,data},gitlab-runner/config}
@@ -133,12 +108,25 @@ DCF=' -f docker-compose.yml -f docker-compose.host.yml '
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
 # gitlab + both host and remote runner
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
-# add mail server
-DCF=' $DCF -f docker-compose.mail.yml '
+# add mail support
+DCF=" $DCF -f docker-compose.mail.yml"
 ````
 
-HOSTNAME is where Gitlab will be publicly accessible. It is required to provide the git clone URL as well as to establish
-contact between the runners and Gitlab.
+component to test the install
+````
+# test mail
+DCF=" $DCF -f /test/mock-mail-endpoint/docker-compose.mail.test.yml"
+
+````
+
+have a DNS like 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
+
+user defines HOSTNAME=gitlab.remip.eu
+==> gitlab.rb external_url 'htt://<HOSTNAME>' (port 80)
+==> docker compose doesn't map the port
+==> docker compose EXPOSE 80 + env for nginx proxy
+==> plus de GITLAB_PUBLIC_PORT, tout passe par nginx proxy  (expect for debug)
+
 ````
 cd voc/core; 
 # generate intermediate compose file
@@ -159,16 +147,9 @@ docker-compose -f docker-compose.intermediate.yml build
 docker stack deploy --compose-file docker-compose.intermediate.yml voc
 ````
 
-Visit localhost:81 or your server's ip/hostname (the _gitlab.cooldomain.eu_) to create a password for the 'root' user. 
+Visit localhost:81 or your server's ip/hostname to create a password for the 'root' user. 
 
 In case of forgotten password, please refer to https://docs.gitlab.com/ee/security/reset_root_password.html
-
-
-##### verify installation
-TODO:
-* check gitlab (public access, docker service ls)
-* check git (add projet, git push conf)
-* check runners (check pipelines, docker stack ls on targeted Docker)
 
 ##### update stack
 build image with docker compose
@@ -305,6 +286,15 @@ Runners configuration is in /etc/gitlab-runner/config.toml
   * gitlab-ci.yml base template
 * NodeJs API  
   * node server KoaJs 
+
+## Mailin
+Build a proper image with all Mailin capabilities
+https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/
+
+* node mediator app
+  * redirect to endoint according to recipient name
+* specific overlay network 'mail_network' to which endpoint server has to be part of   
+
  
  
 # to test app
