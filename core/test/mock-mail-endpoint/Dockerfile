@@ -5,10 +5,9 @@ USER root
 RUN apt-get update;
 
 # copy node app code
-COPY package.json /root/app/package.json
-RUN cd /root/app/; npm install;
-COPY app server.js
+COPY package.json package.json
+RUN npm install;
+COPY server.js server.js
 
 
-ENTRYPOINT /root/app
 CMD node server.js

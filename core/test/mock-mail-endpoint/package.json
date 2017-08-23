@@ -1,0 +1,16 @@
+{
+  "name": "mock-mail-endpoint",
+  "version": "1.0.0",
+  "description": "Simple server to test mail endpoint",
+  "main": "server.js",
+  "author": "https://github.com/remipichon/voc",
+  "license": "ISC",
+  "dependencies": {
+    "async": "*",
+    "express": "*",
+    "fs": "*",
+    "dockerode": "*",
+    "multiparty": "*",
+    "util": "*"
+  }
+}

@@ -115,7 +115,7 @@ DCF=" $DCF -f docker-compose.mail.yml"
 component to test the install
 ````
 # test mail
-DCF=" $DCF -f /test/mock-mail-endpoint/docker-compose.mail.test.yml"
+DCF=" $DCF -f ./test/docker-compose.mail.test.yml"
 
 ````
 

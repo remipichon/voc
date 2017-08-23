@@ -2,7 +2,7 @@ version: '3'
 
 services:
   mock_mail_endpoint:
-    network:
+    networks:
       - mail
     image: 'mock-mail-endpoint:1.0'
     build:
