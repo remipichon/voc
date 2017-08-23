@@ -290,7 +290,11 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 * review/comment/refact/document all Gitlab code
 * ~~docker remote mode~~
 * ~~automate install~~
-==> install on server
+~~==> install on server~~
+* mail
+  * test mail app with different webhooks 
+     * setup stub server mail with server.js from mailin
+     * branch out to Spring to forward attached file ==> Whatstat mail user stories
 ==> try out with Whatstat
 
 ## UI and user friendliness

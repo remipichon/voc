@@ -55,7 +55,7 @@ mailin.on('message', function (connection, data, content) {
     var recipient = data.to[0].address;
     var split = recipient.split('@')
     var name = split[0]
-    var hostname = split[1]
+    var hostname = split[1] //mail.remip.eu
     console.log("Received mail destinated to",name);
     var webhook = process.env[name.toUpperCase()];
     if(!webhook){
