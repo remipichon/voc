@@ -119,13 +119,9 @@ DCF=" $DCF -f ./test/docker-compose.mail.test.yml"
 
 ````
 
-have a DNS like 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
-
-user defines HOSTNAME=gitlab.remip.eu
-==> gitlab.rb external_url 'htt://<HOSTNAME>' (port 80)
-==> docker compose doesn't map the port
-==> docker compose EXPOSE 80 + env for nginx proxy
-==> plus de GITLAB_PUBLIC_PORT, tout passe par nginx proxy  (expect for debug)
+You need to have a DNS A record 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
+* gitlab.rb external_url 'htt://<HOSTNAME>' (port 80)
+* docker compose EXPOSE 80 + env for nginx proxy
 
 ````
 cd voc/core; 
@@ -135,7 +131,6 @@ HOSTNAME=$HOSTNAME docker-compose $(echo $DCF) config > docker-compose.intermedi
 
 # prepare Gitlab conf
 sed -i -e "s/HOSTNAME/$HOSTNAME/g" gitlab/gitlab.rb
-
 
 # build needed image
 docker-compose -f docker-compose.intermediate.yml build
@@ -275,6 +270,8 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 * mail
   * test mail app with different webhooks 
      * setup stub server mail with server.js from mailin
+       * POST to endpoint with all relevant DATA as json and the attachements
+       * provide a way to POST via CURL/Postman to test directly the server (not the mailin stuff)
      * branch out to Spring to forward attached file ==> Whatstat mail user stories
 ==> try out with Whatstat
 
@@ -305,15 +302,9 @@ https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/
  add to runner 
      volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
 
-# to test mail
+# to test mail (don't know why but doesn't trigger the mailin processing)
 ````
 telnet vps1.remip.eu 25
-
-
-
-
-
-
 
 
 helo mail.remip.com
