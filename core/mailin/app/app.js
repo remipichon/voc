@@ -1,4 +1,5 @@
 var mailin = require('mailin');
+var request = require('request');
 
 /**
  * Start Mailin server. Redirect mail according to recipient.
@@ -51,10 +52,18 @@ mailin.on('startMessage', function (connection) {
 
 /* Event emitted after a message was received and parsed. */
 mailin.on('message', function (connection, data, content) {
+    console.log("****** data *********");
     console.log(data);
+
+    console.log("***** content *******");
+    console.log(content);
+
+    fs.writeFile("/truc", content, function(err) {
+        if (err) console.log(err);
+    });
+
     /* Do something useful with the parsed message here.
      * Use parsed message `data` directly or use raw message `content`. */
-    //TODO
     //read recipient <service>@mail.remip.eu
     var recipient = data.to[0].address;
     var split = recipient.split('@')
@@ -73,16 +82,27 @@ mailin.on('message', function (connection, data, content) {
         return;
     }
 
-    console.log("POST to",webhook,"TODO");
-    //POST body/attachments to endpoint system.env.<SERVICE>=<endpoint>
+    console.log("POST to",webhook);
+    //POST body/attachments to endpoint webhook
+    request.post(webhook,
+        {
+            json: {
+                from: data.from[0].address,
+                to: data.to[0].address
+            }
+        },
+        function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log("POST to",webhook,body)
+            }
+        }
+    );
 
 });
 
 function readEnv(envName){
     return process.env[envName]
 }
-
-
 
 
 
