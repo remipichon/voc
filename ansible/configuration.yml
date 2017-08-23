@@ -56,16 +56,28 @@
         repo: "{{ repo_url }}"
         dest: "/home/{{ username }}/voc"
         version: "{{ repo_version }}"
+        force: yes
       become_user: "{{ username }}"
 
     - include: install_docker.yml
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
-      shell: "docker-compose -f {{ main_dir }}/docker-compose.yml -f {{ main_dir }}/docker-compose.{{ mode }}.yml config > docker-compose.intermediate.yml"
+      shell: "docker-compose
+      -f {{ main_dir }}/docker-compose.yml
+      -f {{ main_dir }}/docker-compose.{{ mode }}.yml
+      -f {{ main_dir }}/docker-compose.mail.yml
+      -f {{ main_dir }}/test/docker-compose.mail.test.yml
+      config > docker-compose.intermediate.yml"
       when: mode in ['server','remote']
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
-      shell: docker-compose -f {{ main_dir }}/docker-compose.yml -f {{ main_dir }}/docker-compose.remote.yml -f {{ main_dir }}/docker-compose.host.yml config > {{ main_dir }}/docker-compose.intermediate.yml
+      shell: "docker-compose
+      -f {{ main_dir }}/docker-compose.yml
+      -f {{ main_dir }}/docker-compose.remote.yml
+      -f {{ main_dir }}/docker-compose.host.yml
+      -f {{ main_dir }}/docker-compose.mail.yml
+      -f {{ main_dir }}/test/docker-compose.mail.test.yml
+      config > {{ main_dir }}/docker-compose.intermediate.yml"
       when: mode in ['both']
 
     - name: Edit Gitlab.conf
@@ -75,3 +87,6 @@
 
     - name: Build it
       command: docker-compose -f {{ main_dir }}/docker-compose.intermediate.yml build
+
+    - name: Run it
+      command: docker stack deploy --compose-file docker-compose.intermediate.yml voc
