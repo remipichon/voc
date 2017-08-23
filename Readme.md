@@ -305,6 +305,30 @@ https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/
  add to runner 
      volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
 
+# to test mail
+````
+telnet vps1.remip.eu 25
+
+
+
+
+
+
+
+
+helo mail.remip.com
+mail from:<exp@editor.com>
+rcpt to:<test@mail.remip.com>
+data
+From: exp@editor.com
+Subject: test mail from command line
+
+this is test number 1
+sent from linux box
+.
+```
+
+
 
 # for api to get docker state
 curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json

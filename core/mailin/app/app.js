@@ -20,6 +20,10 @@ var mailin = require('mailin');
  * Here disable the webhook posting so that you can do what you want with the
  * parsed message. */
 mailin.start({
+    smtpOptions:{
+        disableDNSValidation: true
+    }, // DEBUG ONLY,
+    logLevel: 'DEBUG',
     port: 25,
     disableWebhook: true // Disable the webhook posting.
 });
