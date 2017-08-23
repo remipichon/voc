@@ -20,8 +20,6 @@ services:
      image: 'noderemotedocker'
      deploy:
        replicas: 0
-     depends_on:
-       - node_docker
      build:
        context: .
        dockerfile: Dockerfile-node-remote-docker
