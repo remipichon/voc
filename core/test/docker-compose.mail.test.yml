@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  mock_mail_endpoint:
+    network:
+      - mail
+    image: 'mock-mail-endpoint:1.0'
+    build:
+      context: test/mock-mail-endpoint
+    ports:
+      - '3000'
+
