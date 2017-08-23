@@ -57,12 +57,12 @@ mailin.on('message', function (connection, data, content) {
     var name = split[0]
     var hostname = split[1] //mail.remip.eu
     console.log("Received mail destinated to",name);
-    var webhook = process.env[name.toUpperCase()];
+    var webhook = readEnv(name.toUpperCase());
     if(!webhook){
-        webhook = process.env[name.toLowerCase()];
+        webhook = readEnv(name.toLowerCase());
     }
     if(!webhook){
-        webhook = process.env[name];
+        webhook = readEnv(name);
     }
     if(!webhook){
         console.log("Webhook for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"Skipping process");
@@ -73,6 +73,10 @@ mailin.on('message', function (connection, data, content) {
     //POST body/attachments to endpoint system.env.<SERVICE>=<endpoint>
 
 });
+
+function readEnv(envName){
+    return process.env[envName]
+}
 
 
 

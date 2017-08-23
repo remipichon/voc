@@ -5,6 +5,7 @@ var express = require('express');
 var fs = require('fs');
 var multiparty = require('multiparty');
 var util = require('util');
+var execSync = require('child_process').execSync;
 
 
 /* Make an http server to receive the webhook. */
@@ -71,10 +72,23 @@ server.post('/webhook', function (req, res) {
     });
 });
 
+server.get('/test',function(){
+    console.log("env",execSync("env").toString())
+    console.log("readEnv",readEnv("TEST"));
+})
+
 server.listen(3000, function (err) {
+    console.log("readEnv",readEnv("TEST"));
     if (err) {
         console.log(err);
     } else {
         console.log('Http server listening on port 3000');
     }
 });
+
+
+
+function readEnv(envName){
+    return execSync(`bash -c \"echo ${envName}\"`).toString()
+}
+
