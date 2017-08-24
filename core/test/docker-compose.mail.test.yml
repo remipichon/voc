@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  mock_mail_endpoint:
+    networks:
+      - mail
+    image: 'mock-mail-endpoint:1.0'
+    build:
+      context: test/mock-mail-endpoint
+    ports:
+      - '3000'
+  mailing_mediation:
+    environment:
+      - TEST=mock_mail_endpoint:3000/webhook   #can be dynamically added, has to be internal
+

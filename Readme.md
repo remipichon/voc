@@ -108,15 +108,20 @@ DCF=' -f docker-compose.yml -f docker-compose.host.yml '
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml '
 # gitlab + both host and remote runner
 DCF=' -f docker-compose.yml -f docker-compose.remote.yml -f docker-compose.host.yml '
+# add mail support
+DCF=" $DCF -f docker-compose.mail.yml"
 ````
 
-have a DNS like 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
+component to test the install
+````
+# test mail
+DCF=" $DCF -f ./test/docker-compose.mail.test.yml"
 
-user defines HOSTNAME=gitlab.remip.eu
-==> gitlab.rb external_url 'htt://<HOSTNAME>' (port 80)
-==> docker compose doesn't map the port
-==> docker compose EXPOSE 80 + env for nginx proxy
-==> plus de GITLAB_PUBLIC_PORT, tout passe par nginx proxy  (expect for debug)
+````
+
+You need to have a DNS A record 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>', ngninx-proxy will do the redirection
+* gitlab.rb external_url 'htt://<HOSTNAME>' (port 80)
+* docker compose EXPOSE 80 + env for nginx proxy
 
 ````
 cd voc/core; 
@@ -126,7 +131,6 @@ HOSTNAME=$HOSTNAME docker-compose $(echo $DCF) config > docker-compose.intermedi
 
 # prepare Gitlab conf
 sed -i -e "s/HOSTNAME/$HOSTNAME/g" gitlab/gitlab.rb
-
 
 # build needed image
 docker-compose -f docker-compose.intermediate.yml build
@@ -262,8 +266,11 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 * review/comment/refact/document all Gitlab code
 * ~~docker remote mode~~
 * ~~automate install~~
-==> install on server
+~~==> install on server~~
+* mail see #Mailing
+  * branch out to Spring to forward attached file ==> Whatstat mail user stories
 ==> try out with Whatstat
+* document dev mode (gitlab running locally, without mail, volume for node app)
 
 ## UI and user friendliness
 * templating and definitons
@@ -277,7 +284,38 @@ Runners configuration is in /etc/gitlab-runner/config.toml
   * gitlab-ci.yml base template
 * NodeJs API  
   * node server KoaJs 
- 
+
+## Mailin
+Build a proper image with all Mailin capabilities
+https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/
+
+* node mediator app
+  * POST to endpoint with all relevant DATA as json and the attachements
+     * redirect to endoint ~~according to recipient name~~
+     * redirect attachement as BASE64 to the POST to endpoint (read the 'content' var in mailin app, attachement are at the end
+     * provide a way to POST via CURL/Postman to test directly the server (not the mailin stuff)
+  * test with big files
+* specific overlay network 'mail_network' to which endpoint server has to be part of  (add Docs)
+
+### test mail via telnet (don't know why but doesn't trigger the mailin processing)
+````
+telnet vps1.remip.eu 25
+
+
+helo mail.remip.com
+mail from:<exp@editor.com>
+rcpt to:<test@mail.remip.com>
+data
+From: exp@editor.com
+Subject: test mail from command line
+
+this is test number 1
+sent from linux box
+.
+```
+
+### mock mail via Postman (or curl or something to post files the same way mailin-mediation does)
+
  
 # to test app
  add to runner 
