@@ -49,7 +49,7 @@
       get_url:
         url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ kernel.stdout }}-{{ architecture.stdout }}"
         dest: "/usr/local/bin/docker-compose"
-        mode: 0744
+        mode: 0755
 
     - name: Clone the project from Github
       git:
@@ -74,6 +74,7 @@
       -f {{ main_dir }}/test/docker-compose.mail.test.yml
       config > {{ main_dir }}/docker-compose.intermediate.yml"
       when: mode in ['host','remote']
+      become_user: "{{ username }}"
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
       shell: "docker-compose
@@ -84,9 +85,10 @@
       -f {{ main_dir }}/test/docker-compose.mail.test.yml
       config > {{ main_dir }}/docker-compose.intermediate.yml"
       when: mode in ['both']
+      become_user: "{{ username }}"
 
     - name: Build it
       command: docker-compose -f {{ main_dir }}/docker-compose.intermediate.yml build
 
     - name: Run it
-      command: docker stack deploy --compose-file docker-compose.intermediate.yml voc
+      command: docker stack deploy --compose-file {{ main_dir }}/docker-compose.intermediate.yml voc
