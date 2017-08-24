@@ -1,6 +1,6 @@
 var mailin = require('mailin');
 var request = require('request');
-
+var fs = require('fs');
 /**
  * Start Mailin server. Redirect mail according to recipient.
  * <service>@your.mail.host.name
