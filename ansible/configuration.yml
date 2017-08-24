@@ -51,13 +51,13 @@
         dest: "/usr/local/bin/docker-compose"
         mode: 0744
 
-#    - name: Clone the project from Github
-#      git:
-#        repo: "{{ repo_url }}"
-#        dest: "/home/{{ username }}/voc"
-#        version: "{{ repo_version }}"
-#        force: yes
-#      become_user: "{{ username }}"
+    - name: Clone the project from Github
+      git:
+        repo: "{{ repo_url }}"
+        dest: "/home/{{ username }}/voc"
+        version: "{{ repo_version }}"
+        force: yes
+      become_user: "{{ username }}"
 
     - include: install_docker.yml
 
@@ -73,7 +73,7 @@
       -f {{ main_dir }}/docker-compose.mail.yml
       -f {{ main_dir }}/test/docker-compose.mail.test.yml
       config > {{ main_dir }}/docker-compose.intermediate.yml"
-      when: mode in ['server','remote']
+      when: mode in ['host','remote']
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
       shell: "docker-compose
