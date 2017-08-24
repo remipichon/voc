@@ -90,5 +90,13 @@
     - name: Build it
       command: docker-compose -f {{ main_dir }}/docker-compose.intermediate.yml build
 
+    - name: Get Swarm status
+      shell: "docker info | grep Swarm | cut -d' ' -f2"
+      register: swarm_status
+
+    - name: Initialize Swarm master
+      command: "docker swarm init --advertise-addr {{inventory_hostname}}"
+      when: swarm_status.stdout != 'active'
+
     - name: Run it
       command: docker stack deploy --compose-file {{ main_dir }}/docker-compose.intermediate.yml voc
