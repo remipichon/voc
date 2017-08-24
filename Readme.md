@@ -290,7 +290,10 @@ curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 #netstat for mac
 sudo lsof -iTCP -sTCP:LISTEN -n -P
 
+# Ansible
 
+First playbook to play
+ansible-playbook first_run.yml -i keizersgrasht.host -e ansible_user='root'
 
 #Some questions :)
 
