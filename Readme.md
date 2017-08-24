@@ -267,13 +267,10 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 * ~~docker remote mode~~
 * ~~automate install~~
 ~~==> install on server~~
-* mail
-  * test mail app with different webhooks 
-     * setup stub server mail with server.js from mailin
-       * POST to endpoint with all relevant DATA as json and the attachements
-       * provide a way to POST via CURL/Postman to test directly the server (not the mailin stuff)
-     * branch out to Spring to forward attached file ==> Whatstat mail user stories
+* mail see #Mailing
+  * branch out to Spring to forward attached file ==> Whatstat mail user stories
 ==> try out with Whatstat
+* document dev mode (gitlab running locally, without mail, volume for node app)
 
 ## UI and user friendliness
 * templating and definitons
@@ -293,16 +290,14 @@ Build a proper image with all Mailin capabilities
 https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/
 
 * node mediator app
-  * redirect to endoint according to recipient name
-* specific overlay network 'mail_network' to which endpoint server has to be part of   
+  * POST to endpoint with all relevant DATA as json and the attachements
+     * redirect to endoint ~~according to recipient name~~
+     * redirect attachement as BASE64 to the POST to endpoint (read the 'content' var in mailin app, attachement are at the end
+     * provide a way to POST via CURL/Postman to test directly the server (not the mailin stuff)
+  * test with big files
+* specific overlay network 'mail_network' to which endpoint server has to be part of  (add Docs)
 
- 
- 
-# to test app
- add to runner 
-     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
-
-# to test mail (don't know why but doesn't trigger the mailin processing)
+### test mail via telnet (don't know why but doesn't trigger the mailin processing)
 ````
 telnet vps1.remip.eu 25
 
@@ -319,6 +314,12 @@ sent from linux box
 .
 ```
 
+### mock mail via Postman (or curl or something to post files the same way mailin-mediation does)
+
+ 
+# to test app
+ add to runner 
+     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
 
 
 # for api to get docker state
