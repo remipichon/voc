@@ -61,6 +61,14 @@
 
     - include: install_docker.yml
 
+    - name: Set default values for any environment variables referenced in the Compose file
+      lineinfile:
+        dest: "{{ main_dir }}/.env"
+        state: present
+        line: "HOSTNAME={{ fqdn }}"
+        create: yes
+      become_user: "{{ username }}"
+
     - name: Edit Gitlab.conf
       template:
         src: gitlab.rb.j2
@@ -74,6 +82,8 @@
       -f {{ main_dir }}/test/docker-compose.mail.test.yml
       config > {{ main_dir }}/docker-compose.intermediate.yml"
       when: mode in ['host','remote']
+      environment:
+        HOSTNAME: "{{ fqdn }}"
       become_user: "{{ username }}"
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
@@ -85,6 +95,8 @@
       -f {{ main_dir }}/test/docker-compose.mail.test.yml
       config > {{ main_dir }}/docker-compose.intermediate.yml"
       when: mode in ['both']
+      environment:
+        HOSTNAME: "{{ fqdn }}"
       become_user: "{{ username }}"
 
     - name: Build it
