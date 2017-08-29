@@ -297,6 +297,12 @@ https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/
   * test with big files
 * specific overlay network 'mail_network' to which endpoint server has to be part of  (add Docs)
 
+## refactoring 
+* mailin app straight from mailin image with webhook to mediation app (simple Docker image with mailing and spamassassin)
+* mediation app (nodejs + mediation app)
+  * read recipient to know where to redirect webhook
+  * POST to webhook the complete request
+
 ### test mail via telnet (don't know why but doesn't trigger the mailin processing)
 ````
 telnet vps1.remip.eu 25

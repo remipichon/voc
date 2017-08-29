@@ -9,6 +9,8 @@ COPY app/package.json /app/package.json
 RUN cd /app/; npm install;
 COPY app /app/
 
-# TODO configure spam stuff
+COPY entrypoint.sh entrypoint.sh
 
-ENTRYPOINT cd /app; node app.js
+EXPOSE 25
+
+ENTRYPOINT ["entrypoint.sh"]
