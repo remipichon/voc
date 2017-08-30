@@ -65,9 +65,10 @@ server.post('/mediation', function (req, res) {
         }));
 
         console.log('Parsed fields: ' + Object.keys(fields));
-        console.log('mailinMsg fields: ' + Object.keys(fields.mailinMsg));
+        var msg = JSON.parse(fields.mailinMsg);
+        console.log('mailinMsg fields: ' + Object.keys(msg));
 
-        var recipient = fields.mailinMsg.to[0].address;
+        var recipient = msg.to[0].address;
         var split = recipient.split('@')
         var name = split[0]
         var hostname = split[1] //mail.remip.eu
@@ -90,8 +91,8 @@ server.post('/mediation', function (req, res) {
         request.post(webhook,
             {
                 json: {
-                    from: fields.mailinMsg.from[0].address,
-                    to: fields.mailinMsg.to[0].address
+                    from: msg.from[0].address,
+                    to: msg.to[0].address
                 }
             },
             function (error, response, body) {

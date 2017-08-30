@@ -334,3 +334,6 @@ curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 #netstat for mac
 sudo lsof -iTCP -sTCP:LISTEN -n -P
 
+
+git pull; docker service rm voc_mailin_mediation; docker-compose -f docker-compose.intermediate.yml build; docker stack deploy --compose-file docker-compose.intermediate.yml voc
+
