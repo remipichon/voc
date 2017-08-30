@@ -86,6 +86,8 @@ server.post('/mediation', function (req, res) {
         }
 
 
+        if(!webhook.startsWith("http://"))
+            webhook = "http://" + webhook;
         console.log("POST to",webhook);
         //POST body/attachments to endpoint webhook
         request.post(webhook,
