@@ -10,7 +10,7 @@ services:
     ports:
       - '25:25'
     environment:
-      - MAIL_WEBHOOK=voc_mailing_mediation:80/mediation
+      - MAIL_WEBHOOK=voc_mailin_mediation:80/mediation
     depends_on:
       - mailin_mediation
   mailin_mediation:

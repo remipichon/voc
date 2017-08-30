@@ -128,7 +128,7 @@ server.post('/mediation', function (req, res) {
 
 
 server.listen(80, function (err) {
-    console.log("readEnv",readEnv("TEST"));
+    console.log("env",execSync("env").toString());
     if (err) {
         console.log(err);
     } else {
