@@ -268,7 +268,7 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 * ~~automate install~~
 ~~==> install on server~~
 * mail see #Mailing
-  * branch out to Spring to forward attached file ==> Whatstat mail user stories
+  * branch out to Spring to forward attached file (write docs about how to use mailin)==> Whatstat mail user stories
 ==> try out with Whatstat
 * document dev mode (gitlab running locally, without mail, volume for node app)
 
@@ -286,22 +286,22 @@ Runners configuration is in /etc/gitlab-runner/config.toml
   * node server KoaJs 
 
 ## Mailin
-Build a proper image with all Mailin capabilities
-https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/
+~~Build a proper image with all Mailin capabilities~~
+~~https://hub.docker.com/r/craigmcdonald/docker-mailin/~/dockerfile/~~
 
-* node mediator app
-  * POST to endpoint with all relevant DATA as json and the attachements
-     * redirect to endoint ~~according to recipient name~~
-     * redirect attachement as BASE64 to the POST to endpoint (read the 'content' var in mailin app, attachement are at the end
+* ~~node mediator app~~
+  * ~~POST to endpoint with all relevant DATA as json and the attachements~~
+     * ~~redirect to endoint~~ ~~according to recipient name~~
+     * ~~redirect attachement as BASE64 to the POST to endpoint (read the 'content' var in mailin app, attachement are at the end~~
      * provide a way to POST via CURL/Postman to test directly the server (not the mailin stuff)
   * test with big files
-* specific overlay network 'mail_network' to which endpoint server has to be part of  (add Docs)
+* doc: specific overlay network 'mail_network' to which endpoint server has to be part of  (add Docs)
 
-## refactoring 
+## ~~refactoring~~
 * ~~mailin app straight from mailin image with webhook to mediation app (simple Docker image with mailing and~~ spamassassin)
 * ~~mediation app (nodejs + mediation app)~~
   * ~~read recipient to know where to redirect webhook~~
-  * POST to webhook the complete request => no result, no errors ?
+  * ~~POST to webhook the complete request~~
 
 ### test mail via telnet (don't know why but doesn't trigger the mailin processing)
 ````

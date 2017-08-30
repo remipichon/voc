@@ -48,6 +48,8 @@ server.post('/webhook', function (req, res) {
         }));
 
         console.log('Parsed fields: ' + Object.keys(fields));
+        var msg = JSON.parse(fields.mailinMsg);
+        console.log('mailinMsg fields: ' + Object.keys(msg));
 
         /* Write down the payload for ulterior inspection. */
         async.auto({
@@ -57,6 +59,7 @@ server.post('/webhook', function (req, res) {
             writeAttachments: function (cbAuto) {
                 var msg = JSON.parse(fields.mailinMsg);
                 async.eachLimit(msg.attachments, 3, function (attachment, cbEach) {
+                    console.log("Writting",attachment.generatedFileName)
                     fs.writeFile(attachment.generatedFileName, fields[attachment.generatedFileName], 'base64', cbEach);
                 }, cbAuto);
             }
