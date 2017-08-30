@@ -30,7 +30,7 @@ server.get('/env',function(req, res){
 
 server.head('/mediation', function (req, res) {
     console.log('Received head request from webhook.');
-    res.send(200);
+    res.sendStatus(200);
 });
 
 server.post('/mediation', function (req, res) {
@@ -65,6 +65,7 @@ server.post('/mediation', function (req, res) {
         }));
 
         console.log('Parsed fields: ' + Object.keys(fields));
+        console.log('mailinMsg fields: ' + Object.keys(mailinMsg));
 
         var recipient = fields.mailinMsg.to[0].address;
         var split = recipient.split('@')
@@ -89,8 +90,8 @@ server.post('/mediation', function (req, res) {
         request.post(webhook,
             {
                 json: {
-                    from: data.from[0].address,
-                    to: data.to[0].address
+                    from: fields.mailinMsg.from[0].address,
+                    to: fields.mailinMsg.to[0].address
                 }
             },
             function (error, response, body) {
@@ -128,7 +129,7 @@ server.post('/mediation', function (req, res) {
 
 
 server.listen(80, function (err) {
-    console.log("env",execSync("env").toString());
+    console.log(execSync("env").toString());
     if (err) {
         console.log(err);
     } else {
