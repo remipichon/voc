@@ -65,7 +65,7 @@ server.post('/mediation', function (req, res) {
         }));
 
         console.log('Parsed fields: ' + Object.keys(fields));
-        console.log('mailinMsg fields: ' + Object.keys(mailinMsg));
+        console.log('mailinMsg fields: ' + Object.keys(fields.mailinMsg));
 
         var recipient = fields.mailinMsg.to[0].address;
         var split = recipient.split('@')
