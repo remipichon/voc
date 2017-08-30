@@ -99,6 +99,12 @@ server.post('/mediation', function (req, res) {
                 if (!error && response.statusCode == 200) {
                     console.log("POST to",webhook,body)
                 }
+                if(error){
+                    console.error("error",error);
+                    console.error("response",response);
+                    console.error("body",body);
+
+                }
             }
         );
 
@@ -113,6 +119,7 @@ server.post('/mediation', function (req, res) {
             writeAttachments: function (cbAuto) {
                 var msg = JSON.parse(fields.mailinMsg);
                 async.eachLimit(msg.attachments, 3, function (attachment, cbEach) {
+                    console.log("Writting",attachment.generatedFileName)
                     fs.writeFile(attachment.generatedFileName, fields[attachment.generatedFileName], 'base64', cbEach);
                 }, cbAuto);
             }
