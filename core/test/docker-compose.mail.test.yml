@@ -9,7 +9,7 @@ services:
       context: test/mock-mail-endpoint
     ports:
       - '3000'
-  mailing_mediation:
+  mailin_mediation:
     environment:
-      - TEST=mock_mail_endpoint:3000/webhook   #can be dynamically added, has to be internal
+      - TEST=voc_mock_mail_endpoint:3000/webhook   #can be dynamically added, has to be internal
 

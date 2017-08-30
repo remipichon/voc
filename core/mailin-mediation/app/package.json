@@ -6,9 +6,14 @@
   "author": "https://github.com/remipichon/voc",
   "license": "ISC",
   "dependencies": {
-    "mailin": "*",
     "http": "*",
     "request": "*",
-    "fs": "*"
+    "fs": "*",
+    "async": "*",
+    "express": "*",
+    "multiparty": "*",
+    "util": "*",
+    "child_process": "*",
+    "request": "*"
   }
 }

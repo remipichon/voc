@@ -14,8 +14,12 @@ rewrite_subject 1
 required_hits 5
 EOF
 
+echo "Restarting rsyslog"
+service rsyslog restart
+
+echo "Starting spamassassin"
 /etc/init.d/spamassassin start
 
 
-# start Mediation app (which start mailin)
-cd /app; node app.js
+echo "Starting Mailin with --webhook ${MAIL_WEBHOOK}"
+mailin --webhook ${MAIL_WEBHOOK}
