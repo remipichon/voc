@@ -90,13 +90,7 @@ server.post('/mediation', function (req, res) {
             webhook = "http://" + webhook;
         console.log("POST to",webhook);
         //POST body/attachments to endpoint webhook
-        request.post(webhook,
-            {
-                json: {
-                    from: msg.from[0].address,
-                    to: msg.to[0].address
-                }
-            },
+        request.post({url: webhook, formData: fields,
             function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     console.log("POST to",webhook,body)
@@ -128,10 +122,10 @@ server.post('/mediation', function (req, res) {
         }, function (err) {
             if (err) {
                 console.log(err.stack);
-                res.send(500, 'Unable to write payload');
+                res.sendStatus(500, 'Unable to write payload');
             } else {
                 console.log('Webhook payload written.');
-                res.send(200);
+                res.sendStatus(200);
             }
         });
     });
