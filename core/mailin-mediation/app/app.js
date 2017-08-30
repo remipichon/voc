@@ -90,7 +90,7 @@ server.post('/mediation', function (req, res) {
             webhook = "http://" + webhook;
         console.log("POST to",webhook);
         //POST body/attachments to endpoint webhook
-        request.post({url: webhook, formData: fields,
+        request.post({url: webhook, formData: fields},
             function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     console.log("POST to",webhook,body)
