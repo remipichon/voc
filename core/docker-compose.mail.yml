@@ -20,7 +20,7 @@ services:
       build:
         context: mailin-mediation
       ports:
-        - '80'
+        - '3100:80'
       #environment:
       #  - TEST_WEBHOOK=test-mail-webhook:80
 

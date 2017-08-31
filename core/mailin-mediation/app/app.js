@@ -137,7 +137,7 @@ server.listen(80, function (err) {
     if (err) {
         console.log(err);
     } else {
-        console.log('Http server listening on port 3000');
+        console.log('Http server listening on port 80');
     }
 });
 

@@ -268,7 +268,7 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 * ~~automate install~~
 ~~==> install on server~~
 * mail see #Mailing
-  * branch out to Spring to forward attached file (write docs about how to use mailin)==> Whatstat mail user stories
+  * branch out to Spring to forward attached file (write docs about how to use mailin, deal with multipart)==> Whatstat mail user stories
 ==> try out with Whatstat
 * document dev mode (gitlab running locally, without mail, volume for node app)
 
@@ -293,7 +293,7 @@ Runners configuration is in /etc/gitlab-runner/config.toml
   * ~~POST to endpoint with all relevant DATA as json and the attachements~~
      * ~~redirect to endoint~~ ~~according to recipient name~~
      * ~~redirect attachement as BASE64 to the POST to endpoint (read the 'content' var in mailin app, attachement are at the end~~
-     * provide a way to POST via CURL/Postman to test directly the server (not the mailin stuff)
+     * ~~provide a way to POST via CURL/Postman to test directly the server (not the mailin stuff)~~
   * test with big files
 * doc: specific overlay network 'mail_network' to which endpoint server has to be part of  (add Docs)
 
@@ -318,7 +318,20 @@ Subject: test mail from command line
 this is test number 1
 sent from linux box
 .
-```
+````
+
+### mock mailin
+send request to mediation
+```` 
+cd core/test/mock-mailin
+cat TestFile | base64 > temp
+curl  -F "TestFile=<temp" -F "mailinMsg=$(cat mailinMsg.json)" localhost:3100/mediation
+rm temp
+````
+mailing.json must follow these rules:
+* no  \n
+* no '
+* no < or >
 
 ### mock mail via Postman (or curl or something to post files the same way mailin-mediation does)
 
