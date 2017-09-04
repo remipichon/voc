@@ -276,7 +276,18 @@ Runners configuration is in /etc/gitlab-runner/config.toml
 * templating and definitons
   * support subdomain (DNS record needed)
   * support public access (no DSN record, http://<hotname>/<publicAccess>)
+  * support git repo
+     * Docker related file + conf on Gitlab's repo 
+        * VOC pull the repo and use it as context for image and stack (same as having the Docker related files checked in at repo's root)
+     * only conf on Gitlab's repo
+        * VOC infers the Docker related file with the naming convention
+        * VOC looks for the Docker related file in the whole repo, fails if more than one match
+     * both case
+        * conf support git repo + key/password as Gitlab secret
+        * provide doc on how to trigger a VOC build when the source repo is updated (not the other way around, no pooling)
+     
 * Gitlab
+  * trigger tasks (build, deploy) if the context is updated (tricky)
   * periodically garbage collect
   * custom action 
   * remove/kill services/tasks
@@ -303,7 +314,7 @@ Runners configuration is in /etc/gitlab-runner/config.toml
   * ~~read recipient to know where to redirect webhook~~
   * ~~POST to webhook the complete request~~
 
-### test mail via telnet (don't know why but doesn't trigger the mailin processing)
+### DEPREACTED test mail via telnet (don't know why but doesn't trigger the mailin processing)
 ````
 telnet vps1.remip.eu 25
 
@@ -321,7 +332,7 @@ sent from linux box
 ````
 
 ### mock mailin
-send request to mediation
+Send request to mail mediation app wich will trigger the mail web hook defined. 
 ```` 
 cd core/test/mock-mailin
 cat TestFile | base64 > temp
@@ -332,8 +343,6 @@ mailing.json must follow these rules:
 * no  \n
 * no '
 * no < or >
-
-### mock mail via Postman (or curl or something to post files the same way mailin-mediation does)
 
  
 # to test app
