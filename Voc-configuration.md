@@ -10,7 +10,7 @@ to find which files are related to each others. You will encounter two type of f
 * configuration files (any *.json)
 
 Updating one of the file (Docker related or conf) will trigger the process (build or deploy). Both files has to be
-in the same repository. 
+in the same directory. 
 
 # Image
 Two files per image
