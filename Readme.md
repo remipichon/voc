@@ -337,6 +337,7 @@ Send request to mail mediation app wich will trigger the mail web hook defined.
 cd core/test/mock-mailin
 cat TestFile | base64 > temp
 curl  -F "TestFile=<temp" -F "mailinMsg=$(cat mailinMsg.json)" localhost:3100/mediation
+curl  -F "file=<temp" "localhost:8080/api/conversation/uploadFile?conversationName=pouetpouet"
 rm temp
 ````
 mailing.json must follow these rules:
