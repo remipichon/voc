@@ -23,7 +23,7 @@ server.get('/',function(req, res){
 });
 
 server.get('/env',function(req, res){
-    let env = execSync("env").toString();
+    var env = execSync("env").toString();
     console.log("env",env);
     res.send(env);
 });
@@ -64,14 +64,15 @@ server.post('/mediation', function (req, res) {
             depth: 5
         }));
 
-        console.log('Parsed fields: ' + Object.keys(fields));
         var msg = JSON.parse(fields.mailinMsg);
-        console.log('mailinMsg fields: ' + Object.keys(msg));
 
         var recipient = msg.to[0].address;
         var split = recipient.split('@')
         var name = split[0]
         var hostname = split[1] //mail.remip.eu
+        if(hostname != "mail.remip.eu"){
+            console.error("Mail was not for hostname mail.remip.eu")
+        }
         console.log("Received mail destinated to",name);
         var webhook = readEnv(name.toUpperCase());
         if(!webhook){
@@ -84,6 +85,10 @@ server.post('/mediation', function (req, res) {
             console.log("Webhook for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"Skipping process");
             return;
         }
+
+        console.log('Parsed fields: ' + Object.keys(fields));
+        console.log('mailinMsg fields: ' + Object.keys(msg));
+
 
 
         if(!webhook.startsWith("http://"))
