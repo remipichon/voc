@@ -98,7 +98,9 @@ server.post('/mediation', function (req, res) {
         request.post({url: webhook, formData: fields},
             function (error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    console.log("POST to",webhook,body)
+                    console.log("200 POST to",webhook,response,body)
+                } else if (!error) {
+                    console.warn(response.statusCode,"POST to",webhook,response,body)
                 }
                 if(error){
                     console.error("error",error);
