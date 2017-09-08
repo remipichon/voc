@@ -1,5 +1,9 @@
 {
   "text": "-- Remi Pichon ",
+  "from": [{
+    "address": "john.doe@yopmail.com",
+    "name": ""
+  }],
   "to": [
     {
       "address": "test@mail.remip.eu",

@@ -118,12 +118,14 @@ server.post('/mediation', function (req, res) {
         console.log("Write down the payload for ulterior inspection.")
         async.auto({
             writeParsedMessage: function (cbAuto) {
+                //TODO prefix file with something unique
                 fs.writeFile('payload.json', fields.mailinMsg, cbAuto);
             },
             writeAttachments: function (cbAuto) {
                 var msg = JSON.parse(fields.mailinMsg);
                 async.eachLimit(msg.attachments, 3, function (attachment, cbEach) {
                     console.log("Writting",attachment.generatedFileName)
+                    //TODO prefix file with something unique
                     fs.writeFile(attachment.generatedFileName, fields[attachment.generatedFileName], 'base64', cbEach);
                 }, cbAuto);
             }
@@ -138,6 +140,32 @@ server.post('/mediation', function (req, res) {
         });
     });
 });
+
+//equivalent of curl -F TestFile="<temp" -F mailinMsg="<mailinMsg.json"  "localhost:3200/webhook"
+function postTextField(){
+    //TODO move code here
+
+}
+//equivalent of curl -F TestFile="@temp" -F mailinMsg="@mailinMsg.json"  "localhost:3200/webhook"
+function postFile(){
+    //TODO once files are saved, send request
+    var formData = {
+        mailinMsg: fs.createReadStream('/mailinMsg.json'),
+        TestFile: fs.createReadStream('/temp')
+    };
+
+    request.post({
+            url:'http://wae_spring-app/api/conversation/mailhook',
+            formData: formData
+        }, function (err, httpResponse, body) {
+            if (err) {
+                return console.error('upload failed:', err);
+            }
+            console.log('Upload successful!  Server responded with:', body);
+            //TODO delete files
+        }
+    );
+}
 
 
 server.listen(80, function (err) {
