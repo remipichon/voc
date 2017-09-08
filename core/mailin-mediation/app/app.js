@@ -60,8 +60,9 @@ server.post('/mediation', function (req, res) {
     }());
 
     form.parse(req, function (err, fields) {
-        console.log(util.inspect(fields.mailinMsg, {
-            depth: 5
+        console.log("received fields");
+        console.log(util.inspect(fields, {
+            depth: 1
         }));
 
         var msg = JSON.parse(fields.mailinMsg);
@@ -98,9 +99,9 @@ server.post('/mediation', function (req, res) {
         request.post({url: webhook, formData: fields},
             function (error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    console.log("200 POST to",webhook,response,body)
+                    console.log("200 POST to",webhook,body)
                 } else if (!error) {
-                    console.warn(response.statusCode,"POST to",webhook,response,body)
+                    console.warn(response.statusCode,"POST to",webhook,body)
                 }
                 if(error){
                     console.error("error",error);
