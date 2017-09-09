@@ -33,6 +33,7 @@ server.head('/mediation', function (req, res) {
     res.sendStatus(200);
 });
 
+
 server.post('/mediation', function (req, res) {
     console.log('Receiving webhook.');
 
@@ -65,104 +66,133 @@ server.post('/mediation', function (req, res) {
             depth: 1
         }));
 
-        var msg = JSON.parse(fields.mailinMsg);
+        var mailinMsg = JSON.parse(fields.mailinMsg);
 
-        var recipient = msg.to[0].address;
+        var recipient = mailinMsg.to[0].address;
         var split = recipient.split('@')
         var name = split[0]
         var hostname = split[1] //mail.remip.eu
-        if(hostname != "mail.remip.eu"){
-            console.error("Mail was not for hostname mail.remip.eu")
+        if(readEnv("AUTHORIZED_MAIL_HOST") && hostname != readEnv("AUTHORIZED_MAIL_HOST")){
+            console.error("Mail was not for hostname", readEnv("AUTHORIZED_MAIL_HOST"))
         }
         console.log("Received mail destinated to",name);
         var webhook = readEnv(name.toUpperCase());
+        var type = readEnv(name.toUpperCase() + "_TYPE");
         if(!webhook){
             webhook = readEnv(name.toLowerCase());
+            type = readEnv(name.toLowerCase() + "_TYPE");
         }
         if(!webhook){
             webhook = readEnv(name);
+            type = readEnv(name + "_TYPE");
         }
         if(!webhook){
             console.log("Webhook for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"Skipping process");
             return;
         }
+        if(!type){
+            console.log("Type for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"using default");
+            type = "field"
+        }
 
         console.log('Parsed fields: ' + Object.keys(fields));
-        console.log('mailinMsg fields: ' + Object.keys(msg));
-
-
+        console.log('mailinMsg fields: ' + Object.keys(mailinMsg));
 
         if(!webhook.startsWith("http://"))
             webhook = "http://" + webhook;
-        console.log("POST to",webhook);
-        //POST body/attachments to endpoint webhook
-        request.post({url: webhook, formData: fields},
-            function (error, response, body) {
-                if (!error && response.statusCode == 200) {
-                    console.log("200 POST to",webhook,body)
-                } else if (!error) {
-                    console.warn(response.statusCode,"POST to",webhook,body)
+
+        console.log("Mail will be POSTed to ",webhook, "with type", type);
+
+
+        if(type == "field") {
+            postTextField(webhook, mailinMsg, fields);
+        }
+
+
+        if(type == "file") {
+            var prefix = mailinMsg.connection.id;
+            console.log("Write down the payload and the attachments with prefix",prefix);
+
+            async.auto({
+                writeParsedMessage: function (cbAuto) {
+                    console.log("Writting",prefix +'_mailinMsg.json');
+                    fs.writeFile(prefix +'_mailinMsg.json', fields.mailinMsg, cbAuto);
+                },
+                writeAttachments: function (cbAuto) {
+                    async.eachLimit(mailinMsg.attachments, 3, function (attachment, cbEach) {
+                        console.log("Writting", prefix +'_' + attachment.generatedFileName)
+                        fs.writeFile(prefix +'_' + attachment.generatedFileName, fields[attachment.generatedFileName], 'base64', cbEach);
+                    }, cbAuto);
                 }
-                if(error){
-                    console.error("error",error);
-                    console.error("response",response);
-                    console.error("body",body);
+            }, function (err) {
+                if (err) {
+                    console.error(err.stack);
+                    console.error("Unable to write files for", webhook,"from", mailinMsg.from[0].address,"Skipping process");
+                    res.sendStatus(500, 'Unable to write payload');
+                } else {
+                    console.log("Webhook payload written for", webhook,"from", mailinMsg.from[0].address);
+                    postFile(webhook, prefix, mailinMsg);
+                    res.sendStatus(200);
 
                 }
-            }
-        );
-
-
-
-
-        console.log("Write down the payload for ulterior inspection.")
-        async.auto({
-            writeParsedMessage: function (cbAuto) {
-                //TODO prefix file with something unique
-                fs.writeFile('payload.json', fields.mailinMsg, cbAuto);
-            },
-            writeAttachments: function (cbAuto) {
-                var msg = JSON.parse(fields.mailinMsg);
-                async.eachLimit(msg.attachments, 3, function (attachment, cbEach) {
-                    console.log("Writting",attachment.generatedFileName)
-                    //TODO prefix file with something unique
-                    fs.writeFile(attachment.generatedFileName, fields[attachment.generatedFileName], 'base64', cbEach);
-                }, cbAuto);
-            }
-        }, function (err) {
-            if (err) {
-                console.log(err.stack);
-                res.sendStatus(500, 'Unable to write payload');
-            } else {
-                console.log('Webhook payload written.');
-                res.sendStatus(200);
-            }
-        });
+            });
+        }
     });
 });
 
 //equivalent of curl -F TestFile="<temp" -F mailinMsg="<mailinMsg.json"  "localhost:3200/webhook"
-function postTextField(){
-    //TODO move code here
+function postTextField (webhook, mailinMsg, fields) {
+    console.log("POST as field to", webhook,"from",mailinMsg.from[0].address);
+    request.post({url: webhook, formData: fields},
+        function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log("200 POST to", webhook, body)
+            } else if (!error) {
+                console.warn(response.statusCode, "POST to", webhook, body)
+            }
+            if (error) {
+                console.error("error", error);
+                console.error("response", response);
+                console.error("body", body);
 
+            }
+        }
+    );
 }
+
+
 //equivalent of curl -F TestFile="@temp" -F mailinMsg="@mailinMsg.json"  "localhost:3200/webhook"
-function postFile(){
-    //TODO once files are saved, send request
+function postFile(webhook, prefix, mailinMsg){
     var formData = {
-        mailinMsg: fs.createReadStream('/mailinMsg.json'),
-        TestFile: fs.createReadStream('/temp')
+        mailinMsg: fs.createReadStream(prefix +'_mailinMsg.json'),
     };
 
+    mailinMsg.attachments.forEach( function (attachment) {
+        formData[attachment.generatedFileName] = fs.createReadStream(prefix +'_' + attachment.generatedFileName)
+    });
+
+    console.log("POST as file to", webhook,"from",mailinMsg.from[0].address,"with attached files", Object.keys(formData));
+
     request.post({
-            url:'http://wae_spring-app/api/conversation/mailhook',
+            url: webhook,
             formData: formData
-        }, function (err, httpResponse, body) {
-            if (err) {
-                return console.error('upload failed:', err);
+        }, function (err, response, body) {
+            if (!err && response.statusCode == 200) {
+                console.log("200 POST to", webhook, body)
+            } else if (!err) {
+                console.warn(response.statusCode, "POST to", webhook, body)
             }
-            console.log('Upload successful!  Server responded with:', body);
-            //TODO delete files
+            if (err) {
+                console.error("error", err);
+                console.error("response", response);
+                console.error("body", body);
+
+            }
+            console.log("Deleting files with prefix",prefix);
+            fs.unlink(prefix +'_mailinMsg.json')
+            mailinMsg.attachments.forEach( function (attachment) {
+                fs.unlink(prefix +'_' + attachment.generatedFileName)
+            });
         }
     );
 }
@@ -170,6 +200,9 @@ function postFile(){
 
 server.listen(80, function (err) {
     console.log(execSync("env").toString());
+    if(!readEnv("AUTHORIZED_MAIL_HOST")){
+        console.warn("Env 'AUTHORIZED_MAIL_HOST' is not defined. Mediation will not be able to assert that the emails were destined to your installation.")
+    }
     if (err) {
         console.log(err);
     } else {

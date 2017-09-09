@@ -21,7 +21,8 @@ services:
         context: mailin-mediation
       ports:
         - '3100:80'
-      #environment:
+      environment:
+        - AUTHORIZED_MAIL_HOST=mail.remip.eu
       #  - TEST_WEBHOOK=test-mail-webhook:80
 
 networks:

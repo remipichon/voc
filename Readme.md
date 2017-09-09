@@ -260,14 +260,14 @@ networks:
 Configure the _mailin_mediation_ to forward the emails to your service
 ``` 
 MAILDEST=XXX                            
-WEBHOOK=mail_webhook:80/handle_mail     
+WEBHOOK=mail_webhook:80/handledoc_mail     
 TYPE=field|file                         
-docker service update voc_mailin_mediation --env-add $MAILDEST=$WEBHOOK --env-add $MAILDEST_TYPE=$TYPE
+docker service update voc_mailin_mediation --env-add $MAILDEST=$WEBHOOK --env-add ${MAILDEST}_TYPE=$TYPE
 docker kill $(docker ps -q --filter "name=voc_mailin_mediation*")       #node-wide cmd, not a swarm-wide cmd
 docker service logs -f voc_mailin_mediation
 ```
 * MAILDEST: #he XXX of XXX@subdomain.domain.com
-* WEBHOOK: endpoint of your email webhook service, has a to be a valid HTTP URL without 'http://'
+* WEBHOOK: HTTP endpoint of your email webhook service
 * TYPE: whether your endpoint can deal with POST files or POST field [Curl doc, see -F, --form](https://curl.haxx.se/docs/manpage.html)
   * field: default
   * file: slightly slower as the mediation service has to store the file before sending them. All files get deleted after POSTing to your webhook
@@ -388,10 +388,19 @@ NodeJs with _request_ module for type=field [https://github.com/remipichon/voc](
   * ~~read recipient to know where to redirect webhook~~
   * ~~POST to webhook the complete request~~
  
-# to test app
- add to runner 
-     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
+# Dev
 
+## Runner Node js app
+ add to runner 
+ ````
+     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/Users/remi/WebstormProjects/voc/core/app:/root/app/"]
+````
+
+## Mailin Mediation Node js app
+````
+    volumes:
+        - './mailin-mediation/app/:/app/'
+````
 
 # for api to get docker state
 curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
