@@ -50,13 +50,13 @@ server.post('/mediation', function (req, res) {
         var start = Date.now();
         var lastDisplayedPercentage = -1;
         return function (bytesReceived, bytesExpected) {
-            var elapsed = Date.now() - start;
-            var percentage = Math.floor(bytesReceived / bytesExpected * 100);
-            if (percentage % 20 === 0 && percentage !== lastDisplayedPercentage) {
-                lastDisplayedPercentage = percentage;
-                console.log('Form upload progress ' +
-                    percentage + '% of ' + bytesExpected / 1000000 + 'Mb. ' + elapsed + 'ms');
-            }
+            // var elapsed = Date.now() - start;
+            // var percentage = Math.floor(bytesReceived / bytesExpected * 100);
+            // if (percentage % 20 === 0 && percentage !== lastDisplayedPercentage) {
+            //     lastDisplayedPercentage = percentage;
+            //     console.log('Form upload progress ' +
+            //         percentage + '% of ' + bytesExpected / 1000000 + 'Mb. ' + elapsed + 'ms');
+            // }
         };
     }());
 
