@@ -19,7 +19,7 @@ var request = require('request');
 var server = express();
 
 server.get('/',function(req, res){
-    res.send("GET /env to know the defined webhook\nPOST mail as multipart form to /mediation to trigger mediation");
+    res.send("GET /env to know the defined webhook, POST /mediation mail payload and attachment as multipart field form to trigger mediation");
 });
 
 server.get('/env',function(req, res){
@@ -61,10 +61,10 @@ server.post('/mediation', function (req, res) {
     }());
 
     form.parse(req, function (err, fields) {
-        console.log("received fields");
-        console.log(util.inspect(fields, {
-            depth: 1
-        }));
+        console.log("received form");
+        // console.log(util.inspect(fields, {
+        //     depth: 1
+        // }));
 
         var mailinMsg = JSON.parse(fields.mailinMsg);
 
@@ -95,8 +95,8 @@ server.post('/mediation', function (req, res) {
             type = "field"
         }
 
-        console.log('Parsed fields: ' + Object.keys(fields));
-        console.log('mailinMsg fields: ' + Object.keys(mailinMsg));
+        //console.log('Parsed fields: ' + Object.keys(fields));
+        //console.log('mailinMsg fields: ' + Object.keys(mailinMsg));
 
         if(!webhook.startsWith("http://"))
             webhook = "http://" + webhook;
