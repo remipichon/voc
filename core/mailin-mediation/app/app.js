@@ -188,6 +188,9 @@ function postFile(webhook, prefix, mailinMsg){
                 console.error("body", body);
 
             }
+            if(readEnv("DEBUG") == "true") {
+                console.warn("DEBUG is true, skipping deleting files with prefix", prefix)
+            }
             console.log("Deleting files with prefix",prefix);
             fs.unlink(prefix +'_mailinMsg.json')
             mailinMsg.attachments.forEach( function (attachment) {

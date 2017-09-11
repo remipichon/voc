@@ -23,6 +23,7 @@ services:
         - '3100:80'
       environment:
         - AUTHORIZED_MAIL_HOST=mail.remip.eu
+        - DEBUG=true
       #  - TEST_WEBHOOK=test-mail-webhook:80
 
 networks:
