@@ -88,6 +88,7 @@ server.post('/mediation', function (req, res) {
         }
         if(!webhook){
             console.log("Webhook for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"Skipping process");
+            res.sendStatus(403);
             return;
         }
         if(!type){
@@ -102,6 +103,7 @@ server.post('/mediation', function (req, res) {
             webhook = "http://" + webhook;
 
         console.log("Mail will be POSTed to ",webhook, "with type", type);
+        res.sendStatus(200);
 
 
         if(type == "field") {
@@ -128,12 +130,9 @@ server.post('/mediation', function (req, res) {
                 if (err) {
                     console.error(err.stack);
                     console.error("Unable to write files for", webhook,"from", mailinMsg.from[0].address,"Skipping process");
-                    res.sendStatus(500, 'Unable to write payload');
                 } else {
                     console.log("Webhook payload written for", webhook,"from", mailinMsg.from[0].address);
                     postFile(webhook, prefix, mailinMsg);
-                    res.sendStatus(200);
-
                 }
             });
         }
@@ -190,6 +189,7 @@ function postFile(webhook, prefix, mailinMsg){
             }
             if(readEnv("DEBUG") == "true") {
                 console.warn("DEBUG is true, skipping deleting files with prefix", prefix)
+                return;
             }
             console.log("Deleting files with prefix",prefix);
             fs.unlink(prefix +'_mailinMsg.json')
