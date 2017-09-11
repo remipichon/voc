@@ -14,11 +14,13 @@ rewrite_subject 1
 required_hits 5
 EOF
 
-echo "Restarting rsyslog"
-service rsyslog restart
 
-echo "Starting spamassassin"
-/etc/init.d/spamassassin start
+echo "rsyslog and spamassassin has been disabled"
+#echo "Restarting rsyslog"
+#service rsyslog restart
+
+#echo "Starting spamassassin"
+#/etc/init.d/spamassassin start
 
 
 echo "Starting Mailin with --webhook ${MAIL_WEBHOOK}"
