@@ -78,13 +78,16 @@ server.post('/mediation', function (req, res) {
         console.log("Received mail destinated to",name);
         var webhook = readEnv(name.toUpperCase());
         var type = readEnv(name.toUpperCase() + "_TYPE");
+        var attachmentEncoding = readEnv(name.toUpperCase() + "_ENCODING");
         if(!webhook){
             webhook = readEnv(name.toLowerCase());
             type = readEnv(name.toLowerCase() + "_TYPE");
+            attachmentEncoding = readEnv(name.toLowerCase() + "_ENCODING");
         }
         if(!webhook){
             webhook = readEnv(name);
             type = readEnv(name + "_TYPE");
+            attachmentEncoding = readEnv(name + "_ENCODING");
         }
         if(!webhook){
             console.log("Webhook for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"Skipping process");
@@ -92,8 +95,12 @@ server.post('/mediation', function (req, res) {
             return;
         }
         if(!type){
-            console.log("Type for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"using default");
+            console.log("Type for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"using default 'field");
             type = "field"
+        }
+        if(!attachmentEncoding){
+            console.log("attachmentEncoding for",name,"wasn't found in ENV using",name.toUpperCase(),name.toLowerCase(),name,"using default 'null'");
+            attachmentEncoding = null;
         }
 
         //console.log('Parsed fields: ' + Object.keys(fields));
@@ -122,8 +129,9 @@ server.post('/mediation', function (req, res) {
                 },
                 writeAttachments: function (cbAuto) {
                     async.eachLimit(mailinMsg.attachments, 3, function (attachment, cbEach) {
-                        console.log("Writting", prefix +'_' + attachment.generatedFileName)
-                        fs.writeFile(prefix +'_' + attachment.generatedFileName, fields[attachment.generatedFileName], 'base64', cbEach);
+                        console.log("Writting", prefix +'_' + attachment.generatedFileName, "using encoding",attachmentEncoding, "(see https://nodejs.org/api/fs.html#fs_fs_writefile_file_data_options_callback to know what encoding means)");
+                        if(attachmentEncoding && attachmentEncoding != "") fs.writeFile(prefix +'_' + attachment.generatedFileName, fields[attachment.generatedFileName], attachmentEncoding, cbEach);
+                        fs.writeFile(prefix +'_' + attachment.generatedFileName, fields[attachment.generatedFileName],cbEach);
                     }, cbAuto);
                 }
             }, function (err) {

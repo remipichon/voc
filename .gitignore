@@ -1,2 +1,3 @@
 docker-compose.intermediate.yml
 temp
+core/mailin-mediation/app/node_modules
