@@ -21,6 +21,7 @@ services:
   nginx-proxy:
     networks:
       - network
+      - nginx_proxy
     #image: jwilder/nginx-proxy
     image: 'nginx-proxy'
     build:
@@ -34,3 +35,4 @@ services:
 
 networks:
   network:
+  nginx_proxy:
