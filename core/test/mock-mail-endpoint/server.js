@@ -13,7 +13,7 @@ var server = express();
 
 server.head('/webhook', function (req, res) {
     console.log('Received head request from webhook.');
-    res.send(200);
+    res.sendStatus(200);
 });
 
 server.post('/webhook', function (req, res) {
@@ -48,6 +48,8 @@ server.post('/webhook', function (req, res) {
         }));
 
         console.log('Parsed fields: ' + Object.keys(fields));
+        var msg = JSON.parse(fields.mailinMsg);
+        console.log('mailinMsg fields: ' + Object.keys(msg));
 
         /* Write down the payload for ulterior inspection. */
         async.auto({
@@ -57,16 +59,17 @@ server.post('/webhook', function (req, res) {
             writeAttachments: function (cbAuto) {
                 var msg = JSON.parse(fields.mailinMsg);
                 async.eachLimit(msg.attachments, 3, function (attachment, cbEach) {
+                    console.log("Writting",attachment.generatedFileName)
                     fs.writeFile(attachment.generatedFileName, fields[attachment.generatedFileName], 'base64', cbEach);
                 }, cbAuto);
             }
         }, function (err) {
             if (err) {
                 console.log(err.stack);
-                res.send(500, 'Unable to write payload');
+                res.sendStatus(500, 'Unable to write payload');
             } else {
                 console.log('Webhook payload written.');
-                res.send(200);
+                res.sendStatus(200);
             }
         });
     });

@@ -2,13 +2,11 @@ FROM node:latest
 
 USER root
 
-RUN apt-get update; apt-get install -y build-essential spamassassin spamc
+RUN apt-get update; apt-get install -y build-essential spamassassin spamc rsyslog
+RUN npm install -g mailin
 
-# copy node app code
-COPY app/package.json /app/package.json
-RUN cd /app/; npm install;
-COPY app /app/
+COPY entrypoint.sh entrypoint.sh
 
-# TODO configure spam stuff
+EXPOSE 25
 
-ENTRYPOINT cd /app; node app.js
+ENTRYPOINT ["sh","entrypoint.sh"]

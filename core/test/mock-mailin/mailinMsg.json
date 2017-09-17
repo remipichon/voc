@@ -1,0 +1,72 @@
+{
+  "text": "-- Remi Pichon ",
+  "from": [{
+    "address": "john.doe@yopmail.com",
+    "name": ""
+  }],
+  "to": [
+    {
+      "address": "test@mail.remip.eu",
+      "name": ""
+    }
+  ],
+  "date": "2017-08-30T18:34:29.000Z",
+  "receivedDate": "2017-08-30T18:34:51.000Z",
+  "attachments": [
+    {
+      "contentType": "text/x-markdown",
+      "charset": "utf-8",
+      "fileName": "TestFile",
+      "contentDisposition": "attachment",
+      "transferEncoding": "base64",
+      "generatedFileName": "TestFile",
+      "contentId": "1e290ac8433d555bce009b162cb869d0@mailparser",
+      "checksum": "0dd22bfc3ec803f3459e1544ab9f51ec",
+      "length": 11972
+    }
+  ],
+  "dkim": "pass",
+  "spf": "failed",
+  "spamScore": 0,
+  "language": "czech",
+  "cc": [],
+  "connection": {
+    "id": "a67804d8-ee13-4456-8c6d-bfc9c62fc507",
+    "remoteAddress": "10.255.0.2",
+    "remotePort": 37832,
+    "clientHostname": "[10.255.0.2]",
+    "openingCommand": "EHLO",
+    "hostNameAppearsAs": "mail-io0-f177.google.com",
+    "xClient": {},
+    "xForward": {},
+    "transmissionType": "ESMTPS",
+    "tlsOptions": {
+      "name": "ECDHE-RSA-AES128-GCM-SHA256",
+      "version": "TLSv1/SSLv3"
+    },
+    "envelope": {
+      "mailFrom": {
+        "address": "pichon.remi.pr@gmail.com",
+        "args": false
+      },
+      "rcptTo": [
+        {
+          "address": "test@mail.remip.eu",
+          "args": false
+        }
+      ]
+    },
+    "transaction": 1,
+    "mailPath": ".tmp/a67804d8-ee13-4456-8c6d-bfc9c62fc507"
+  },
+  "envelopeFrom": {
+    "address": "pichon.remi.pr@gmail.com",
+    "args": false
+  },
+  "envelopeTo": [
+    {
+      "address": "test@mail.remip.eu",
+      "args": false
+    }
+  ]
+}
