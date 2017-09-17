@@ -43,7 +43,7 @@ You need to have a DNS A record 'gitlab.<HOSTNAME>' that points to '<HOSTNAME>',
 ````
 cd voc/core; 
 # generate intermediate compose file
-HOSTNAME=gitlab.remip.eu
+HOSTNAME=gitlab.remip.eu #just gitlab is localhost
 HOSTNAME=$HOSTNAME docker-compose $(echo $DCF) config > docker-compose.intermediate.yml
 
 # prepare Gitlab conf
@@ -111,12 +111,14 @@ Image is built out of the box by Docker Compose but service has to be configured
 docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
 
 name=node_host_docker
-url=http://gitlab.remip.eu
-token=ErrysV73DDmBXdsWxyvv
+url=http://<HOSTNAME>      # runner will use the public access to reach Gitlab (to clone the repo)
+# url=http://gitlab        # runner will use the Docker overlay network that Gitlab and the runners can share with following   
+# docker_network_mode=voc_network
+token=<TOKEN> #from /admin/runners
 image=nodedocker
 volumes=/var/run/docker.sock:/var/run/docker.sock
 
-gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
+gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
 
 #currently register doesn't support volume, add them by hand, do it it vim if another runner already exists. You would override its volumes.
 sed -i "/volumes/c\    volumes = [\"/cache\",\"$volumes\"]" /etc/gitlab-runner/config.toml
@@ -136,9 +138,10 @@ Docker Compose will build an image including the certificates. **Don't ever _pus
 docker exec -ti $(docker ps -q --filter "name=voc_host_docker_runner") bash
 
 name=node_remote_docker
-url=http://<HOSTNAME>
-token=<TOKEN>
-docker_network_mode=voc_network
+url=http://<HOSTNAME>      # runner will use the public access to reach Gitlab (to clone the repo)
+# url=http://gitlab        # runner will use the Docker overlay network that Gitlab and the runners can share with following   
+# docker_network_mode=voc_network
+token=<TOKEN> #from /admin/runners
 image=noderemotedocker
 
 gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false
@@ -161,7 +164,7 @@ Voc can receive emails sent to XXX@subdomain.domain.com (following naming of Mai
 DNS record are needed to properly receive mail. Please follow "The crux: setting up your DNS correctly" from [Mailin Doc](http://mailin.io/doc)
 
 ### Compose for webhook service
-Your email webhook service should be part of the _mail_ network, following the Docker Compose for your service
+Your email webhook (said 'mail_webhook') service should be part of the _mail_ network, following the Docker Compose for your service
 ````
 services:
   mail_webhook:
