@@ -36,7 +36,9 @@ Each time the runner will start using the latest code in the volume. Just retry 
 
 Want to quickly test some JS code without anything around it ? 
 ````
+cd voc/core
 docker exec -ti $(docker run -d -v $(pwd)/app:/app node tail -f /dev/null) bash
+cd /app
 node script.js
 ````
 

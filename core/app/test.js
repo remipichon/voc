@@ -13,6 +13,7 @@ function testIsResourceFile() {
 
 
     var item = [
+        "/path/to/file/docker-compose_valid.yml",
         "docker-compose_valid.yml",
         "docker-compose_nonvalid.ym",
         "docker-compose_non_valid.yml",
@@ -46,5 +47,17 @@ function testIsResourceFile() {
 }
 
 
-testIsResourceFile();
-testIsResourceFile();
+function testWalk(){
+    utils.walkResourceFile("/app", function(err,res){console.log(res)})
+}
+
+
+
+
+
+
+//testWalk()
+
+
+// testIsResourceFile();
+// testIsResourceFile();
