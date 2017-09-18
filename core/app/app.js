@@ -115,7 +115,81 @@ function manageImage(fileState) {
     }
 }
 
-//TODO read FS to find resource files
+function getAllResourceFiles(){
+
+    console.log("Reading repository to find resource files and create couple (resource file + related config file");
+
+    utils.walkResourceFile(repoFolder, function(err, allResourcePaths){
+        //let's make couple like this: name : { config: /path/to/config, [dockercompose|dockerfile]: /path/to/related/resource }
+        let meetic = {};
+        allResourcePaths.forEach(path => {
+            let typeAndResourceName = utils.getTypeAndResourceName(path);
+            let name = typeAndResourceName.name;
+            let type = typeAndResourceName.type;
+
+            if(!meetic[name])
+                meetic[name] = {type: ""};
+
+            if(type.indexOf("config") != -1){
+                if(!meetic[name]['config']) {
+                    meetic[name]['config'] = path;
+                    meetic[name].type = type.replace("config", "");
+                } else
+                    meetic[name]['error'] = `${name} more than one config found: ${meetic[name]['config']} and ${path}`;
+            } else {
+                if(!meetic[name][type])
+                    meetic[name][type] = path;
+                else
+                    meetic[name]['error'] = `${name} more than one resource found: ${meetic[name][type]} and ${path}`;
+            }
+        });
+
+        //now cleaning the malformed couples
+        let happyCouples = []
+        Object.keys(meetic).forEach((name) => {
+            let yes = false;
+            let files = meetic[name];
+            if (files.error) {
+                console.log(files.error, `${name} will not be processed`);
+            } else {
+                if (!files.config) {
+                    console.log(`${name} doesnt' have a config file, will not be processed`);
+                } else {
+                    if (files.type == "image") {
+                        if (!files['dockerfile'])
+                            console.log(`${name} doesnt' have a corresponding Dockerfile, will not be processed`);
+                        else
+                            yes = true;
+                    } else if (files.type == "stack") {
+                        if (!files['dockercompose'])
+                            console.log(`${name} doesnt' have a corresponding docker-compose, will not be processed`);
+                        else
+                            yes = true
+                    }
+                }
+            }
+
+            if (yes) {
+                console.log(`${name} will be processed as a ${files.type}`);
+                files.name = name;
+                happyCouples.push(files)
+            }
+        });
+
+        console.log("All valid resources couple found:")
+        console.log(happyCouples);
+
+
+        //todo
+        //read build deps for all happy couples
+        //dockerfile: config.context (relative to current dir) or current dir
+        //dockercompose: all services.context (relative to current dir)
+
+
+        //hand over to getGitDiffModifiedFile
+
+    })
+}
 
 function getGitDiffModifiedFile() {
     var modifiedFiles = "cd " + repoFolder + "; git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
@@ -212,7 +286,6 @@ function buildPushImage(Dockerfile, config) {
     })
 }
 
-
-getGitDiffModifiedFile();
+getAllResourceFiles()
 
 console.log("End of script, waiting for callbacks to answer");
