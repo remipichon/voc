@@ -41,26 +41,35 @@ function manageStack(fileState) {
         }
 
         var configFile = path.join(repoFolder, stackConfig);
-        fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
-            if (!err) {
-                console.log('Config for\n', composeFile, "\n", data);
 
-                var config = JSON.parse(data);
-                var action;
-
-                if (config.enabled) {
-                    action = "update"
-                } else {
-                    action = "remove"
-                }
-
-                deployStack(composeFile, action, stackName);
-
+        var data;
+        try {
+            data = fs.readFileSync(configFile, {encoding: 'utf-8'});
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                console.log("Config json file not found for " + composeFile);
             } else {
-                console.log("Config json file not found for " + composeFile, "with error", err);
-                console.log(err);
+                console.error("Error while reading config json file:", err);
+                throw err;
             }
-        });
+        }
+
+        if(data) {
+            console.log('Config for\n', composeFile, "\n", data);
+
+            var config = JSON.parse(data);
+            var action;
+
+            if (config.enabled) {
+                action = "update"
+            } else {
+                action = "remove"
+            }
+
+            deployStack(composeFile, action, stackName);
+        } else {
+            console.info("Action was not performed on",stackName,"because its config file was not found");
+        }
     }
 };
 
@@ -81,18 +90,32 @@ function manageImage(fileState) {
         }
 
         var configFile = path.join(repoFolder, imageConfig);
-        fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
-            if (!err) {
-                console.log('Config for\n', Dockerfile, '\n', data);
-                var config = JSON.parse(data);
-                buildPushImage(Dockerfile, config);
+        var data;
+        try {
+            data = fs.readFileSync(configFile, {encoding: 'utf-8'});
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                console.log("file not found for " + configFile);
             } else {
-                console.log("Config json file not found for " + Dockerfile, "with error", err);
-                console.log(err);
+                console.error(`Error while reading file ${configFile}:`, err);
+                throw err;
             }
-        });
+        }
+
+        if(data) {
+            console.log('Config file for\n', Dockerfile, "\n", data);
+
+            var config = JSON.parse(data);
+            buildPushImage(Dockerfile, config);
+
+        } else {
+            console.info(`Action was not performed because ${configFile} was not found`);
+        }
+
     }
 }
+
+//TODO read FS to find resource files
 
 function getGitDiffModifiedFile() {
     var modifiedFiles = "cd " + repoFolder + "; git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
@@ -112,6 +135,8 @@ function getGitDiffModifiedFile() {
 
             filesState.forEach(function (fileState) {
                 console.log(fileState.fileName, "has been", fileState.state);
+
+                //TODO check if dependencies match one of the found resource files
 
                 if (utils.isComposeFile(fileState.fileName) || utils.isStackConfig(fileState.fileName)) {
                     manageStack(fileState);

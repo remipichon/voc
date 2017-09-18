@@ -47,9 +47,25 @@ module.exports = {
         return pattern.exec(path) !== null
     },
 
+
+    resourceTypeLabel: {
+        "dockercompose": "docker compose",
+        "stackconfig": "stack json config",
+        "dockerfile": "Dockerfile",
+        "imageconfig": "imate json config"
+    },
+
+    resourceTypeRegex: {
+        "dockercompose": /docker-compose_([a-zA-Z0-9]+).yml$/m,
+        "stackconfig": /docker-compose_([a-zA-Z0-9]+)_config.json$/m,
+        "dockerfile": /Dockerfile_([a-zA-Z0-9]+)$/m,
+        "imageconfig": /Dockerfile_([a-zA-Z0-9]+)_config.json$/m
+    },
+
     getResourceName(pattern, path){
-        let match;
-        if(match = pattern.exec(path)){
+        var match = pattern.exec(path)
+        //console.log(pattern, path,match)
+        if (match) {
             return match[1]
         } else {
             return null;
@@ -57,7 +73,27 @@ module.exports = {
     },
 
     getTypeAndResourceName(path){
-        //TODO
+        if (this.isComposeFile(path))
+            return {
+                name: this.getResourceName(this.resourceTypeRegex.dockercompose, path),
+                type: "dockercompose"
+            };
+        if (this.isStackConfig(path))
+            return {
+                name: this.getResourceName(this.resourceTypeRegex.stackconfig, path),
+                type: "stackconfig"
+            };
+        if (this.isDockerfile(path))
+            return {
+                name: this.getResourceName(this.resourceTypeRegex.dockerfile, path),
+                type: "dockerfile"
+            };
+        if (this.isImageConfig(path))
+            return {
+                name: this.getResourceName(this.resourceTypeRegex.imageconfig, path),
+                type: "imageconfig"
+            };
+        return null;
     },
 
     /**
@@ -70,20 +106,45 @@ module.exports = {
     },
 
     isComposeFile: function (fileName) {
-        return this._isResourceFile(/docker-compose_([a-zA-Z0-9]+).yml$/gm, fileName);
+        return this._isResourceFile(this.resourceTypeRegex.dockercompose, fileName);
     },
 
     isStackConfig: function (fileName) {
-        return this._isResourceFile(/docker-compose_([a-zA-Z0-9]+)_config.json/gm, fileName);
-    },
-
-    isImageConfig: function (fileName) {
-        return this._isResourceFile(/Dockerfile_([a-zA-Z0-9]+)/, fileName);
+        return this._isResourceFile(this.resourceTypeRegex.stackconfig, fileName);
     },
 
     isDockerfile: function (fileName) {
-        return this._isResourceFile(/Dockerfile_([a-zA-Z0-9]+)_config.json/, fileName);
+        return this._isResourceFile(this.resourceTypeRegex.dockerfile, fileName);
+    },
+
+    isImageConfig: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.imageconfig, fileName);
     }
 };
 
 
+/* CODE SAMPLE
+
+ READ FILE SYNC
+ var data;
+ try {
+ data = fs.readFileSync(path, {encoding: 'utf-8'});
+ } catch (err) {
+ if (err.code === 'ENOENT') {
+ console.log("file not found for " + path);
+ } else {
+ console.error(`Error while reading file ${path}:`, err);
+ throw err;
+ }
+ }
+
+ if(data) {
+ console.log('File for\n', composeFile, "\n", data);
+
+ var config = JSON.parse(data);
+ } else {
+ console.info(`Action was not performed because ${file} was not found`);
+ }
+
+
+ */

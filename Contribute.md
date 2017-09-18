@@ -34,6 +34,11 @@ Each time the runner will start using the latest code in the volume. Just retry 
 * pipeline with runner should trigger the build/push/deploy
 
 
+Want to quickly test some JS code without anything around it ? 
+````
+docker exec -ti $(docker run -d -v $(pwd)/app:/app node tail -f /dev/null) bash
+node script.js
+````
 
 
 
