@@ -43,25 +43,47 @@ module.exports = {
         });
     },
 
-    isResourceFile: function (resource, fileName) {
-        var split = fileName.split("/");
-        if (split[split.length - 1].indexOf(resource) !== -1) return true;
-        return false;
+    _isResourceFile: function (pattern, path) {
+        return pattern.exec(path) !== null
+    },
+
+    getResourceName(pattern, path){
+        let match;
+        if(match = pattern.exec(path)){
+            return match[1]
+        } else {
+            return null;
+        }
+    },
+
+    getTypeAndResourceName(path){
+        //TODO
+    },
+
+    /**
+     * @summary test if path correspond to one of the resource file type
+     * @param path full path
+     * @returns {true|false}
+     */
+    isResourceFile: function (path) {
+        return this.isComposeFile(path) || this.isStackConfig(path) || this.isImageConfig(path) || this.isDockerfile(path);
     },
 
     isComposeFile: function (fileName) {
-        return this.isResourceFile("docker-compose", fileName);
+        return this._isResourceFile(/docker-compose_([a-zA-Z0-9]+).yml$/gm, fileName);
     },
 
     isStackConfig: function (fileName) {
-        return this.isResourceFile("stack", fileName);
+        return this._isResourceFile(/docker-compose_([a-zA-Z0-9]+)_config.json/gm, fileName);
     },
 
     isImageConfig: function (fileName) {
-        return this.isResourceFile("image", fileName);
+        return this._isResourceFile(/Dockerfile_([a-zA-Z0-9]+)/, fileName);
     },
 
     isDockerfile: function (fileName) {
-        return this.isResourceFile("Dockerfile", fileName);
+        return this._isResourceFile(/Dockerfile_([a-zA-Z0-9]+)_config.json/, fileName);
     }
-}
+};
+
+
