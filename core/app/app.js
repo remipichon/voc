@@ -145,7 +145,7 @@ function getAllResourceFiles(){
         });
 
         //now cleaning the malformed couples
-        let happyCouples = []
+        let happyCouples = []; // {name: name, [dockerfile|dockercompose]: /path/to/resource, config: /path/tpo/config}
         Object.keys(meetic).forEach((name) => {
             let yes = false;
             let files = meetic[name];
@@ -156,12 +156,12 @@ function getAllResourceFiles(){
                     console.log(`${name} doesnt' have a config file, will not be processed`);
                 } else {
                     if (files.type == "image") {
-                        if (!files['dockerfile'])
+                        if (!files.dockerfile)
                             console.log(`${name} doesnt' have a corresponding Dockerfile, will not be processed`);
                         else
                             yes = true;
                     } else if (files.type == "stack") {
-                        if (!files['dockercompose'])
+                        if (!files.dockercompose)
                             console.log(`${name} doesnt' have a corresponding docker-compose, will not be processed`);
                         else
                             yes = true
@@ -182,8 +182,21 @@ function getAllResourceFiles(){
 
         //todo
         //read build deps for all happy couples
-        //dockerfile: config.context (relative to current dir) or current dir
-        //dockercompose: all services.context (relative to current dir)
+        happyCouples.forEach(couple => {
+            if(couple.dockerfile){
+                //dockerfile: config.context (relative to current dir) or current dir
+                var config = JSON.parse(fs.readFileSync(couple.config, {encoding: 'utf-8'}));
+                if(config.context){
+
+                }
+
+
+
+            } else if(couple.dockercompose){
+                //dockercompose: all services.context (relative to current dir)
+
+            }
+        });
 
 
         //hand over to getGitDiffModifiedFile
