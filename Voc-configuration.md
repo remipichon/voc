@@ -32,6 +32,7 @@ Regular Dockerfile, see Docker docs.
 {
   "tag": "alpinette",
   "push": "registry:5000/alpinette"
+  "context: "relative/path/to/context"
 }
 ````
 * tag
@@ -42,6 +43,9 @@ Regular Dockerfile, see Docker docs.
  * non mandatory
  * built image will be pushed to the 'push' value, it has to be a valid repository
  * currently not supporting 'docker login' nor unsecure registry
+* context
+ * relative path from where **configuration** file is found
+ * should not start with '/' (no control)
 
 
 # Stack

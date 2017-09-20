@@ -96,6 +96,10 @@ module.exports = {
         return null;
     },
 
+    removeLastPathPart(path){
+        return /^(.+)\/(.*)$/m.exec(path) || "";
+    },
+
     /**
      * @summary test if path correspond to one of the resource file type
      * @param path full path

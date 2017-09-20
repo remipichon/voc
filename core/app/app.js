@@ -4,6 +4,9 @@ var path = require('path')
 require("dockerode/package.json"); // dockerode is a peer dependency.
 var Docker = require('dockerode');
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
+var YAML = require('yamljs');
+var _ = require("underscore");
+
 
 
 var utils = require("./utils");
@@ -83,10 +86,10 @@ function manageImage(fileState) {
         var Dockerfile;
         if (utils.isDockerfile(fileState.fileName)) {
             Dockerfile = fileState.fileName;
-            imageConfig = fileState.fileName.replace("Dockerfile", "image") + ".json"
+            imageConfig = fileState.fileName.replace("Dockerfile", "image") + ".json" //TODO not this way anymore
         } else if (utils.isImageConfig(fileState.fileName)) {
             imageConfig = fileState.fileName;
-            Dockerfile = fileState.fileName.replace("image", "Dockerfile").replace(".json", "")
+            Dockerfile = fileState.fileName.replace("image", "Dockerfile").replace(".json", "")  //TODO not this way anymore
         }
 
         var configFile = path.join(repoFolder, imageConfig);
@@ -180,32 +183,61 @@ function getAllResourceFiles(){
         console.log(happyCouples);
 
 
-        //todo
-        //read build deps for all happy couples
+        //read build contexts for all happy couples
+        let contextPaths = [];// {path: /path/to/deps, name: resource name}
         happyCouples.forEach(couple => {
             if(couple.dockerfile){
                 //dockerfile: config.context (relative to current dir) or current dir
-                var config = JSON.parse(fs.readFileSync(couple.config, {encoding: 'utf-8'}));
+                let config = JSON.parse(fs.readFileSync(couple.config, {encoding: 'utf-8'}));
+                let path = utils.removeLastPathPart(config.config);
                 if(config.context){
-
+                    path = `${path}/${config.context}`
                 }
-
-
-
+                path = repoFolder+path;
+                path = path.replace("\/\/","/");//justincase
+                contextPaths.push({name: couple.name, path: path});
             } else if(couple.dockercompose){
+                console.log("ouple.dockercomposev",couple.dockercompose);
                 //dockercompose: all services.context (relative to current dir)
-
+                let dockercompose = YAML.load(couple.dockercompose);
+                console.log("dockercompose",dockercompose)
+                let path = utils.removeLastPathPart(couple.dockercompose);
+                if(dockercompose.services)
+                    Object.keys(dockercompose.services).forEach( name => {
+                        let service = dockercompose.services[''+name];
+                        if(service.build && service.build.context){
+                            contextPaths.push({name: couple.name, path: `${path}/${service.build.context}`});
+                        }
+                });
             }
         });
 
+        console.log("All context path used by the valid couple found:")
+        console.log(contextPaths);
+
 
         //hand over to getGitDiffModifiedFile
+        getGitDiffModifiedFile(happyCouples, contextPaths)
 
-    })
+    });
 }
 
-function getGitDiffModifiedFile() {
+function getGitDiffModifiedFile(happyCouples, contextPaths) {
+    console.info("Reading git commit payload to find which files has been modified");
     var modifiedFiles = "cd " + repoFolder + "; git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
+    //TODO
+    //use this git diff-tree --stat --no-commit-id $(git rev-parse HEAD)
+    /*
+
+
+excecpct this
+
+     stackwithcontext/marseille/Dockerfile-marseille | 2 +-
+     1 file changed, 1 insertion(+), 1 deletion(-)
+
+via regepx
+
+     */
     utils.execCmd(modifiedFiles, function (error, stdout) {
         if (stdout) {
             var files = stdout.split("\n");
@@ -218,22 +250,64 @@ function getGitDiffModifiedFile() {
                     fileName: spec[1]
                 })
             });
-            console.log("Updated files\n", filesState);
+            console.log("All updated files\n", filesState);
 
             filesState.forEach(function (fileState) {
                 console.log(fileState.fileName, "has been", fileState.state);
 
-                //TODO check if dependencies match one of the found resource files
-
-                if (utils.isComposeFile(fileState.fileName) || utils.isStackConfig(fileState.fileName)) {
-                    manageStack(fileState);
+                if(utils.isResourceFile(fileState.fileName)){
+                    const resourceName = utils.getTypeAndResourceName(fileState.fileName).name;
+                    console.log(`${fileState.fileName} is a resource file for ${resourceName}`);
+                    let couple = _.find(happyCouples, function(couple){ return couple.name === resourceName});
+                    couple.contextChanged = true;
+                    couple.fileState = fileState;
+                } else {
+                    //is updated files part of resource context ?
+                    const updatedFileDirectory = repoFolder + utils.removeLastPathPart(fileState.fileName);
+                    let updatedContextPaths = _.filter(contextPaths, function (context) {
+                        return context.path.startsWith(updatedFileDirectory)
+                    });
+                    updatedContextPaths.forEach(updatedContext => {
+                        console.log(`${fileState.fileName} is at least part of one context of ${updatedContext.name}`);
+                        _.find(happyCouples, function (couple) {
+                            return couple.name === updatedContext.name
+                        }).contextChanged = true;
+                    });
                 }
-
-                if (utils.isDockerfile(fileState.fileName) || utils.isImageConfig(fileState.fileName)) {
-                    manageImage(fileState)
-                }
-            })
+            });
         }
+
+        console.log("Summary of what is going to be effectively done according to updated files");
+        let counselorReadyCouple = _.filter(happyCouples, function(couple){ return couple.contextChanged });
+        counselorReadyCouple.forEach(couple => {
+            let actions = "";
+            if(couple.dockerfile)
+                actions = "built";
+            else if(couple.dockercompose)
+                actions = "built and deployed";
+
+           console.log(`${couple.name} has been scheduled to be ${actions}`)
+        });
+
+
+        console.log("****************");
+        console.log("Here comes Moby");
+        console.log("****************");
+
+
+        counselorReadyCouple.forEach(couple => {
+            if(couple.dockerfile){
+                if(couple.fileState)
+                    manageImage(couple.fileState);
+                else
+                    console.log(`${couple.name} has been scheduled to be built 'cause its context has been updated but it's not implemented yet`)
+            } else if(couple.dockercompose){
+                if(couple.fileState)
+                    manageStack(couple.fileState);
+                else
+                    console.log(`${couple.name} has been scheduled to be built 'cause its context has been updated but it's not implemented yet`)            }
+        });
+
     });
 }
 

@@ -1,4 +1,5 @@
 var utils = require("./utils");
+var YAML = require('yamljs');
 
 
 function testIsResourceFile() {
@@ -52,12 +53,20 @@ function testWalk(){
 }
 
 
+function testYAML(){
+    console.log(YAML.load("docker-compose_stackwithcontext.yml").services);
+        YAML.load("docker-compose_stackwithcontext.yml").services.forEach(s => {
+        console.log(s.build);
+    })
+}
 
 
+"/ // /".replace()
 
+
+//testYAML()
 
 //testWalk()
-
 
 // testIsResourceFile();
 // testIsResourceFile();
