@@ -276,6 +276,7 @@ via regepx
                 }
             });
         }
+        //TODO else ?
 
         console.log("Summary of what is going to be effectively done according to updated files");
         let counselorReadyCouple = _.filter(happyCouples, function(couple){ return couple.contextChanged });

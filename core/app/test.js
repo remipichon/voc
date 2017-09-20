@@ -1,5 +1,5 @@
 var utils = require("./utils");
-var YAML = require('yamljs');
+//var YAML = require('yamljs');
 
 
 function testIsResourceFile() {
@@ -61,8 +61,54 @@ function testYAML(){
 }
 
 
-"/ // /".replace()
+function testGitCmd(){
+    var repoFolder = "/Users/pichr1/work2/voc-configuration/";
 
+    //TODO get the status AMD !!!
+    var modifiedFiles = "cd " + repoFolder + "; git diff-tree --stat --no-commit-id $(git rev-parse HEAD)"
+
+    utils.execCmd(modifiedFiles, function (error, stdout) {
+        if (stdout) {
+            let allLines = stdout.split("\n") //I couldn't do it by Regexp
+
+            let files = [];
+            let fileChangedCount;
+
+            allLines.forEach(line => {
+                var fileMatch = /^\s+([^\s]+)\s+\|\s+.+$/m.exec(line);      //match  path/to/file    |   24 ++--
+                if(!fileMatch) {
+                    console.log(line, "is not a file");
+
+                    var summaryMatch = /^\s+(\d) files changed/m.exec(line);  //match 24 files changed, 24 insertions...
+                    if(summaryMatch){
+                        console.log("but it was the summary",summaryMatch[1],"files has been changed")
+                        fileChangedCount = summaryMatch[1];
+                    }
+                }
+                else {
+                    console.log("match for", line, "is", fileMatch[1]);
+                    files.push(fileMatch[1]);
+                }
+
+            })
+
+            console.log("*****************");
+            console.log("Git diff tree result");
+            if(fileChangedCount != files.length){
+                console.warn(`${files.length} files has been found but ${fileChangedCount} should have been found`);
+            }
+            console.log("All files found");
+            console.log(files)
+
+        }
+
+    })
+
+}
+
+
+
+testGitCmd();
 
 //testYAML()
 
