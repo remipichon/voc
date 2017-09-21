@@ -198,7 +198,7 @@ function getAllResourceFiles(){
 
 function getGitDiffModifiedFile(happyCouples, contextPaths) {
     console.info("Reading git commit payload to find which files has been modified");
-    var modifiedFiles = "cd " + repoFolder + ";git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)";
+    var modifiedFiles = "cd " + repoFolder + "; git diff-tree --stat --no-commit-id $(git rev-parse HEAD)"
 
     utils.execCmd(modifiedFiles, function (error, stdout) {
         if(error){
@@ -209,23 +209,37 @@ function getGitDiffModifiedFile(happyCouples, contextPaths) {
             let allLines = stdout.split("\n") //I couldn't do it by Regexp
 
             let files = [];
+            let fileChangedCount;
+
             allLines.forEach(line => {
-                var fileMatch = /^([ACDMRTUXB])\s+([^\s]+)$/m.exec(line);      //match  type    path/to/file
-                if(fileMatch) {
-                    files.push({file: fileMatch[2], status: fileMatch[1]});
+                var fileMatch = /^\s+([^\s]+)\s+\|\s+.+$/m.exec(line);      //match  path/to/file    |   24 ++--
+                if(!fileMatch) {
+                    //console.log(line, "is not a file");
+
+                    var summaryMatch = /^\s+(\d) file/m.exec(line);  //match 24 files changed, 24 insertions...
+                    if(summaryMatch){
+                        //console.log("but it was the summary",summaryMatch[1],"files has been changed")
+                        fileChangedCount = summaryMatch[1];
+                    }
+                }
+                else {
+                    //console.log("match for", line, "is", fileMatch[1]);
+                    files.push(fileMatch[1]);
                 }
 
-            });
+            })
+
+            if(fileChangedCount != files.length){
+                console.warn(`${files.length} files has been found but ${fileChangedCount} should have been found`);
+            }
 
             console.log("*****************");
+            console.log("Git diff tree result");
             console.log("All updated files\n", files);
-            console.log("*****************");
 
-
-            files.forEach(function (file) {
-                let fileName = file.name;
-                let state = file.status;
-                //Added (A), Copied (C), Deleted (D), Modified (M), Renamed (R), have their type (i.e. regular file, symlink, submodule, …​) changed (T), are Unmerged (U), are Unknown (X), or have had their pairing Broken (B).
+            files.forEach(function (fileName) {
+                // console.log(fileState.fileName, "has been", fileState.state);
+                console.log("file",fileName);
 
                 if(utils.isResourceFile(fileName)){
                     const resourceName = utils.getTypeAndResourceName(fileName).name;
@@ -251,7 +265,6 @@ function getGitDiffModifiedFile(happyCouples, contextPaths) {
         console.log("Summary of what is going to be effectively done according to updated files");
         let counselorReadyCouple = _.filter(happyCouples, function(couple){ return couple.contextChanged });
         counselorReadyCouple.forEach(couple => {
-            //do something with removed files, flag couples to be discarded
             let actions = "";
             if(couple.dockerfile)
                 actions = "built";
