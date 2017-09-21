@@ -106,9 +106,9 @@ function testGitCmd(){
 
 }
 
+//console.log(utils.isResourceFile(("stackwithcontext/marseille/Dockerfile-marseille")))
 
-
-testGitCmd();
+//testGitCmd();
 
 //testYAML()
 

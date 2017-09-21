@@ -7,12 +7,11 @@ var path = require('path');
 module.exports = {
 
     writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
-        var resultFile = artifactDir + resultFile;
-        var pathResult = path.join(repoFolder, resultFile);
+        console.log(artifactDir, resultFile, repoFolder, key, value);
 
         var resultJson = {};
-        if (fs.existsSync(pathResult)) {
-            var resultTest = fs.readFileSync(resultFile).toString();
+        if (fs.existsSync(repoFolder+artifactDir+resultFile)) {
+            var resultTest = fs.readFileSync(repoFolder+artifactDir+resultFile).toString();
             resultJson = JSON.parse(resultTest);
         }
         if (resultJson[key]) {
@@ -28,7 +27,7 @@ module.exports = {
             fs.mkdirSync(repoFolder + artifactDir);
         }
         console.log("resultJson", resultJson);
-        fs.writeFileSync(pathResult, JSON.stringify(resultJson));
+        fs.writeFileSync(repoFolder+artifactDir+resultFile, JSON.stringify(resultJson));
     },
 
     execCmd: function (cmd, callback) {

@@ -21,36 +21,23 @@ if (!process.env.CI_PROJECT_DIR) {
     process.exit(1)
 }
 var repoFolder = process.env.CI_PROJECT_DIR + "/";
-var artifactDir = "/job-result/";
+var artifactDir = "job-result/";
 var resultFile = "result.json";
 
 console.log("Starting...  ...");
 
-function manageStack(fileState) {
-    var stackName = getStackName(fileState.fileName);
-
-    if (fileState.state == "D") {
-        console.log(fileState.fileName, "has been deleted, remove associated stack", stackName);
-        deployStack(fileState.fileName, "remove", stackName);
-    } else {
-        var stackConfig;
-        var composeFile;
-        if (utils.isComposeFile(fileState.fileName)) {
-            composeFile = fileState.fileName;
-            stackConfig = fileState.fileName.replace("docker-compose", "stack").replace(".yml", ".json")
-        } else if (utils.isStackConfig(fileState.fileName)) {
-            stackConfig = fileState.fileName
-            composeFile = fileState.fileName.replace("stack", "docker-compose").replace(".json", ".yml")
-        }
-
-        var configFile = path.join(repoFolder, stackConfig);
+function manageStack(couple) {
+    // if (fileState.state == "D") {
+    //     console.log(fileState.fileName, "has been deleted, remove associated stack", stackName);
+    //     deployStack(fileState.fileName, "remove", stackName);
+    // } else {
 
         var data;
         try {
-            data = fs.readFileSync(configFile, {encoding: 'utf-8'});
+            data = fs.readFileSync(couple.config, {encoding: 'utf-8'});
         } catch (err) {
             if (err.code === 'ENOENT') {
-                console.log("Config json file not found for " + composeFile);
+                console.log("Config json file not found for " + couple.dockercompose);
             } else {
                 console.error("Error while reading config json file:", err);
                 throw err;
@@ -58,7 +45,7 @@ function manageStack(fileState) {
         }
 
         if(data) {
-            console.log('Config for\n', composeFile, "\n", data);
+            console.log('Config for\n', couple.dockercompose, "\n", data);
 
             var config = JSON.parse(data);
             var action;
@@ -69,53 +56,40 @@ function manageStack(fileState) {
                 action = "remove"
             }
 
-            deployStack(composeFile, action, stackName);
+            deployStack(couple.dockercompose, action, couple.name);
         } else {
-            console.info("Action was not performed on",stackName,"because its config file was not found");
+            console.info("Action was not performed on",couple.name,"because its config file was not found");
         }
-    }
 };
 
-function manageImage(fileState) {
-    if (fileState.state == "D") {
-        console.log(fileState.fileName, "has been deleted, doint nothing, GC wil be there soon... ");
-        utils.writeResult(artifactDir, resultFile, repoFolder, fileState.fileName, {result: "has been deleted"});
-        return;
-    } else {
-        var imageConfig;
-        var Dockerfile;
-        if (utils.isDockerfile(fileState.fileName)) {
-            Dockerfile = fileState.fileName;
-            imageConfig = fileState.fileName.replace("Dockerfile", "image") + ".json" //TODO not this way anymore
-        } else if (utils.isImageConfig(fileState.fileName)) {
-            imageConfig = fileState.fileName;
-            Dockerfile = fileState.fileName.replace("image", "Dockerfile").replace(".json", "")  //TODO not this way anymore
-        }
+function manageImage(couple) {
+    // if (fileState.state == "D") {
+    //     console.log(fileState.fileName, "has been deleted, doint nothing, GC wil be there soon... ");
+    //     utils.writeResult(artifactDir, resultFile, repoFolder, fileState.fileName, {result: "has been deleted"});
+    //     return;
+    // } else {
 
-        var configFile = path.join(repoFolder, imageConfig);
         var data;
         try {
-            data = fs.readFileSync(configFile, {encoding: 'utf-8'});
+            data = fs.readFileSync(couple.config, {encoding: 'utf-8'});
         } catch (err) {
             if (err.code === 'ENOENT') {
-                console.log("file not found for " + configFile);
+                console.log("file not found for " + couple.config);
             } else {
-                console.error(`Error while reading file ${configFile}:`, err);
+                console.error(`Error while reading file ${couple.config}:`, err);
                 throw err;
             }
         }
 
         if(data) {
-            console.log('Config file for\n', Dockerfile, "\n", data);
+            console.log('Config file for\n', couple.dockerfile, "\n", data);
 
             var config = JSON.parse(data);
-            buildPushImage(Dockerfile, config);
+            buildPushImage(couple.dockerfile, config);
 
         } else {
             console.info(`Action was not performed because ${configFile} was not found`);
         }
-
-    }
 }
 
 function getAllResourceFiles(){
@@ -224,51 +198,62 @@ function getAllResourceFiles(){
 
 function getGitDiffModifiedFile(happyCouples, contextPaths) {
     console.info("Reading git commit payload to find which files has been modified");
-    var modifiedFiles = "cd " + repoFolder + "; git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
-    //TODO
-    //use this git diff-tree --stat --no-commit-id $(git rev-parse HEAD)
-    /*
+    var modifiedFiles = "cd " + repoFolder + "; git diff-tree --stat --no-commit-id $(git rev-parse HEAD)"
 
-
-excecpct this
-
-     stackwithcontext/marseille/Dockerfile-marseille | 2 +-
-     1 file changed, 1 insertion(+), 1 deletion(-)
-
-via regepx
-
-     */
     utils.execCmd(modifiedFiles, function (error, stdout) {
+        if(error){
+            console.error("Error executing",modifiedFiles,error);
+        }
+
         if (stdout) {
-            var files = stdout.split("\n");
-            var filesState = [];
-            files.forEach(function (file) {
-                var spec = file.split("\t");
-                if (!spec[0] || !spec[1]) return;
-                filesState.push({
-                    state: spec[0],
-                    fileName: spec[1]
-                })
-            });
-            console.log("All updated files\n", filesState);
+            let allLines = stdout.split("\n") //I couldn't do it by Regexp
 
-            filesState.forEach(function (fileState) {
-                console.log(fileState.fileName, "has been", fileState.state);
+            let files = [];
+            let fileChangedCount;
 
-                if(utils.isResourceFile(fileState.fileName)){
-                    const resourceName = utils.getTypeAndResourceName(fileState.fileName).name;
-                    console.log(`${fileState.fileName} is a resource file for ${resourceName}`);
+            allLines.forEach(line => {
+                var fileMatch = /^\s+([^\s]+)\s+\|\s+.+$/m.exec(line);      //match  path/to/file    |   24 ++--
+                if(!fileMatch) {
+                    //console.log(line, "is not a file");
+
+                    var summaryMatch = /^\s+(\d) file/m.exec(line);  //match 24 files changed, 24 insertions...
+                    if(summaryMatch){
+                        //console.log("but it was the summary",summaryMatch[1],"files has been changed")
+                        fileChangedCount = summaryMatch[1];
+                    }
+                }
+                else {
+                    //console.log("match for", line, "is", fileMatch[1]);
+                    files.push(fileMatch[1]);
+                }
+
+            })
+
+            if(fileChangedCount != files.length){
+                console.warn(`${files.length} files has been found but ${fileChangedCount} should have been found`);
+            }
+
+            console.log("*****************");
+            console.log("Git diff tree result");
+            console.log("All updated files\n", files);
+
+            files.forEach(function (fileName) {
+                // console.log(fileState.fileName, "has been", fileState.state);
+                console.log("file",fileName);
+
+                if(utils.isResourceFile(fileName)){
+                    const resourceName = utils.getTypeAndResourceName(fileName).name;
+                    console.log(`${fileName} is a resource file for ${resourceName}`);
                     let couple = _.find(happyCouples, function(couple){ return couple.name === resourceName});
                     couple.contextChanged = true;
-                    couple.fileState = fileState;
                 } else {
                     //is updated files part of resource context ?
-                    const updatedFileDirectory = repoFolder + utils.removeLastPathPart(fileState.fileName);
+                    const updatedFileDirectory = repoFolder + utils.removeLastPathPart(fileName);
                     let updatedContextPaths = _.filter(contextPaths, function (context) {
                         return context.path.startsWith(updatedFileDirectory)
                     });
                     updatedContextPaths.forEach(updatedContext => {
-                        console.log(`${fileState.fileName} is at least part of one context of ${updatedContext.name}`);
+                        console.log(`${fileName} is at least part of one context of ${updatedContext.name}`);
                         _.find(happyCouples, function (couple) {
                             return couple.name === updatedContext.name
                         }).contextChanged = true;
@@ -276,7 +261,6 @@ via regepx
                 }
             });
         }
-        //TODO else ?
 
         console.log("Summary of what is going to be effectively done according to updated files");
         let counselorReadyCouple = _.filter(happyCouples, function(couple){ return couple.contextChanged });
@@ -298,15 +282,9 @@ via regepx
 
         counselorReadyCouple.forEach(couple => {
             if(couple.dockerfile){
-                if(couple.fileState)
-                    manageImage(couple.fileState);
-                else
-                    console.log(`${couple.name} has been scheduled to be built 'cause its context has been updated but it's not implemented yet`)
-            } else if(couple.dockercompose){
-                if(couple.fileState)
-                    manageStack(couple.fileState);
-                else
-                    console.log(`${couple.name} has been scheduled to be built 'cause its context has been updated but it's not implemented yet`)            }
+                manageImage(couple);
+            } else if(couple.dockercompose)
+                manageStack(couple);
         });
 
     });
@@ -326,7 +304,7 @@ function deployStack(composeFile, action, stackName) {
     var shDockerStackDeploy;
     var curlDockerStackDeploy;
     if (action == "create" || action == "update") {
-        shDockerStackDeploy = "docker stack deploy --compose-file " + repoFolder + composeFile + ' ' + stackName;
+        shDockerStackDeploy = "docker stack deploy --compose-file " + composeFile + ' ' + stackName;
     } else if (action == "remove") {
         shDockerStackDeploy = "docker stack rm " + stackName;
     } else {
