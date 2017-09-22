@@ -27,11 +27,10 @@ var resultFile = "result.json";
 console.log("Starting...  ...");
 
 function manageStack(couple) {
-    // if (fileState.state == "D") {
-    //     console.log(fileState.fileName, "has been deleted, remove associated stack", stackName);
-    //     deployStack(fileState.fileName, "remove", stackName);
-    // } else {
-
+    if (couple.clean) {
+        console.log("Either docker-compose or config file for",couple.name, "has been deleted, remove associated stack");
+        deployStack(couple.dockercompose, "remove", couple.name);
+    } else {
         var data;
         try {
             data = fs.readFileSync(couple.config, {encoding: 'utf-8'});
@@ -63,12 +62,11 @@ function manageStack(couple) {
 };
 
 function manageImage(couple) {
-    // if (fileState.state == "D") {
-    //     console.log(fileState.fileName, "has been deleted, doint nothing, GC wil be there soon... ");
-    //     utils.writeResult(artifactDir, resultFile, repoFolder, fileState.fileName, {result: "has been deleted"});
-    //     return;
-    // } else {
-
+    if (couple.clean) {
+        console.log("Either Dockerfile or config file for",couple.name, "has been deleted, doint nothing, GC wil be there soon... ");
+        utils.writeResult(artifactDir, resultFile, repoFolder, couple.name, {result: "has been unscheduled"});
+        return;
+    } else {
         var data;
         try {
             data = fs.readFileSync(couple.config, {encoding: 'utf-8'});
@@ -224,14 +222,24 @@ function getGitDiffModifiedFile(happyCouples, contextPaths) {
 
             files.forEach(function (file) {
                 let fileName = file.name;
-                let state = file.status;
-                //Added (A), Copied (C), Deleted (D), Modified (M), Renamed (R), have their type (i.e. regular file, symlink, submodule, …​) changed (T), are Unmerged (U), are Unknown (X), or have had their pairing Broken (B).
 
                 if(utils.isResourceFile(fileName)){
+                    let state = file.status;
+                    //Added (A), Copied (C), Deleted (D), Modified (M), Renamed (R), have their type (i.e. regular file, symlink, submodule, …​) changed (T), are Unmerged (U), are Unknown (X), or have had their pairing Broken (B).
+                    //state is only relevant for resource file, precisely it has to be known whether the resource should be 'cleaned' or 'used' (build, deploy, push....)
+                    //(A) and (M) => resource can be 'used'
+                    //(D) and (U) => resource can be 'cleaned'
+                    //I honestly never experienced (C) or (R) or (X). Renaming a file seems to produce a (D) and a (A), which is good. Copying a file just create a (A) which will not make it an happy couple and therefore will not be managed at all
+                    //Copying resource file without changing its name (just to another directory) will make the resource to be ignored until one of the duplicated files is deleted.
                     const resourceName = utils.getTypeAndResourceName(fileName).name;
                     console.log(`${fileName} is a resource file for ${resourceName}`);
                     let couple = _.find(happyCouples, function(couple){ return couple.name === resourceName});
-                    couple.contextChanged = true;
+                    if(couple) {
+                        couple.contextChanged = true;
+                        if(state == "D" || state == "U"){
+                            couple.clean = true;
+                        }
+                    }
                 } else {
                     //is updated files part of resource context ?
                     const updatedFileDirectory = repoFolder + utils.removeLastPathPart(fileName);
