@@ -46,26 +46,22 @@ module.exports = {
         return pattern.exec(path) !== null
     },
 
-
-    resourceTypeLabel: {
-        "dockercompose": "docker compose",
-        "stackconfig": "stack json config",
-        "dockerfile": "Dockerfile",
-        "imageconfig": "imate json config"
-    },
-
     resourceTypeRegex: {
-        "dockercompose": /docker-compose_([a-zA-Z0-9]+).yml$/m,
-        "stackconfig": /docker-compose_([a-zA-Z0-9]+)_config.json$/m,
+        "dockercompose": /docker-compose\.([a-zA-Z0-9_-]+)\.yml$/m,           //docker-compose.<dc-name>.yml
+        "stackdefinition": /stack-defintion\.([a-zA-Z0-9_-]+)\.json$/m,       //stack-definition.<sd-name>.json
+        "stackinstance": /stack-instance\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<sd-name>.<si-name>[.<suffix>].json
+        "simplestackinstance": /stack-instance\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+).json$/m,  //stack-instance.<dc-name>.<si-name>.json
         "dockerfile": /Dockerfile_([a-zA-Z0-9]+)$/m,
-        "imageconfig": /Dockerfile_([a-zA-Z0-9]+)_config.json$/m
+        "imageconfig": /Dockerfile_([a-zA-Z0-9]+)_config\.json$/m
     },
 
-    getResourceName(pattern, path){
-        var match = pattern.exec(path)
+    _getResourceName(pattern, path, matchIndex){
+        var match = pattern.exec(path);
         //console.log(pattern, path,match)
         if (match) {
-            return match[1]
+            if(matchIndex)
+                return match[matchIndex];
+            return match
         } else {
             return null;
         }
@@ -74,22 +70,39 @@ module.exports = {
     getTypeAndResourceName(path){
         if (this.isComposeFile(path))
             return {
-                name: this.getResourceName(this.resourceTypeRegex.dockercompose, path),
+                name: this._getResourceName(this.resourceTypeRegex.dockercompose, path, 1),
                 type: "dockercompose"
             };
-        if (this.isStackConfig(path))
+        if (this.isStackDefinition(path))
             return {
-                name: this.getResourceName(this.resourceTypeRegex.stackconfig, path),
-                type: "stackconfig"
+                name: this._getResourceName(this.resourceTypeRegex.stackdefinition, path, 1),
+                type: "stackdefinition"
             };
+        if (this.isStackInstance(path)) {
+            let matches = this._getResourceName(this.resourceTypeRegex.stackinstance, path);
+            return {
+                name: matches[2],
+                stackDefinitionName: matches[1],
+                suffix: (matches[3] == "json")? null: matches[3], //couldn't make a proper regexp for that
+                type: "stackinstance"
+            };
+        }
+        if (this.isSimpleStackInstance(path)) {
+            let matches = this._getResourceName(this.resourceTypeRegex.simplestackinstance, path);
+            return {
+                name: matches[2],
+                dockerComposeName: matches[1],
+                type: "simplestackinstance"
+            };
+        }
         if (this.isDockerfile(path))
             return {
-                name: this.getResourceName(this.resourceTypeRegex.dockerfile, path),
+                name: this._getResourceName(this.resourceTypeRegex.dockerfile, path, 1),
                 type: "dockerfile"
             };
         if (this.isImageConfig(path))
             return {
-                name: this.getResourceName(this.resourceTypeRegex.imageconfig, path),
+                name: this._getResourceName(this.resourceTypeRegex.imageconfig, path, 1),
                 type: "imageconfig"
             };
         return null;
@@ -105,15 +118,23 @@ module.exports = {
      * @returns {true|false}
      */
     isResourceFile: function (path) {
-        return this.isComposeFile(path) || this.isStackConfig(path) || this.isImageConfig(path) || this.isDockerfile(path);
+        return this.isComposeFile(path) || this.isStackDefinition(path) ||  this.isStackInstance(path) ||  this.isSimpleStackInstance(path) || this.isImageConfig(path) || this.isDockerfile(path);
     },
 
     isComposeFile: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.dockercompose, fileName);
     },
 
-    isStackConfig: function (fileName) {
-        return this._isResourceFile(this.resourceTypeRegex.stackconfig, fileName);
+    isStackDefinition: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.stackdefinition, fileName);
+    },
+
+    isStackInstance: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.stackinstance, fileName);
+    },
+
+    isSimpleStackInstance: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.simplestackinstance, fileName);
     },
 
     isDockerfile: function (fileName) {
