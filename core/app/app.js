@@ -102,7 +102,7 @@ function getAllResourceFiles(){
         let singles = [];       // name, type, path, if instance: soulMateName, if instance: suffix
         let instances = [];     // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
         let dockercomposes = [];    //name, path
-        let stackDefinitions = [];  //name, path
+        let stackDefinitions = [];  //name, path, dockercomposes (names)
 
         //populating singles
         allResourcePaths.forEach(path => {
@@ -200,6 +200,8 @@ function getAllResourceFiles(){
                     }
                     usedDockercompose.used = true;
                 });
+
+                stackDefinition.dockercomposes = _.map(dockercomposes, dockercompose => { return this.name; });
             }
         });
         dockercomposes = _.filter(dockercomposes, dockercompose => { return dockercompose.used });
@@ -212,27 +214,23 @@ function getAllResourceFiles(){
         dockercomposes.forEach(dc => {
             let dockercompose = YAML.load(dc.path);
             let path = utils.removeLastPathPart(dc.path);
-            console.log("dockercompose",dockercompose,"\n","path",path,"\n",/^(.+)\/(.*)$/m.exec(path))
-            if(dockercompose.services)
-                Object.keys(dockercompose.services).forEach( name => {
-                    console.log("name",name)
+            if(dockercompose.services) {
+                Object.keys(dockercompose.services).forEach(name => {
                     let service = dockercompose.services[name];
-                    console.log("service",service);
-                    if(service.build ){
+                    if (service.build) {
                         service.build.forEach(build => {
-                            contextPaths.push({name: dc.name, path: `${path}/${build.context}`});
+                            dc.hasBuild = true;
+                            contextPaths.push({name: dc.name, path: `${path}/${build.context}`, type: "dockercompose"});
                         })
                     }
                 });
+            }
         });
-
 
         console.log("***** Here are all the contexts used by one of the valid used docker composes *****");
         console.log(contextPaths);
 
-
-        //hand over to getGitDiffModifiedFile
-        //getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, dockercomposes);
+        getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, dockercomposes);
 
 
     //get context for image
@@ -251,7 +249,54 @@ function getAllResourceFiles(){
     });
 }
 
-function getGitDiffModifiedFile(happyCouples, contextPaths) {
+let triggerInstancesForResource = function (resource, instances, name, clean, stackDefinitions) {
+    if (resource.type === "dockercompose") {
+        //all simpleStackInstance
+        _.filter(instances, instance => {
+            instance.dockercomposeName === name;
+        }).forEach(instance => {
+            instance.changed = true;
+            instance.clean = clean;
+        });
+        //all stackInstance whose stackDefinition contains dockercompose
+        let relatedStackDefinitions = stackDefinitions.filter(stackDefinition => {
+            _.contains(stackDefinition.dockercomposes, name);
+        });
+        _.filter(instances, instance => {
+            return _.contains(relatedStackDefinitions, instance.stackDefinitionName);
+        }).forEach(instance => {
+            instance.changed = true;
+            instance.clean = clean;
+        });
+    } else if (resource.type === "stackDefinition") {
+        _.filter(instances, instance => {
+            return instance.stackDefinitionName === name;
+        }).forEach(instance => {
+            instance.changed = true;
+            instance.clean = clean;
+        });
+    } else if (resource.type === "stackInstance") {
+        let si = _.find(instances, instance => {
+            return instance.instanceName === name;
+        });
+        si.changed = true;
+        si.clean = clean;
+    } else if (resource.type === "simpleStackInstance") {
+        let ssi = _.find(instances, instance => {
+            return instance.instanceName === name;
+        });
+        ssi.changed = true;
+        ssi.clean = clean;
+    }
+};
+/**
+ *
+ * @param contextPaths          //  path, name
+ * @param instances             // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
+ * @param stackDefinitions      //name, path, dockercomposes
+ * @param dockercomposess       //name, path
+ */
+function getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, dockercomposes) {
     console.info("Reading git commit payload to find which files has been modified");
     var modifiedFiles = "cd " + repoFolder + ";git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)";
 
@@ -278,7 +323,8 @@ function getGitDiffModifiedFile(happyCouples, contextPaths) {
 
 
             files.forEach(function (file) {
-                let fileName = file.name;
+                let fileName = file.file;
+                console.log("fileName",fileName);
 
                 if(utils.isResourceFile(fileName)){
                     let state = file.status;
@@ -288,58 +334,85 @@ function getGitDiffModifiedFile(happyCouples, contextPaths) {
                     //(D) and (U) => resource can be 'cleaned'
                     //I honestly never experienced (C) or (R) or (X). Renaming a file seems to produce a (D) and a (A), which is good. Copying a file just create a (A) which will not make it an happy couple and therefore will not be managed at all
                     //Copying resource file without changing its name (just to another directory) will make the resource to be ignored until one of the duplicated files is deleted.
-                    const resourceName = utils.getTypeAndResourceName(fileName).name;
-                    console.log(`${fileName} is a resource file for ${resourceName}`);
-                    let couple = _.find(happyCouples, function(couple){ return couple.name === resourceName});
-                    if(couple) {
-                        couple.contextChanged = true;
-                        if(state == "D" || state == "U"){
-                            couple.clean = true;
+                    let resource = utils.getTypeAndResourceName(fileName);
+                    let name = resource.name ;
+                    if(!name){
+                        console.log(`file ${fileName} is not a valid resource file, trying as normal file`);
+                    } else {
+                        console.log(`${fileName} is a resource file for ${name}`);
+                        let clean = false;
+                        if (state == "D" || state == "U") {
+                            clean = true;
                         }
+                        triggerInstancesForResource(resource, instances, name, clean, stackDefinitions);
+                        return;
                     }
-                } else {
-                    //is updated files part of resource context ?
-                    const updatedFileDirectory = repoFolder + utils.removeLastPathPart(fileName);
-                    let updatedContextPaths = _.filter(contextPaths, function (context) {
-                        return context.path.startsWith(updatedFileDirectory)
-                    });
-                    updatedContextPaths.forEach(updatedContext => {
-                        console.log(`${fileName} is at least part of one context of ${updatedContext.name}`);
-                        _.find(happyCouples, function (couple) {
-                            return couple.name === updatedContext.name
-                        }).contextChanged = true;
-                    });
                 }
+
+
+                //is updated files part of resource context ?
+                const updatedFileDirectory = repoFolder + utils.removeLastPathPart(fileName);
+                let updatedContextPaths = _.filter(contextPaths, function (context) {
+                    return context.path.startsWith(updatedFileDirectory)
+                });
+                updatedContextPaths.forEach(updatedContext => {
+                    if(updatedContext.type == "dockercompose"){
+                        let resource = utils.getTypeAndResourceName(fileName);
+                        if(!resource){
+                            console.log(`resource ${fileName} is not a valid resource`);
+                            return;
+                        }
+                        triggerInstancesForResource(resource, instances, resource.name, null, stackDefinitions);
+                    }
+                });
             });
         }
 
         console.log("Summary of what is going to be effectively done according to updated files");
-        let counselorReadyCouple = _.filter(happyCouples, function(couple){ return couple.contextChanged });
-        counselorReadyCouple.forEach(couple => {
-            //do something with removed files, flag couples to be discarded
+        let triggeredInstances = _.filter(instances, function(instance){ return instance.changed });
+        triggeredInstances.forEach(instance => {
             let actions = "";
-            if(couple.dockerfile)
-                actions = "built";
-            else if(couple.dockercompose)
-                actions = "built and deployed";
+            // if(instance.dockerfile)
+            //     actions = "built";
+            // else if(instance.dockercompose)
+            //     actions = "built and deployed";
 
-           console.log(`${couple.name} has been scheduled to be ${actions}`)
+            let doWeBuild = false;
+            if(instance.stackDefinitionName){
+                let stackDef = _.find(stackDefinitions, stackDefinition => { return stackDefinition.name === instance.stackDefinitionName; });
+                if(stackDef.dockercomposes)
+                    doWeBuild = _.find(stackDef.dockercomposes,dockercompose => { return dockercompose.hasBuild }) != "undefined";
+            }
+            if(instance.dockercomposeName){
+                let dockercompose = _.find(dockercomposes, dockercompose => { return dockercompose.name === instance.dockercomposeName; });
+                doWeBuild = dockercompose.hasBuild;
+            }
+            instance.build = doWeBuild;
+            if(doWeBuild)
+                actions = `build`;
+            actions = `${actions} and deployed`;
+
+           console.log(`${instance.instanceName} has been scheduled to be ${actions}`)
         });
 
 
-        console.log("****************");
-        console.log("Here comes Moby");
-        console.log("****************");
-
-
-        counselorReadyCouple.forEach(couple => {
-            if(couple.dockerfile){
-                manageImage(couple);
-            } else if(couple.dockercompose)
-                manageStack(couple);
-        });
-
+        //triggerInstance(triggeredInstances, stackDefinitions, dockercomposes);
     });
+}
+
+/**
+ *
+ * @param triggeredInstances        instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName, build,
+ * @param stackDefinitions          name, path, dockercomposes
+ * @param dockercomposes            name, path
+ */
+function triggerInstance(triggeredInstances, stackDefinitions, dockercomposes){
+    console.log("****************");
+    console.log("Here comes Moby");
+    console.log("****************");
+
+    //TODO
+
 }
 
 function deployStack(composeFile, action, stackName) {

@@ -111,7 +111,8 @@ module.exports = {
     },
 
     removeLastPathPart(path){
-        return /^(.+)\/(.*)$/m.exec(path)[1] || "";
+        let dir = /^(.+)\/(.*)$/m.exec(path);
+        return (dir)? dir[1] : "/";
     },
 
     /**
