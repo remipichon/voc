@@ -43,7 +43,7 @@ function manageStack(couple) {
             }
         }
 
-        if(data) {
+        if (data) {
             console.log('Config for\n', couple.dockercompose, "\n", data);
 
             var config = JSON.parse(data);
@@ -57,8 +57,9 @@ function manageStack(couple) {
 
             deployStack(couple.dockercompose, action, couple.name);
         } else {
-            console.info("Action was not performed on",couple.name,"because its config file was not found");
+            console.info("Action was not performed on", couple.name, "because its config file was not found");
         }
+    }
 };
 
 function manageImage(couple) {
@@ -79,7 +80,7 @@ function manageImage(couple) {
             }
         }
 
-        if(data) {
+        if (data) {
             console.log('Config file for\n', couple.dockerfile, "\n", data);
 
             var config = JSON.parse(data);
@@ -88,108 +89,164 @@ function manageImage(couple) {
         } else {
             console.info(`Action was not performed because ${configFile} was not found`);
         }
+    }
 }
 
 function getAllResourceFiles(){
 
-    console.log("Reading repository to find resource files and create couple (resource file + related config file");
+    console.info("Reading repository to find resource files and create couple (resource file + related config file");
 
     utils.walkResourceFile(repoFolder, function(err, allResourcePaths){
-        //let's make couple like this: name : { config: /path/to/config, [dockercompose|dockerfile]: /path/to/related/resource }
-        let meetic = {};
+        //we are now reading all the resource file to make couple and then determine which couples need to see the counselor (Moby) according to the Git modified files
+
+        let singles = [];       // name, type, path, if instance: soulMateName, if instance: suffix
+        let instances = [];     // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
+        let dockercomposes = [];    //name, path
+        let stackDefinitions = [];  //name, path
+
+        //populating singles
         allResourcePaths.forEach(path => {
             let typeAndResourceName = utils.getTypeAndResourceName(path);
             let name = typeAndResourceName.name;
             let type = typeAndResourceName.type;
 
-            if(!meetic[name])
-                meetic[name] = {type: ""};
-
-            if(type.indexOf("config") != -1){
-                if(!meetic[name]['config']) {
-                    meetic[name]['config'] = path;
-                    meetic[name].type = type.replace("config", "");
-                } else
-                    meetic[name]['error'] = `${name} more than one config found: ${meetic[name]['config']} and ${path}`;
+            if(type == "dockerfile" || type == "imageconfig"){
+                console.log("dockerfile and imageconfig are not supported yet");
             } else {
-                if(!meetic[name][type])
-                    meetic[name][type] = path;
-                else
-                    meetic[name]['error'] = `${name} more than one resource found: ${meetic[name][type]} and ${path}`;
+                //for instance only
+                let soulMate = typeAndResourceName.soulMate;
+                let suffix = typeAndResourceName.suffix;
+
+                let single = {
+                    name: name,
+                    type: type,
+                    path: path
+                };
+                if(soulMate) //only instances have soul mate
+                    single.soulMateName = soulMate;
+                if(suffix)  //only instances have soul suffix
+                    single.suffix = suffix;
+                singles.push(single);
             }
         });
 
-        //now cleaning the malformed couples
-        let happyCouples = []; // {name: name, [dockerfile|dockercompose]: /path/to/resource, config: /path/tpo/config}
-        Object.keys(meetic).forEach((name) => {
-            let yes = false;
-            let files = meetic[name];
-            if (files.error) {
-                console.log(files.error, `${name} will not be processed`);
-            } else {
-                if (!files.config) {
-                    console.log(`${name} doesnt' have a config file, will not be processed`);
-                } else {
-                    if (files.type == "image") {
-                        if (!files.dockerfile)
-                            console.log(`${name} doesnt' have a corresponding Dockerfile, will not be processed`);
-                        else
-                            yes = true;
-                    } else if (files.type == "stack") {
-                        if (!files.dockercompose)
-                            console.log(`${name} doesnt' have a corresponding docker-compose, will not be processed`);
-                        else
-                            yes = true
+        dockercomposes = _.filter(singles, single => { return single.type === "dockercompose" });
+        dockercomposes = _.map(dockercomposes, dockercompose => { return { name: dockercompose.name, path: dockercompose.path} });
+
+        stackDefinitions = _.filter(singles, single => { return single.type === "stackDefinition" });
+        stackDefinitions = _.map(stackDefinitions, stackDefinition => { return { name: stackDefinition.name, path: stackDefinition.path} });
+
+        console.log("***** Here is what I could extract from the file system *****");
+        console.log("singles\n",singles);
+        console.log("*****                                                   *****");
+        console.log("dockercomposes\n",dockercomposes);
+        console.log("*****                                                   *****");
+        console.log("stackDefinitions\n",stackDefinitions);
+        console.log("*****           That's all from the file system         *****");
+
+
+        //populating instances
+        let usedStackDefinitions = []; // List<String>
+        singles.forEach(single => {
+            if(single.type === "simpleStackInstance" || single.type === "stackInstance") {
+                let instance = {
+                    instanceName: single.name,
+                    path: single.path,
+                };
+                if(single.type === "stackInstance") {
+                    let stackDefinition = _.find(stackDefinitions, stackDefinition => { return stackDefinition.name == single.soulMateName });
+                    if(!stackDefinition){
+                        console.warn(`File ${single.name} with path ${single.path} is looking for stack definition ${single.soulMateName} which is not defined`);
+                        return;
                     }
+                    instance.stackDefinitionName = stackDefinition.name;
+                    usedStackDefinitions.push(stackDefinition.name);
                 }
-            }
-
-            if (yes) {
-                console.log(`${name} will be processed as a ${files.type}`);
-                files.name = name;
-                happyCouples.push(files)
+                if(single.type === "simpleStackInstance") {
+                    let usedDockercompose = _.find(dockercomposes, dockercompose => { return dockercompose.name == single.soulMateName });
+                    if(!usedDockercompose){
+                        console.warn(`File ${single.name} with path ${single.path} is looking for dockercompose ${single.soulMateName} which couldn't not be found, skipping`);
+                        return;
+                    }
+                    instance.dockercomposeName = usedDockercompose.name;
+                    usedDockercompose.used = true;
+                }
+                instances.push(instance);
             }
         });
 
-        console.log("All valid resources couple found:")
-        console.log(happyCouples);
+        console.log("***** Here are all the valid instances *****");
+        console.log("instances\n",instances);
 
 
-        //read build contexts for all happy couples
-        let contextPaths = [];// {path: /path/to/deps, name: resource name}
-        happyCouples.forEach(couple => {
-            if(couple.dockerfile){
-                //dockerfile: config.context (relative to current dir) or current dir
-                let config = JSON.parse(fs.readFileSync(couple.config, {encoding: 'utf-8'}));
-                let path = utils.removeLastPathPart(config.config);
-                if(config.context){
-                    path = `${path}/${config.context}`
-                }
-                path = repoFolder+path;
-                path = path.replace("\/\/","/");//justincase
-                contextPaths.push({name: couple.name, path: path});
-            } else if(couple.dockercompose){
-                console.log("ouple.dockercomposev",couple.dockercompose);
-                //dockercompose: all services.context (relative to current dir)
-                let dockercompose = YAML.load(couple.dockercompose);
-                console.log("dockercompose",dockercompose)
-                let path = utils.removeLastPathPart(couple.dockercompose);
-                if(dockercompose.services)
-                    Object.keys(dockercompose.services).forEach( name => {
-                        let service = dockercompose.services[''+name];
-                        if(service.build && service.build.context){
-                            contextPaths.push({name: couple.name, path: `${path}/${service.build.context}`});
-                        }
+        //remove stack definitions not used by any instances
+        stackDefinitions = _.filter(stackDefinitions, stackDefinition => { return _.contains(usedStackDefinitions,stackDefinition.name); });
+
+        console.log("***** Here are all actually used stack definitions *****");
+        console.log("stackDefinitions\n",stackDefinitions);
+
+        //remove dockercomposes not used by any instances
+        stackDefinitions.forEach(stackDefinition => {
+            let stackDefinitionConfig = fs.readFileSync(stackDefinition.name, {encoding: 'utf-8'});
+            if(stackDefinitionConfig.dockercomposes && Array.isArray(stackDefinitionConfig.dockercomposes)){
+                stackDefinitionConfig.dockercomposes.forEach(dockercomposeRelativePath => {
+                    let dockercomposeName = utils.getTypeAndResourceName(dockercomposeRelativePath);
+                    if(!dockercomposeName) {
+                        console.warn(`Stack definition is looking for docker compose ${dockercomposeRelativePath} which is not a valid file name format, skipping`);
+                    }
+                    let usedDockercompose = dockercomposes.find(dockercompose => { return dockercompose.name === dockercomposeName });
+                    if(!usedDockercompose){
+                        console.warn(`Stack definition is looking for docker compose ${dockercomposeRelativePath} which could'nt be found, skipping`);
+                    }
+                    usedDockercompose.used = true;
                 });
             }
         });
+        dockercomposes = _.filter(dockercomposes, dockercompose => { return dockercompose.used });
 
-        console.log("All context path used by the valid couple found:")
+        console.log("***** Here are all actually used docker composes *****");
+        console.log("dockercomposes\n",dockercomposes);
+
+        //get all the contexts
+        let contextPaths = [];  //  path, name
+        dockercomposes.forEach(dc => {
+            let dockercompose = YAML.load(dc.path);
+            let path = utils.removeLastPathPart(dc.path);
+            console.log("dockercompose",dockercompose,"\n","path",path,"\n",/^(.+)\/(.*)$/m.exec(path))
+            if(dockercompose.services)
+                Object.keys(dockercompose.services).forEach( name => {
+                    console.log("name",name)
+                    let service = dockercompose.services[name];
+                    console.log("service",service);
+                    if(service.build ){
+                        service.build.forEach(build => {
+                            contextPaths.push({name: dc.name, path: `${path}/${build.context}`});
+                        })
+                    }
+                });
+        });
+
+
+        console.log("***** Here are all the contexts used by one of the valid used docker composes *****");
         console.log(contextPaths);
 
 
         //hand over to getGitDiffModifiedFile
-        getGitDiffModifiedFile(happyCouples, contextPaths)
+        //getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, dockercomposes);
+
+
+    //get context for image
+    // if(couple.dockerfile){
+    //     //dockerfile: config.context (relative to current dir) or current dir
+    //     let config = JSON.parse(fs.readFileSync(couple.config, {encoding: 'utf-8'}));
+    //     let path = utils.removeLastPathPart(config.config);
+    //     if(config.context){
+    //         path = `${path}/${config.context}`
+    //     }
+    //     path = repoFolder+path;
+    //     path = path.replace("\/\/","/");//justincase
+    //     contextPaths.push({name: couple.name, path: path});
+    //
 
     });
 }
@@ -283,16 +340,6 @@ function getGitDiffModifiedFile(happyCouples, contextPaths) {
         });
 
     });
-}
-
-function getStackName(fileName) {
-    var split = fileName.split("/");
-    var last = split[split.length - 1];
-    if (last.indexOf("docker-compose") !== -1) {
-        return last.replace("docker-compose-", "").replace(".yml", "");
-    } else if (last.indexOf("stack-") !== -1) {
-        return last.replace("stack-", "").replace(".json", "");
-    }
 }
 
 function deployStack(composeFile, action, stackName) {
