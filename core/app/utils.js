@@ -175,6 +175,18 @@ module.exports = {
                 });
             });
         });
+    },
+
+    walkResourceFilePromise: function(dir){
+        var self = this;
+        return new Promise((resolve, reject) => {
+            return self.walkResourceFile(dir, (err, allPaths) => {
+                if(err)
+                    reject(err)
+                else
+                    resolve(allPaths);
+            });
+        });
     }
 
 

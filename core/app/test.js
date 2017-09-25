@@ -49,7 +49,15 @@ function testIsResourceFile() {
 
 
 function testWalk(){
-    utils.walkResourceFile("/app", function(err,res){console.log(res)})
+
+    // console.log("****************************async")
+    // utils.walkResourceFile("/Users/pichr1/work2/voc/core/app", function(err,res){console.log("final res",res)})
+
+    console.log("*****************************promise")
+    utils.walkResourceFilePromise("/Users/pichr1/work2/voc/core/app").then((allPaths) => {
+        console.log("allpath",allPaths)
+    }).catch(error => console.error("error",error));
+
 }
 
 
@@ -97,11 +105,11 @@ function testGitCmd(){
 
 //console.log(utils.isResourceFile(("stackwithcontext/marseille/Dockerfile-marseille")))
 
-testGitCmd();
+//testGitCmd();
 
 //testYAML()
 
-//testWalk()
+testWalk()
 
 // testIsResourceFile();
 // testIsResourceFile();
