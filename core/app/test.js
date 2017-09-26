@@ -1,5 +1,6 @@
 var utils = require("./utils");
 //var YAML = require('yamljs');
+var _ = require("underscore");
 
 
 function testIsResourceFile() {
@@ -103,9 +104,39 @@ function testGitCmd(){
 
 }
 
+
+// var truc = [{a:1},{a:1},{a:2}]
+// _.filter(truc, number => { return number.a == 1}).forEach(val => {val.a =10});
+// console.log(truc);
+//
+// var resource = { name: 'stackwithcontext', type: 'dockercompose' }
+// var instances = [
+//     {
+//         instanceName: 'mystackwithcontext',
+//         path: '/builds/root/test-runner/stackwithcontext/simple-stack-instance.stackwithcontext.mystackwithcontext.json',
+//         dockercomposeName: 'stackwithcontext'
+//     } ]
+//
+// _.filter(instances, instance => {
+//     return instance.dockercomposeName == resource.name;
+// }).forEach(instance => {
+//     instance.changed = true;
+//     instance.clean = true;
+// });
+//
+// console.log("filer", _.filter(instances, instance => {
+//     instance.dockercomposeName == resource.name;
+// }));
+// console.log(instances)
+
+
 //console.log(utils.isResourceFile(("stackwithcontext/marseille/Dockerfile-marseille")))
 
+<<<<<<< Updated upstream
 //testGitCmd();
+=======
+// testGitCmd();
+>>>>>>> Stashed changes
 
 //testYAML()
 

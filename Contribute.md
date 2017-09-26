@@ -42,6 +42,13 @@ cd /app
 node script.js
 ````
 
+When running locally, most likely you computer will go to sleep putting down Docker which seems to be equivalent to
+a server reboot when it comes to SSH. As a result, git push to your local Gitlab will fails after resuming. Use this to 
+delete the 'localhost' entry from your known_hosts (not working)
+````
+sed -i '/localhost/c\ /' ~/.ssh/known_hosts
+````
+
 
 
 ## Email Mediation app

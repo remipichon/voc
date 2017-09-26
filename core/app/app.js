@@ -220,7 +220,7 @@ function getAllResourceFiles(){
                     if (service.build) {
                         service.build.forEach(build => {
                             dc.hasBuild = true;
-                            contextPaths.push({name: dc.name, path: `${path}/${build.context}`, type: "dockercompose"});
+                            contextPaths.push({name: dc.name, directory: `${path}/${build.context}`, type: "dockercompose"});
                         })
                     }
                 });
@@ -249,18 +249,19 @@ function getAllResourceFiles(){
     });
 }
 
-let triggerInstancesForResource = function (resource, instances, name, clean, stackDefinitions) {
+let triggerInstancesForResource = function (resource, instances , stackDefinitions, clean = false) {
     if (resource.type === "dockercompose") {
         //all simpleStackInstance
+        console.log("resource",resource, "instances",instances);
         _.filter(instances, instance => {
-            instance.dockercomposeName === name;
+            return instance.dockercomposeName == resource.name;
         }).forEach(instance => {
             instance.changed = true;
             instance.clean = clean;
         });
         //all stackInstance whose stackDefinition contains dockercompose
         let relatedStackDefinitions = stackDefinitions.filter(stackDefinition => {
-            _.contains(stackDefinition.dockercomposes, name);
+            _.contains(stackDefinition.dockercomposes, resource.name);
         });
         _.filter(instances, instance => {
             return _.contains(relatedStackDefinitions, instance.stackDefinitionName);
@@ -270,20 +271,20 @@ let triggerInstancesForResource = function (resource, instances, name, clean, st
         });
     } else if (resource.type === "stackDefinition") {
         _.filter(instances, instance => {
-            return instance.stackDefinitionName === name;
+            return instance.stackDefinitionName === resource.name;
         }).forEach(instance => {
             instance.changed = true;
             instance.clean = clean;
         });
     } else if (resource.type === "stackInstance") {
         let si = _.find(instances, instance => {
-            return instance.instanceName === name;
+            return instance.instanceName === resource.name;
         });
         si.changed = true;
         si.clean = clean;
     } else if (resource.type === "simpleStackInstance") {
         let ssi = _.find(instances, instance => {
-            return instance.instanceName === name;
+            return instance.instanceName === resource.name;
         });
         ssi.changed = true;
         ssi.clean = clean;
@@ -291,7 +292,7 @@ let triggerInstancesForResource = function (resource, instances, name, clean, st
 };
 /**
  *
- * @param contextPaths          //  path, name
+ * @param contextPaths          //  path, directory      (only dockercompose at the moment)
  * @param instances             // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
  * @param stackDefinitions      //name, path, dockercomposes
  * @param dockercomposess       //name, path
@@ -312,7 +313,7 @@ function getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, docke
             allLines.forEach(line => {
                 var fileMatch = /^([ACDMRTUXB])\s+([^\s]+)$/m.exec(line);      //match  type    path/to/file
                 if(fileMatch) {
-                    files.push({file: fileMatch[2], status: fileMatch[1]});
+                    files.push({file: repoFolder + fileMatch[2], status: fileMatch[1]});
                 }
 
             });
@@ -324,7 +325,7 @@ function getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, docke
 
             files.forEach(function (file) {
                 let fileName = file.file;
-                console.log("fileName",fileName);
+                console.log("Now computing:",fileName);
 
                 if(utils.isResourceFile(fileName)){
                     let state = file.status;
@@ -344,25 +345,28 @@ function getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, docke
                         if (state == "D" || state == "U") {
                             clean = true;
                         }
-                        triggerInstancesForResource(resource, instances, name, clean, stackDefinitions);
+                        triggerInstancesForResource(resource, instances, stackDefinitions, clean);
                         return;
                     }
                 }
 
 
                 //is updated files part of resource context ?
-                const updatedFileDirectory = repoFolder + utils.removeLastPathPart(fileName);
+                const updatedFileDirectory = utils.removeLastPathPart(fileName);
                 let updatedContextPaths = _.filter(contextPaths, function (context) {
-                    return context.path.startsWith(updatedFileDirectory)
+                    return updatedFileDirectory.startsWith(context.directory);
                 });
+
                 updatedContextPaths.forEach(updatedContext => {
                     if(updatedContext.type == "dockercompose"){
-                        let resource = utils.getTypeAndResourceName(fileName);
+                        let dockercompose = dockercomposes.find(dc => { return dc.name === updatedContext.name});
+                        let resource = utils.getTypeAndResourceName(dockercompose.path);
+
                         if(!resource){
-                            console.log(`resource ${fileName} is not a valid resource`);
+                            console.log(`resource ${updatedContext.name} doest not reference a valid resource`);
                             return;
                         }
-                        triggerInstancesForResource(resource, instances, resource.name, null, stackDefinitions);
+                        triggerInstancesForResource(resource, instances, stackDefinitions);
                     }
                 });
             });
