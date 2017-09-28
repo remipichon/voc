@@ -1,7 +1,8 @@
 ---
 - hosts: app
   become: yes
-  gather_facts: no
+  roles:
+    - docker
   tasks:
     - name: Check if 'mode' var is defined
       fail:
@@ -59,8 +60,6 @@
         version: "{{ repo_version }}"
         force: yes
       become_user: "{{ username }}"
-
-    - include: install_docker.yml
 
     - name: Set default values for any environment variables referenced in the Compose file
       lineinfile:
