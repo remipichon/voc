@@ -1,6 +1,7 @@
 ---
 - hosts: app
   become: yes
+  gather_facts: no
   tasks:
     - name: Check if 'mode' var is defined
       fail:
