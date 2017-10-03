@@ -27,3 +27,9 @@
         user: ansible
         state: present
         key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Setup alternate SSH port
+      lineinfile:
+        dest: "/etc/ssh/sshd_config"
+        regexp: "^Port"
+        line: "Port 2222"

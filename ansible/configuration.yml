@@ -1,6 +1,8 @@
 ---
 - hosts: app
   become: yes
+  roles:
+    - docker
   tasks:
     - name: Check if 'mode' var is defined
       fail:
@@ -37,17 +39,9 @@
       with_items:
         - "{{ directories }}"
 
-    - name: Get kernel name
-      shell: "uname -s"
-      register: kernel
-
-    - name: Get architecture name
-      shell: "uname -m"
-      register: architecture
-
     - name: Install Docker Compose
       get_url:
-        url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ kernel.stdout }}-{{ architecture.stdout }}"
+        url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
         dest: "/usr/local/bin/docker-compose"
         mode: 0755
 
@@ -58,8 +52,6 @@
         version: "{{ repo_version }}"
         force: yes
       become_user: "{{ username }}"
-
-    - include: install_docker.yml
 
     - name: Set default values for any environment variables referenced in the Compose file
       lineinfile:
