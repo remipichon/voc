@@ -1,0 +1,75 @@
+---
+- name: Gathering user facts
+  set_fact:
+    _gitlab_dict: "{{ _gitlab_dict|default({})|combine({item.key : item.value}, recursive=True) }}"
+  with_dict: "{{ gitlab_dict }}"
+  when: gitlab_dict is defined
+  
+- name: Ensure Gitlab role, data, config and log path are available
+  file:
+    path: "{{ item }}"
+    state: "directory"
+    owner: "{{ _gitlab_dict.uid }}"
+    group: "{{ _gitlab_dict.gid }}"
+    mode: "0755"
+  with_item:
+    - "{{ _gitlab_dict.role_path }}"
+    - "{{ _gitlab_dict.data_path }}"
+    - "{{ _gitlab_dict.config_path }}"
+    - "{{ _gitlab_dict.log_path }}"
+  tags:
+    - init
+
+- name: Ensure redis conf path is available
+  file:
+    dest: "{{ _gitlab_dict.redis.config_path }}"
+    state: directory
+  tags:
+    - init
+  when: not _gitlab_dict.redis.keep_internal
+
+- name: Ensure redis data path is available
+  file:
+    dest: "{{ _gitlab_dict.redis.data_path }}"
+    state: directory
+  tags:
+    - init
+  when: not _gitlab_dict.redis.keep_internal
+
+- name: Ensure postgres data path is available
+  file:
+    dest: "{{ _gitlab_dict.db.data_path }}"
+    state: directory
+  tags:
+    - init
+  when: _gitlab_dict.db.deploy_postgresql
+  
+- name: Ensure Gitlab.rb configuration file is up-to-date
+  template:
+    backup: "yes"
+    src: "gitlab.rb.j2"
+    dest: "{{ _gitlab_dict.config_path }}/gitlab.rb"
+    owner: "{{ _gitlab_dict.uid }}"
+    group: "{{ _gitlab_dict.gid }}"
+    mode: "0644"
+  tags:
+    - init
+    
+- name: Ensure redis.conf configuration file is up-to-date
+  template:
+    backup: "yes"
+    src: "redis.conf.j2"
+    dest: "{{ _gitlab_dict.redis.config_path }}/redis.conf"
+    mode: "0644"
+  tags:
+    - init
+  when: not _gitlab_dict.redis.keep_internal
+    
+- name: Ensure Gitlab compose file is updated
+  template:
+    backup: yes
+    src: "{{ _gitlab_dict.docker_compose | default('docker-compose.yml.j2') }}"
+    dest: "{{ _gitlab_dict.role_path }}/docker-compose.yml"
+    mode: "0644"
+    
+- include: deploy/{{ _gitlab_dict.deploy.mode }}.yml
