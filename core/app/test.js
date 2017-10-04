@@ -1,6 +1,8 @@
 var utils = require("./utils");
 //var YAML = require('yamljs');
 var _ = require("underscore");
+var fsUtil = require("./fsUtil");
+
 
 
 function testIsResourceFile() {
@@ -38,26 +40,36 @@ function testIsResourceFile() {
 
     console.log("test file name \t\t\t\t is valid \t\t resource type \t\t resource name");
     item.forEach(item => {
-        let typeAndResourceName = utils.getTypeAndResourceName(item);
+        let typeAndResourceName = resourceUtil.getTypeAndResourceName(item);
         if (typeAndResourceName)
-            console.log(item, "\t\t", utils.isResourceFile(item), "\t\t", typeAndResourceName.type, typeAndResourceName.name);
+            console.log(item, "\t\t", resourceUtil.isResourceFile(item), "\t\t", typeAndResourceName.type, typeAndResourceName.name);
         else
-            console.log(item, "\t\t", utils.isResourceFile(item));
+            console.log(item, "\t\t", resourceUtil.isResourceFile(item));
     })
 
 
 }
 
 
-function testWalk(){
+async function testWalk(){
 
     // console.log("****************************async")
     // utils.walkResourceFile("/Users/pichr1/work2/voc/core/app", function(err,res){console.log("final res",res)})
 
-    console.log("*****************************promise")
-    utils.walkResourceFilePromise("/Users/pichr1/work2/voc/core/app").then((allPaths) => {
-        console.log("allpath",allPaths)
-    }).catch(error => console.error("error",error));
+    // console.log("*****************************promise")
+    // utils.walkResourceFilePromise("/Users/remi/work/voc-configuration").then((allPaths) => {
+    //     console.log("allpath",allPaths)
+    // }).catch(error => console.error("error",error));
+    //
+    // console.log("end of method");
+
+
+    console.log("avant");
+    var res = await fsUtil.walkResourceFilePromise("/app/pouet")
+    console.log("rest",res);
+    console.log("apres")
+
+    return res;
 
 }
 
@@ -71,10 +83,10 @@ function testYAML(){
 
 
 function testGitCmd(){
-    var repoFolder = "/Users/pichr1/work2/voc-configuration/";
+    var configuration.repoFolder = "/Users/pichr1/work2/voc-configuration/";
 
     //TODO get the status AMD !!!
-    var modifiedFiles = "cd " + repoFolder + "; git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)"
+    var modifiedFiles = "cd " + configuration.repoFolder + "; git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)"
 
     utils.execCmd(modifiedFiles, function (error, stdout) {
         if (stdout) {
@@ -100,47 +112,31 @@ function testGitCmd(){
 
         }
 
-    })
+    });
 
 }
 
 
-// var truc = [{a:1},{a:1},{a:2}]
-// _.filter(truc, number => { return number.a == 1}).forEach(val => {val.a =10});
-// console.log(truc);
-//
-// var resource = { name: 'stackwithcontext', type: 'dockercompose' }
-// var instances = [
-//     {
-//         instanceName: 'mystackwithcontext',
-//         path: '/builds/root/test-runner/stackwithcontext/simple-stack-instance.stackwithcontext.mystackwithcontext.json',
-//         dockercomposeName: 'stackwithcontext'
-//     } ]
-//
-// _.filter(instances, instance => {
-//     return instance.dockercomposeName == resource.name;
-// }).forEach(instance => {
-//     instance.changed = true;
-//     instance.clean = true;
-// });
-//
-// console.log("filer", _.filter(instances, instance => {
-//     instance.dockercomposeName == resource.name;
-// }));
-// console.log(instances)
+function testCmdSync(){
+    console.log("start")
+    let stdout = utils.execCmdSync("lsee", true);
+    console.log("cmd result",stdout);
+    console.log("end")
+}
+
+
+// testCmdSync();
 
 
 //console.log(utils.isResourceFile(("stackwithcontext/marseille/Dockerfile-marseille")))
 
-<<<<<<< Updated upstream
 //testGitCmd();
-=======
 // testGitCmd();
->>>>>>> Stashed changes
 
 //testYAML()
 
-testWalk()
+var tr = testWalk()
+console.log("apres apres",tr);
 
 // testIsResourceFile();
 // testIsResourceFile();
