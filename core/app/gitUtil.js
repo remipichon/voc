@@ -8,37 +8,9 @@ var fsUtil = require("./fsUtil");
 
 module.exports = {
 
-    /**
-     *
-     * @param contextPaths          //  path, directory      (only dockercompose at the moment)
-     * @param instances             // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
-     * @param stackDefinitions      //name, path, dockercomposes
-     * @param dockercomposess       //name, path
-     */
-    getGitDiffModifiedFile(contextPaths, instances, stackDefinitions, dockercomposes) {
-        console.info("Reading git commit payload to find which files has been modified");
-        var modifiedFiles = "cd " + configuration.repoFolder + ";git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)";
-
-        let stdout = utils.execCmdSync(modifiedFiles);
-
-        let allLines = stdout.split("\n") //I couldn't do it by Regexp
-
-        let files = [];
-        allLines.forEach(line => {
-            var fileMatch = /^([ACDMRTUXB])\s+([^\s]+)$/m.exec(line);      //match  type    path/to/file
-            if (fileMatch) {
-                files.push({file: configuration.repoFolder + fileMatch[2], status: fileMatch[1]});
-            }
-
-        });
-
-        console.log("*****************");
-        console.log("All updated files\n", files);
-        console.log("*****************");
-
-        files.forEach( file => {
+    getUpdatedInstances: function (files, instances, stackDefinitions, contextPaths, dockercomposes) {
+        files.forEach(file => {
             let fileName = file.file;
-            console.log("Now computing:", fileName);
 
             if (resourceUtil.isResourceFile(fileName)) {
                 let state = file.status;
@@ -77,7 +49,7 @@ module.exports = {
                     let resource = resourceUtil.getTypeAndResourceName(dockercompose.path);
 
                     if (!resource) {
-                        console.log(`resource ${updatedContext.name} doest not reference a valid resource`);
+                        console.warn(`resource ${updatedContext.name} doest not reference a valid resource`);
                         return;
                     }
                     resourceUtil.triggerInstancesForResource(resource, instances, stackDefinitions);
@@ -85,43 +57,30 @@ module.exports = {
             });
         });
 
-        console.log("Summary of what is going to be effectively done according to updated files");
         let triggeredInstances = _.filter(instances, function (instance) {
             return instance.changed
         });
-        triggeredInstances.forEach(instance => {
-            let actions = "";
-            // if(instance.dockerfile)
-            //     actions = "built";
-            // else if(instance.dockercompose)
-            //     actions = "built and deployed";
+        return triggeredInstances;
+    },
 
-            let doWeBuild = false;
-            if (instance.stackDefinitionName) {
-                let stackDef = _.find(stackDefinitions, stackDefinition => {
-                    return stackDefinition.name === instance.stackDefinitionName;
-                });
-                if (stackDef.dockercomposes)
-                    doWeBuild = _.find(stackDef.dockercomposes, dockercompose => {
-                            return dockercompose.hasBuild
-                        }) != "undefined";
-            }
-            if (instance.dockercomposeName) {
-                let dockercompose = _.find(dockercomposes, dockercompose => {
-                    return dockercompose.name === instance.dockercomposeName;
-                });
-                doWeBuild = dockercompose.hasBuild;
-            }
-            instance.build = doWeBuild;
-            if (doWeBuild)
-                actions = `build`;
-            actions = `${actions} and deployed`;
 
-            console.log(`${instance.instanceName} has been scheduled to be ${actions}`)
+    getGitDiffModifiedFile() {
+        var modifiedFiles = "cd " + configuration.repoFolder + ";git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)";
+
+        let stdout = utils.execCmdSync(modifiedFiles);
+
+        let allLines = stdout.split("\n") //I couldn't do it by Regexp
+
+        let files = [];
+        allLines.forEach(line => {
+            var fileMatch = /^([ACDMRTUXB])\s+([^\s]+)$/m.exec(line);      //match  type    path/to/file
+            if (fileMatch) {
+                files.push({file: configuration.repoFolder + fileMatch[2], status: fileMatch[1]});
+            }
+
         });
 
-
-        return triggeredInstances;
+        return files;
     }
 
 };

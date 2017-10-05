@@ -91,9 +91,6 @@ module.exports = {
      * @param dockercomposes            List<DockerCompose>
      */
     triggerInstance(triggeredInstances, stackDefinitions, dockercomposes){
-        console.log("****************");
-        console.log("Here comes Moby");
-        console.log("****************");
 
         //TODO
 

@@ -9,10 +9,12 @@ var configuration = require("./configuration");
 
 module.exports = {
 
-    getAllResourceFiles: function (allResourcePaths) {
-
-        //we are now reading all the resource file to make couple and then determine which couples need to see the counselor (Moby) according to the Git modified files
-
+    /**
+     * @summary extract everything from the given resource paths (without opening the files, just using the file names)
+     * @param allResourcePaths List<String> list of absolute paths
+     * @returns {instances: List<Instance>, dockercomposes: List<Dockercompose>, stackDefinitions: List<StackDefinition>, usedStackDefinitions: List<StackDefinition>}
+     */
+    getVocResources: function (allResourcePaths) {
         let singles = [];       // name, type, path, if instance: soulMateName, if instance: suffix
         let instances = [];     // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
         let dockercomposes = [];    //name, path
@@ -25,7 +27,7 @@ module.exports = {
             let type = typeAndResourceName.type;
 
             if (type == "dockerfile" || type == "imageconfig") {
-                console.log("dockerfile and imageconfig are not supported yet");
+                console.warn("dockerfile and imageconfig are not supported yet");
             } else {
                 let single = {
                     name: name,
@@ -53,14 +55,6 @@ module.exports = {
         stackDefinitions = _.map(stackDefinitions, stackDefinition => {
             return {name: stackDefinition.name, path: stackDefinition.path}
         });
-
-        console.log("***** Here is what I could extract from the file system *****");
-        console.log("singles\n", singles);
-        console.log("*****                                                   *****");
-        console.log("dockercomposes\n", dockercomposes);
-        console.log("*****                                                   *****");
-        console.log("stackDefinitions\n", stackDefinitions);
-        console.log("*****           That's all from the file system         *****");
 
 
         //populating instances
@@ -97,17 +91,21 @@ module.exports = {
             }
         });
 
-        console.log("***** Here are all the valid instances *****");
-        console.log("instances\n", instances);
+        return {
+            instances: instances,
+            dockercomposes: dockercomposes,
+            stackDefinitions: stackDefinitions,
+            usedStackDefinitions: usedStackDefinitions
+        }
 
+    },
 
+    cleanUnusedVocResources: function (stackDefinitions, usedStackDefinitions, dockercomposes) {
         //remove stack definitions not used by any instances
         stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
             return _.contains(usedStackDefinitions, stackDefinition.name);
         });
 
-        console.log("***** Here are all actually used stack definitions *****");
-        console.log("stackDefinitions\n", stackDefinitions);
 
         //remove dockercomposes not used by any instances
         stackDefinitions.forEach(stackDefinition => {
@@ -136,9 +134,9 @@ module.exports = {
             return dockercompose.used
         });
 
-        console.log("***** Here are all actually used docker composes *****");
-        console.log("dockercomposes\n", dockercomposes);
+    },
 
+    getContextPaths: function (dockercomposes) {
         //get all the contexts
         let contextPaths = [];  //  path, name
         dockercomposes.forEach(dc => {
@@ -161,20 +159,7 @@ module.exports = {
             }
         });
 
-        console.log("***** Here are all the contexts used by one of the valid used docker composes *****");
-        console.log(contextPaths);
-
-        return {
-            contextPaths: contextPaths,
-            instances: instances,
-            stackDefinitions: stackDefinitions,
-            dockercomposes: dockercomposes
-        };
-
-
-
-
-        //get context for image
+        //TODO get context for image
         // if(couple.dockerfile){
         //     //dockerfile: config.context (relative to current dir) or current dir
         //     let config = JSON.parse(fs.readFileSync(couple.config, {encoding: 'utf-8'}));
@@ -187,7 +172,10 @@ module.exports = {
         //     contextPaths.push({name: couple.name, path: path});
         //
 
+
+        return contextPaths;
     },
+
 
     removeLastPathPart: function (path) {
         let dir = /^(.+)\/(.*)$/m.exec(path);

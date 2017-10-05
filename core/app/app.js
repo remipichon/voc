@@ -22,8 +22,9 @@ if (!process.env.CI_PROJECT_DIR) {
 
 
 
-console.log("Starting...  ...");
+console.log("Starting main.main()......");
 
-main.main();
-
-console.log("End of script, waiting for callbacks to answer");
+main.main().catch(err => {
+    console.error(err);
+    process.exit(1);
+});

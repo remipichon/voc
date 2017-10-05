@@ -1,3 +1,4 @@
 docker-compose.intermediate.yml
 temp
 core/app/node_modules
+gitlab.rb-e
