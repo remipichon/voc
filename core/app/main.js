@@ -1,18 +1,24 @@
-async.function(function(response) {
-    foo = "bar"
-    if (exists){
-        foo = "foobar";
-    }
+'use strict';
 
-    if( typeof callback == 'function' ){
-        callback(foo);
-    }
-});
+var fsUtil = require("./fsUtil");
+var gitUtil = require("./gitUtil");
+var configuration = require("./configuration");
+var resourceUtil = require("./resourceUtil");
 
 module.exports = {
-    main:  function () {
+    main:  async function () {
 
-        let resources = fsUtil.getAllResourceFiles();
+        console.info("Reading repository to find resource files and create couple (resource file + related config file)");
+
+        var allResourcePaths;
+        try {
+            allResourcePaths = await fsUtil.walkResourceFilePromise(configuration.repoFolder);
+        } catch (error) {
+            console.error("error", error);
+            throw new Error(error)
+        }
+
+        let resources = fsUtil.getAllResourceFiles(allResourcePaths);
 
         let contextPaths = resources.contextPaths;
         let instances = resources.instances;

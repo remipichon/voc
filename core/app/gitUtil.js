@@ -1,6 +1,10 @@
+'use strict';
+
 var _ = require("underscore");
 var resourceUtil = require("./resourceUtil");
 var configuration = require("./configuration");
+var utils = require("./utils");
+var fsUtil = require("./fsUtil");
 
 module.exports = {
 
@@ -32,8 +36,7 @@ module.exports = {
         console.log("All updated files\n", files);
         console.log("*****************");
 
-
-        files.forEach(function (file) {
+        files.forEach( file => {
             let fileName = file.file;
             console.log("Now computing:", fileName);
 
@@ -55,11 +58,10 @@ module.exports = {
                     if (state == "D" || state == "U") {
                         clean = true;
                     }
-                    gitUtil.triggerInstancesForResource(resource, instances, stackDefinitions, clean);
+                    resourceUtil.triggerInstancesForResource(resource, instances, stackDefinitions, clean);
                     return;
                 }
             }
-
 
             //is updated files part of resource context ?
             const updatedFileDirectory = fsUtil.removeLastPathPart(fileName);
@@ -78,7 +80,7 @@ module.exports = {
                         console.log(`resource ${updatedContext.name} doest not reference a valid resource`);
                         return;
                     }
-                    gitUtil.triggerInstancesForResource(resource, instances, stackDefinitions);
+                    resourceUtil.triggerInstancesForResource(resource, instances, stackDefinitions);
                 }
             });
         });

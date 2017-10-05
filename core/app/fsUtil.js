@@ -1,3 +1,5 @@
+'use strict';
+
 var fs = require('fs');
 var path = require('path');
 var YAML = require('yamljs');
@@ -7,16 +9,8 @@ var configuration = require("./configuration");
 
 module.exports = {
 
-    getAllResourceFiles: async function () {
-        console.info("Reading repository to find resource files and create couple (resource file + related config file");
+    getAllResourceFiles: function (allResourcePaths) {
 
-        var allResourcePaths;
-        try {
-            allResourcePaths = await this.walkResourceFilePromise(configuration.repoFolder);
-        } catch (error) {
-            console.error("error", error);
-            throw new Error(error)
-        }
         //we are now reading all the resource file to make couple and then determine which couples need to see the counselor (Moby) according to the Git modified files
 
         let singles = [];       // name, type, path, if instance: soulMateName, if instance: suffix
@@ -149,7 +143,7 @@ module.exports = {
         let contextPaths = [];  //  path, name
         dockercomposes.forEach(dc => {
             let dockercompose = YAML.load(dc.path);
-            let path = fsUtil.removeLastPathPart(dc.path);
+            let path = this.removeLastPathPart(dc.path);
             if (dockercompose.services) {
                 Object.keys(dockercompose.services).forEach(name => {
                     let service = dockercompose.services[name];

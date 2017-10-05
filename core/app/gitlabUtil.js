@@ -1,3 +1,5 @@
+'use strict';
+
 var fs = require('fs');
 var _ = require("underscore");
 var gitlabUtil = require("./gitlabUtil");
@@ -5,7 +7,7 @@ var configuration = require("./configuration");
 
 module.exports = {
 
-    writeResult: function (configuration.artifactDir, configuration.resultFile, configuration.repoFolder, key, value) {
+    writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
         console.log(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, key, value);
 
         var resultJson = {};

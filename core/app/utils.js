@@ -1,9 +1,5 @@
 var exec = require('child_process').exec;
 var execSync = require('child_process').execSync;
-// var execSync = require('child_process').execSync;
-var fs = require('fs');
-var path = require('path');
-var configuration = require("./configuration");
 
 module.exports = {
 
@@ -35,35 +31,5 @@ module.exports = {
         return stdout
     },
 
-
-
-
-
 };
 
-
-/* CODE SAMPLE
-
- READ FILE SYNC
- var data;
- try {
- data = fs.readFileSync(path, {encoding: 'utf-8'});
- } catch (err) {
- if (err.code === 'ENOENT') {
- console.log("file not found for " + path);
- } else {
- console.error(`Error while reading file ${path}:`, err);
- throw err;
- }
- }
-
- if(data) {
- console.log('File for\n', composeFile, "\n", data);
-
- var config = JSON.parse(data);
- } else {
- console.info(`Action was not performed because ${file} was not found`);
- }
-
-
- */

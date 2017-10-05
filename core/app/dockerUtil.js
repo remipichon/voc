@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require("underscore");
 require("dockerode/package.json"); // dockerode is a peer dependency.
 var Docker = require('dockerode');

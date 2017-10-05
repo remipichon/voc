@@ -1,3 +1,5 @@
+'use strict';
+
 var fs = require('fs');
 var _ = require("underscore");
 var gitlabUtil = require("./gitlabUtil");

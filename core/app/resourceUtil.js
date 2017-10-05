@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require("underscore");
 var configuration = require("./configuration");
 
@@ -44,7 +46,6 @@ module.exports = {
     triggerInstancesForResource (resource, instances, stackDefinitions, clean = false) {
         if (resource.type === "dockercompose") {
             //all simpleStackInstance
-            console.log("resource", resource, "instances", instances);
             _.filter(instances, instance => {
                 return instance.dockercomposeName == resource.name;
             }).forEach(instance => {
