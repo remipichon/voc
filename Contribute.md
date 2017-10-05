@@ -39,8 +39,10 @@ Want to quickly test some JS code without anything around it ?
 cd voc/core
 docker exec -ti $(docker run -d -v $(pwd)/app:/app node tail -f /dev/null) bash
 cd /app
-node script.js
+CI_PROJECT_DIR=/absolute/path/to/your/voc-configuration node script.js
 ````
+
+> if CI_PROJECT_DIR points to a repo, running above command will do the same as triggering the runner
 
 When running locally, most likely you computer will go to sleep putting down Docker which seems to be equivalent to
 a server reboot when it comes to SSH. As a result, git push to your local Gitlab will fails after resuming. Use this to 

@@ -12,17 +12,13 @@ var _ = require("underscore");
 var main = require("./main");
 
 
-console.log("env", process.env);
 if (!process.env.CI_PROJECT_DIR) {
     console.error("CI_PROJECT_DIR is not defined or empty");
     process.exit(1)
 }
 
-
-
-
-
-console.log("Starting main.main()......");
+console.log("Starting main.main() using configuration:");
+Object.keys(configuration).forEach(key => {if(typeof configuration[key] == "string") console.log(`    ${key} : ${configuration[key]}`)});
 
 main.main().catch(err => {
     console.error(err);
