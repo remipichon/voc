@@ -27,7 +27,7 @@ module.exports = {
         console.log("*****  That's all from the file system                   *****");
 
 
-        fsUtil.cleanUnusedVocResources(stackDefinitions, usedStackDefinitions, dockercomposes);
+        resourceUtil.cleanUnusedVocResources(stackDefinitions, usedStackDefinitions, dockercomposes);
         console.log("***** Here are all actually used stack definitions *****");
         console.log("   ", stackDefinitions);
         console.log("***** Here are all actually used docker composes *****");

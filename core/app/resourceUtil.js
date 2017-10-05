@@ -35,6 +35,43 @@ module.exports = {
      */
 
 
+    cleanUnusedVocResources: function (stackDefinitions, usedStackDefinitions, dockercomposes) {
+        //remove stack definitions not used by any instances
+        stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
+            return _.contains(usedStackDefinitions, stackDefinition.name);
+        });
+
+
+        //remove dockercomposes not used by any instances
+        stackDefinitions.forEach(stackDefinition => {
+            let stackDefinitionConfig = fs.readFileSync(stackDefinition.name, {encoding: 'utf-8'});
+            if (stackDefinitionConfig.dockercomposes && Array.isArray(stackDefinitionConfig.dockercomposes)) {
+                stackDefinitionConfig.dockercomposes.forEach(dockercomposeRelativePath => {
+                    let dockercomposeName = resourceUtil.getTypeAndResourceName(dockercomposeRelativePath);
+                    if (!dockercomposeName) {
+                        console.warn(`Stack definition is looking for docker compose ${dockercomposeRelativePath} which is not a valid file name format, skipping`);
+                    }
+                    let usedDockercompose = dockercomposes.find(dockercompose => {
+                        return dockercompose.name === dockercomposeName
+                    });
+                    if (!usedDockercompose) {
+                        console.warn(`Stack definition is looking for docker compose ${dockercomposeRelativePath} which could'nt be found, skipping`);
+                    }
+                    usedDockercompose.used = true;
+                });
+
+                stackDefinition.dockercomposes = _.map(dockercomposes, dockercompose => {
+                    return this.name;
+                });
+            }
+        });
+        dockercomposes = _.filter(dockercomposes, dockercompose => {
+            return dockercompose.used
+        });
+
+    },
+
+
 
     /**
      * @summary Set .changed=true for all instances which are dependant on resource
