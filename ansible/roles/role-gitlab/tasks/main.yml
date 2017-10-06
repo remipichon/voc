@@ -4,19 +4,47 @@
     _gitlab_dict: "{{ _gitlab_dict|default({})|combine({item.key : item.value}, recursive=True) }}"
   with_dict: "{{ gitlab_dict }}"
   when: gitlab_dict is defined
+  tags:
+    - init
+    - debug
   
-- name: Ensure Gitlab role, data, config and log path are available
+- name: Ensure Gitlab role path is available
   file:
-    path: "{{ item }}"
+    path: "{{ _gitlab_dict.role_path }}"
     state: "directory"
     owner: "{{ _gitlab_dict.uid }}"
     group: "{{ _gitlab_dict.gid }}"
     mode: "0755"
-  with_item:
-    - "{{ _gitlab_dict.role_path }}"
-    - "{{ _gitlab_dict.data_path }}"
-    - "{{ _gitlab_dict.config_path }}"
-    - "{{ _gitlab_dict.log_path }}"
+  tags:
+    - init
+
+- name: Ensure Gitlab data path volume path is available
+  file:
+    path: "{{ _gitlab_dict.data_path }}"
+    state: "directory"
+    owner: "{{ _gitlab_dict.uid }}"
+    group: "{{ _gitlab_dict.gid }}"
+    mode: "0755"
+  tags:
+    - init
+
+- name: Ensure Gitlab configuration volume path is available
+  file:
+    path: "{{ _gitlab_dict.config_path }}"
+    state: "directory"
+    owner: "{{ _gitlab_dict.uid }}"
+    group: "{{ _gitlab_dict.gid }}"
+    mode: "0755"
+  tags:
+    - init
+
+- name: Ensure Gitlab log volume path is available
+  file:
+    path: "{{ _gitlab_dict.log_path }}"
+    state: "directory"
+    owner: "{{ _gitlab_dict.uid }}"
+    group: "{{ _gitlab_dict.gid }}"
+    mode: "0755"
   tags:
     - init
 
@@ -38,6 +66,7 @@
     mode: "0644"
   tags:
     - init
+    - debug
     
 - name: Ensure Gitlab compose file is updated
   template:

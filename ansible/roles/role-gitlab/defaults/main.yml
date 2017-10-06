@@ -1,7 +1,12 @@
 ---
-gitlab_root_path: "/data/athena/gitlab"
+gitlab_root_path: "/data/voc/gitlab"
 
-in_gitlab_dict:
+proxy_env:
+  https_proxy: ""
+  http_proxy: ""
+  no_proxy: ""
+
+gitlab_dict:
   name: gitlab
   image:
     name: gitlab/gitlab-ce
@@ -20,7 +25,7 @@ in_gitlab_dict:
   db:
     deploy_postgresql: true
     image:
-      name: "{{ athena_registry }}/athena/postgresql"
+      name: "postgres"
       version: 9.5
     hostname: postgresql
     port: 5432
