@@ -47,8 +47,9 @@ module.exports = {
         let triggeredInstances = gitUtil.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes);
         console.log("***** Summary of what is going to be effectively done according to updated files *****");
         triggeredInstances.forEach(instance => {
+            //!!!!!!!   it's not only to display a sumary, IT DOES SET the .build
             let actions = "";
-            //TODO
+            //TODO support image
             // if(instance.dockerfile)
             //     actions = "built";
             // else if(instance.dockercompose)
@@ -70,7 +71,7 @@ module.exports = {
                 });
                 doWeBuild = dockercompose.hasBuild;
             }
-            instance.build = doWeBuild;
+            instance.toBuild = doWeBuild;
             if (doWeBuild)
                 actions = `build`;
             actions = `${actions} and deployed`;

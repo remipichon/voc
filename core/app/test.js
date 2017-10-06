@@ -85,7 +85,6 @@ function testYAML(){
 function testGitCmd(){
     var repoFolder = "/Users/pichr1/work2/voc-configuration/";
 
-    //TODO get the status AMD !!!
     var modifiedFiles = "cd " + configuration.repoFolder + "; git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)"
 
     utils.execCmd(modifiedFiles, function (error, stdout) {

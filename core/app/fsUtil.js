@@ -27,6 +27,7 @@ module.exports = {
             let type = typeAndResourceName.type;
 
             if (type == "dockerfile" || type == "imageconfig") {
+                //TODO support image
                 console.warn("dockerfile and imageconfig are not supported yet");
             } else {
                 let single = {
@@ -109,15 +110,13 @@ module.exports = {
             if (dockercompose.services) {
                 Object.keys(dockercompose.services).forEach(name => {
                     let service = dockercompose.services[name];
-                    if (service.build) {
-                        service.build.forEach(build => {
-                            dc.hasBuild = true;
-                            contextPaths.push({
-                                name: dc.name,
-                                directory: `${path}/${build.context}`,
-                                type: "dockercompose"
-                            });
-                        })
+                    if (service.build && service.build.context) {
+                        dc.hasBuild = true;
+                        contextPaths.push({
+                            name: dc.name,
+                            directory: `${path}/${service.build.context}`,
+                            type: "dockercompose"
+                        });
                     }
                 });
             }

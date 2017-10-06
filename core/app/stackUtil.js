@@ -1,51 +1,50 @@
-'use strict';
 
-var fs = require('fs');
 var _ = require("underscore");
 var gitlabUtil = require("./gitlabUtil");
 var configuration = require("./configuration");
+var utils = require("./utils");
+var composeUtil = require("./composeUtil");
 
 module.exports = {
 
-    manageStack(couple) {
-        if (couple.clean) {
-            console.log("Either docker-compose or config file for", couple.name, "has been deleted, remove associated stack");
-            deployStack(couple.dockercompose, "remove", couple.name);
+    manageStack(instance, dockercompose) {
+        let stackName = instance.instanceName;
+
+        if (instance.toClean) {
+            this.deployStack(stackName, "remove");
         } else {
-            var data;
-            try {
-                data = fs.readFileSync(couple.config, {encoding: 'utf-8'});
-            } catch (err) {
-                if (err.code === 'ENOENT') {
-                    console.log("Config json file not found for " + couple.dockercompose);
-                } else {
-                    console.error("Error while reading config json file:", err);
-                    throw err;
+            if(instance.toBuild){
+                let result = composeUtil.build(dockercompose.path);
+                if(result.error){
+                    gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {
+                        error: `An error occurred while building ${stackName} from ${dockercompose.path}. Stack will not be deployed. Error: ${result.error} `
+                    });
+                    return;
                 }
+                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {result: result});
             }
+            let instanceConfig = utils.readFileSyncToJson(instance.path);
 
-            if (data) {
-                console.log('Config for\n', couple.dockercompose, "\n", data);
-
-                var config = JSON.parse(data);
-                var action;
-
-                if (config.enabled) {
-                    action = "update"
-                } else {
-                    action = "remove"
-                }
-
-                deployStack(couple.dockercompose, action, couple.name);
+            var action;
+            if (instanceConfig.enabled) {
+                action = "update"
             } else {
-                console.info("Action was not performed on", couple.name, "because its config file was not found");
+                action = "remove"
             }
+
+            this.deployStack(stackName, action, dockercompose.path);
         }
     },
 
-    deployStack(composeFile, action, stackName) {
+    /**
+     *
+     * @param stackName     <String>
+     * @param action        <String> [update|remove]
+     * @param composeFile   <String> absolute path to single docker compose
+     */
+    deployStack(stackName, action, composeFile) {
+        //TODO make use of dockerUtil
         var shDockerStackDeploy;
-        var curlDockerStackDeploy;
         if (action == "create" || action == "update") {
             shDockerStackDeploy = "docker stack deploy --compose-file " + composeFile + ' ' + stackName;
         } else if (action == "remove") {
@@ -55,8 +54,7 @@ module.exports = {
             console.error("Action not any of create, update or remove for ", stackName);
             return;
         }
-        //if composeFile is yml => Docker API
-        //if composeFile is json => Docker HTTP API (doesn't support stack yet)
+        console.info(`Stack ${stackName} is going to be ${action} using docker compose file ${composeFile}. Command is:\n    ${shDockerStackDeploy}`);
         utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
             gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, gitlabUtil.getState(error, stderr, stdout));
         })

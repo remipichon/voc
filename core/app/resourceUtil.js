@@ -1,5 +1,6 @@
 'use strict';
 
+var stackUtil = require("./stackUtil");
 var _ = require("underscore");
 var configuration = require("./configuration");
 
@@ -10,7 +11,7 @@ module.exports = {
      *
      * <Resource>
      *     * name <String>
-     *     * type [dockercompose|stackDefinition|simpleStackInstance|stackInstance|dockerfile|imageConfig]
+     *     * type <String> [dockercompose|stackDefinition|simpleStackInstance|stackInstance|dockerfile|imageConfig]
      *     * [soulMate if type=simpleStackInstance or type=stackInstance]
      *     * [suffix if type=simpleStackInstance or type=stackInstance]
      *
@@ -25,7 +26,8 @@ module.exports = {
      *     * path           <String> absolute path
      *     * [stackDefinitionName   <String> if type=si]
      *     * [dockercomposeName     <String> if type=ssi]
-     *     * build          TODO ??
+     *     * toBuild           <Boolean>
+     *     * toClean           <Boolean>
      *
      *
      * <DockerCompose>
@@ -71,8 +73,6 @@ module.exports = {
 
     },
 
-
-
     /**
      * @summary Set .changed=true for all instances which are dependant on resource
      * @param resource      <Resource>
@@ -87,7 +87,7 @@ module.exports = {
                 return instance.dockercomposeName == resource.name;
             }).forEach(instance => {
                 instance.changed = true;
-                instance.clean = clean;
+                instance.toClean = clean;
             });
             //all stackInstance whose stackDefinition contains dockercompose
             let relatedStackDefinitions = stackDefinitions.filter(stackDefinition => {
@@ -97,27 +97,27 @@ module.exports = {
                 return _.contains(relatedStackDefinitions, instance.stackDefinitionName);
             }).forEach(instance => {
                 instance.changed = true;
-                instance.clean = clean;
+                instance.toClean = clean;
             });
         } else if (resource.type === "stackDefinition") {
             _.filter(instances, instance => {
                 return instance.stackDefinitionName === resource.name;
             }).forEach(instance => {
                 instance.changed = true;
-                instance.clean = clean;
+                instance.toClean = clean;
             });
         } else if (resource.type === "stackInstance") {
             let si = _.find(instances, instance => {
                 return instance.instanceName === resource.name;
             });
             si.changed = true;
-            si.clean = clean;
+            si.toClean = clean;
         } else if (resource.type === "simpleStackInstance") {
             let ssi = _.find(instances, instance => {
                 return instance.instanceName === resource.name;
             });
             ssi.changed = true;
-            ssi.clean = clean;
+            ssi.toClean = clean;
         }
     },
 
@@ -129,7 +129,22 @@ module.exports = {
      */
     triggerInstance(triggeredInstances, stackDefinitions, dockercomposes){
 
-        //TODO
+        triggeredInstances.forEach(instance => {
+            if(instance.dockercomposeName){
+                //TODO read instance Envs and generate intermediate compose
+                let dc = dockercomposes.find(compose => { return compose.name == instance.dockercomposeName});
+                stackUtil.manageStack(instance, dc);
+            }
+            if(instance.stackDefinitionName){
+                //TODO read stackDef dockercomposes + instance Envs and generate intermediate compose
+                let dc = {
+                    name: `docker-compose.intermediate.${instance.name}.yml`,
+                    path: `/path/to/docker-compose.intermediate.${instance.name}.yml`
+                };
+                stackUtil.manageStack(instance, dc);
+            }
+            //TODO images
+        });
 
     },
 

@@ -34,12 +34,11 @@ Each time the runner will start using the latest code in the volume. Just retry 
 * pipeline with runner should trigger the build/push/deploy
 
 
-Want to quickly test some JS code without anything around it ? 
+Want to quickly test some JS code without anything around it ? (assuming you have some valid conf at 'voc-configuration' and code at 'voc')
 ````
-cd voc/core
-docker exec -ti $(docker run -d -v $(pwd)/app:/app node tail -f /dev/null) bash
+docker exec -ti $(docker run -d -v '/var/run/docker.sock:/var/run/docker.sock' -v $(pwd)/voc-configuration/:/voc-configuration -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null) bash
 cd /app
-CI_PROJECT_DIR=/absolute/path/to/your/voc-configuration node script.js
+DEV=true CI_PROJECT_DIR=/voc-configuration node app.js
 ````
 
 > if CI_PROJECT_DIR points to a repo, running above command will do the same as triggering the runner

@@ -20,6 +20,11 @@ if (!process.env.CI_PROJECT_DIR) {
 console.log("Starting main.main() using configuration:");
 Object.keys(configuration).forEach(key => {if(typeof configuration[key] == "string") console.log(`    ${key} : ${configuration[key]}`)});
 
+if(process.env.DEV) {
+    console.debug("cleaning result.json");
+    utils.execCmdSync("rm " + configuration.repoFolder + configuration.artifactDir + configuration.resultFile, true);
+}
+
 main.main().catch(err => {
     console.error(err);
     process.exit(1);

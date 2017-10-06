@@ -8,6 +8,7 @@ var configuration = require("./configuration");
 module.exports = {
 
     manageImage(couple) {
+        //TODO refactor
         if (couple.clean) {
             console.log("Either Dockerfile or config file for", couple.name, "has been deleted, doint nothing, GC wil be there soon... ");
             gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, couple.name, {result: "has been unscheduled"});
@@ -38,6 +39,7 @@ module.exports = {
     },
 
     pushImage(config) {
+        //TODO refactor
         var dockerTag = "docker tag " + config.tag + " " + config.push;
         utils.execCmd(dockerTag, function (error, stdout, stderr) {
             var dockerPush = "docker push " + config.push;
@@ -48,6 +50,7 @@ module.exports = {
     },
 
     buildPushImage(Dockerfile, config) {
+        //TODO refactor
         if (!config.tag) {
             console.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
         }

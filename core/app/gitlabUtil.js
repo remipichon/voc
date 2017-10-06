@@ -2,7 +2,6 @@
 
 var fs = require('fs');
 var _ = require("underscore");
-var gitlabUtil = require("./gitlabUtil");
 var configuration = require("./configuration");
 
 module.exports = {
