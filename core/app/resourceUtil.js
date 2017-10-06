@@ -3,6 +3,8 @@
 var stackUtil = require("./stackUtil");
 var _ = require("underscore");
 var configuration = require("./configuration");
+var utils = require("./utils");
+var gitlabUtil = require("./gitlabUtil");
 
 module.exports = {
     /**
@@ -128,15 +130,43 @@ module.exports = {
      * @param dockercomposes            List<DockerCompose>
      */
     triggerInstance(triggeredInstances, stackDefinitions, dockercomposes){
+        let dir = configuration.repoFolder + configuration.artifactDir;
 
         triggeredInstances.forEach(instance => {
             if(instance.dockercomposeName){
-                //TODO read instance Envs and generate intermediate compose
+
+                let instanceConfig = utils.readFileSyncToJson(instance.path);
+                let env = "";
+                if(instanceConfig.parameters){
+                    instanceConfig.parameters.forEach(param => {
+                        env += `${ param }`
+                    });
+                }
                 let dc = dockercomposes.find(compose => { return compose.name == instance.dockercomposeName});
-                stackUtil.manageStack(instance, dc);
+
+                let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
+                let configCmd = `${env} docker-compose -f ${dc.path} config > ${intermediateCompose}`;
+
+                console.log("*******",configCmd)
+                let result = utils.execCmdSync(configCmd, true);
+
+                if(result.error){
+                    gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {
+                        error: `An error occurred while generating intermediate compose file for ${instance.instanceName} from ${dc}. Stack will not be deployed. Error: ${result.error} `
+                    });
+                    return;
+                }
+                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {result:
+                        `Successfully built ${intermediateCompose}`
+                });
+
+                stackUtil.manageStack(instance, intermediateCompose);
             }
             if(instance.stackDefinitionName){
                 //TODO read stackDef dockercomposes + instance Envs and generate intermediate compose
+                //                DCF=' -f docker-compose.yml '
+                // let configCmd = `${env} docker-compose ${composeFiles} config > docker-compose.intermediate.${instance.instanceName}.yml`;
+
                 let dc = {
                     name: `docker-compose.intermediate.${instance.name}.yml`,
                     path: `/path/to/docker-compose.intermediate.${instance.name}.yml`

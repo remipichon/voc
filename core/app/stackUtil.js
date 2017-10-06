@@ -7,17 +7,17 @@ var composeUtil = require("./composeUtil");
 
 module.exports = {
 
-    manageStack(instance, dockercompose) {
+    manageStack(instance, dockercomposePath) {
         let stackName = instance.instanceName;
 
         if (instance.toClean) {
             this.deployStack(stackName, "remove");
         } else {
             if(instance.toBuild){
-                let result = composeUtil.build(dockercompose.path);
+                let result = composeUtil.build(dockercomposePath);
                 if(result.error){
                     gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {
-                        error: `An error occurred while building ${stackName} from ${dockercompose.path}. Stack will not be deployed. Error: ${result.error} `
+                        error: `An error occurred while building ${stackName} from ${dockercomposePath}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }
@@ -32,7 +32,7 @@ module.exports = {
                 action = "remove"
             }
 
-            this.deployStack(stackName, action, dockercompose.path);
+            this.deployStack(stackName, action, dockercomposePath);
         }
     },
 
