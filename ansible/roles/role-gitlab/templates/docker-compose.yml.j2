@@ -1,13 +1,13 @@
-version: "{{ in_gitlab_dict.deploy.compose_version }}"
+version: "{{ _gitlab_dict.deploy.compose_version }}"
 
 services:
   gitlab:
-    image: "{{ in_gitlab_dict.image.name }}:{{ in_gitlab_dict.image.version }}"
+    image: "{{ _gitlab_dict.image.name }}:{{ _gitlab_dict.image.version }}"
     healthcheck:
-      {{ in_gitlab_dict.healthcheck | to_nice_yaml(indent=2) | indent(width=6) }}
+      {{ _gitlab_dict.healthcheck | to_nice_yaml(indent=2) | indent(width=6) }}
     networks:
       internal:
-{% for item in in_gitlab_dict.deploy.networks %}
+{% for item in _gitlab_dict.deploy.networks %}
       {{ item.name }}:
 {% if item.aliases is defined and item.aliases | length > 0 %}
         aliases:
@@ -17,61 +17,61 @@ services:
 {% endif %}
 {% endfor %}
     ports:
-      - "{{ in_gitlab_dict.http_port }}:80"
-      - "{{ in_gitlab_dict.https_port }}:443"
-      - "{{ in_gitlab_dict.git_port }}:22"
+      - "{{ _gitlab_dict.http_port }}:80"
+      - "{{ _gitlab_dict.https_port }}:443"
+      - "{{ _gitlab_dict.git_port }}:22"
     volumes:
-      - "{{ in_gitlab_dict.data_path }}:/var/opt/gitlab"
-      - "{{ in_gitlab_dict.log_path }}:/var/log/gitlab"
-      - "{{ in_gitlab_dict.config_path }}:/etc/gitlab"
-      - "{{ in_gitlab_dict.config_path }}/omniauth_callbacks_controller.rb:/opt/gitlab/embedded/service/gitlab-rails/app/controllers/omniauth_callbacks_controller.rb"
-{% for ligne in in_gitlab_dict.volumes | default([]) %}
+      - "{{ _gitlab_dict.data_path }}:/var/opt/gitlab"
+      - "{{ _gitlab_dict.log_path }}:/var/log/gitlab"
+      - "{{ _gitlab_dict.config_path }}:/etc/gitlab"
+      - "{{ _gitlab_dict.config_path }}/omniauth_callbacks_controller.rb:/opt/gitlab/embedded/service/gitlab-rails/app/controllers/omniauth_callbacks_controller.rb"
+{% for ligne in _gitlab_dict.volumes | default([]) %}
       - "{{ ligne }}"
 {% endfor %}
     environment:
-{% for ligne in in_gitlab_dict.environment | default([]) %}
+{% for ligne in _gitlab_dict.environment | default([]) %}
       - "{{ ligne }}"
 {% endfor %}
-{% if in_gitlab_dict.deploy.mode == 'swarm' and in_gitlab_dict.deploy.definition is defined %}
+{% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.deploy.definition is defined %}
     deploy:
-      {{ in_gitlab_dict.deploy.definition | to_nice_yaml(indent=2) | indent(width=6) }}
+      {{ _gitlab_dict.deploy.definition | to_nice_yaml(indent=2) | indent(width=6) }}
 {% endif %}
 
-{% if in_gitlab_dict.db.deploy_postgresql %}
-  {{ in_gitlab_dict.db.hostname }}:
-    image: "{{ in_gitlab_dict.db.image.name }}:{{ in_gitlab_dict.db.image.version }}"
+{% if _gitlab_dict.db.deploy_postgresql %}
+  {{ _gitlab_dict.db.hostname }}:
+    image: "{{ _gitlab_dict.db.image.name }}:{{ _gitlab_dict.db.image.version }}"
     networks:
       internal:
     volumes:
-      - "{{ in_gitlab_dict.db.data_path }}:/var/lib/postgresql/data"
+      - "{{ _gitlab_dict.db.data_path }}:/var/lib/postgresql/data"
     environment:
-      - POSTGRES_USER={{ in_gitlab_dict.db.user }}
-      - POSTGRES_PASSWORD={{ in_gitlab_dict.db.password }}
-      - POSTGRES_DB={{ in_gitlab_dict.db.name }}
-{% if in_gitlab_dict.deploy.mode == 'swarm' and in_gitlab_dict.deploy.definition is defined %}
+      - POSTGRES_USER={{ _gitlab_dict.db.user }}
+      - POSTGRES_PASSWORD={{ _gitlab_dict.db.password }}
+      - POSTGRES_DB={{ _gitlab_dict.db.name }}
+{% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.deploy.definition is defined %}
     deploy:
-      {{ in_gitlab_dict.deploy.definition | to_nice_yaml(indent=2) | indent(width=6) }}
+      {{ _gitlab_dict.deploy.definition | to_nice_yaml(indent=2) | indent(width=6) }}
 {% endif %}
 {% endif %}
  
-{% if not in_gitlab_dict.redis.keep_internal %}
-  {{ in_gitlab_dict.redis.hostname }}:
-    image: "{{ in_gitlab_dict.redis.image.name }}:{{ in_gitlab_dict.redis.image.version }}"
+{% if not _gitlab_dict.redis.keep_internal %}
+  {{ _gitlab_dict.redis.hostname }}:
+    image: "{{ _gitlab_dict.redis.image.name }}:{{ _gitlab_dict.redis.image.version }}"
     networks:
       internal:
     volumes:
-      - "{{ in_gitlab_dict.redis.config_path }}/redis.conf:/usr/local/etc/redis/redis.conf"
-      - "{{ in_gitlab_dict.redis.data_path }}:/data"
-{% if in_gitlab_dict.deploy.mode == 'swarm' and in_gitlab_dict.redis.deploy is defined %}
+      - "{{ _gitlab_dict.redis.config_path }}/redis.conf:/usr/local/etc/redis/redis.conf"
+      - "{{ _gitlab_dict.redis.data_path }}:/data"
+{% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.redis.deploy is defined %}
     deploy:
-      {{ in_gitlab_dict.redis.deploy | to_nice_yaml(indent=2) | indent(width=6) }}
+      {{ _gitlab_dict.redis.deploy | to_nice_yaml(indent=2) | indent(width=6) }}
 {% endif %}
 {% endif %}
 
 networks:
   internal:
     external: false
-{% for item in in_gitlab_dict.deploy.networks %}
+{% for item in _gitlab_dict.deploy.networks %}
   {{ item.name }}:
     external: {{ item.isExternal | lower }}
 {% endfor %}
