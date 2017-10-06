@@ -1,0 +1,21 @@
+- name: Ensure Gitlab stack has an up-to-date configuration
+  docker_service:
+    project_name: "{{ in_gitlab_dict.name }}"
+    project_src: "{{ in_gitlab_dict.role_path }}"
+    pull: "{{ in_gitlab_dict.deploy.force_pull }}"
+    state: "present"
+
+- name: Add cron task to backup Gitlab data
+  cron:
+    name: "backup gitlab data"
+    minute: "0"
+    hour: "5"
+    job: "docker exec -t {{ in_gitlab_dict.name }}_gitlab_1 gitlab-rake gitlab:backup:create"
+
+- name: Waiting for Gitlab service to be ready...
+  shell: docker ps | grep {{ in_gitlab_dict.name }}_gitlab_1
+  register: gitlab_status
+  until: gitlab_status.stdout.find("healthy") != -1
+  retries: 30
+  delay: 10
+  become: true
