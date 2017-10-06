@@ -18,3 +18,58 @@ repo_version: "HEAD"
 
 docker_compose_version: "1.15.0"
 
+# Gitlab configuration
+
+gitlab_root_path: "/data/voc/gitlab"
+gitlab_dict:
+  name: gitlab
+  image:
+    name: gitlab/gitlab-ce
+    version: 9.2.6-ce.0
+  uid: 998
+  gid: 998
+  http_port: 80
+  https_port: 443
+  git_port: 2222
+  role_path: "{{ gitlab_root_path }}/role/"
+  data_path: "{{ gitlab_root_path }}/data/"
+  config_path: "{{ gitlab_root_path }}/config/"
+  log_path: "{{ gitlab_root_path }}/log/"
+  healthcheck:
+    retries: 10
+  redis:
+    keep_internal: true
+  db:
+    deploy_postgresql: true
+    image:
+      name: "postgres"
+      version: 9.5
+    hostname: postgresql
+    port: 5432
+    data_path: "{{ gitlab_root_path }}/postgresql"
+    name: gitlab
+    user: gitlab
+    password: "s3cR3t"
+  deploy:
+    networks: []
+    mode: 'default'
+    compose_version: '3'
+    delegate_to: "{{ inventory_hostname }}"
+    force_pull: no
+  configuration:
+    external_url: "http://{{ ansible_ens3.ipv4.address }}"
+    ssh_host: "{{ ansible_ens3.ipv4.address }}"
+    time_zone: "Europe/Paris"
+    download_path: /var/opt/gitlab/tmp/repositories
+    backup:
+      enable: true
+      path: /var/opt/gitlab/backups
+      keep_time: 604800
+      cron_schedule: "0 5 * * *"
+    trusted_proxies: "localhost"
+    enable_https: false
+  environment:
+    GITLAB_ROOT_PASSWORD: "5uP325eC23t"
+    http_proxy: "{{ proxy_env.http_proxy | default('') }}"
+    https_proxy: "{{ proxy_env.https_proxy | default('') }}"
+    no_proxy: "{{ proxy_env.no_proxy | default('') }}"
