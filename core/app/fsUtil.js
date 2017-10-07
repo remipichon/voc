@@ -77,9 +77,13 @@ module.exports = {
                     return;
                 }
                 let instance = {
-                    instanceName: single.name,
                     path: single.path,
+                    resourceName: single.name
                 };
+                if(single.suffix)
+                    instance.instanceName = single.name + '.' + single.suffix;
+                else
+                    instance.instanceName = single.name;
                 if (single.type === "stackInstance") {
                     let stackDefinition = _.find(stackDefinitions, stackDefinition => {
                         return stackDefinition.name == single.soulMateName

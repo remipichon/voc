@@ -8,7 +8,7 @@ var composeUtil = require("./composeUtil");
 module.exports = {
 
     manageStack(instance, dockercomposePath) {
-        let stackName = instance.instanceName;
+        let stackName = instance.resourceName;
 
         if (instance.toClean) {
             this.deployStack(stackName, "remove");
@@ -17,7 +17,7 @@ module.exports = {
                 let result = composeUtil.build(dockercomposePath);
                 if(result.error){
                     utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {
-                        error: `${instance.instanceName}: An error occurred while building from ${dockercomposePath}. Stack will not be deployed. Error: ${result.error} `
+                        error: `${stackName}: An error occurred while building from ${dockercomposePath}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }

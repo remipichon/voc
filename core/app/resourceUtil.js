@@ -150,6 +150,8 @@ module.exports = {
             //TODO read if enabled
             //stackUtil.manageStack(instance, intermediateCompose); //TODO pass remove if
 
+            //TODO check for same resource name and check if deploy target is different
+
             if (instance.dockercomposeName) {
 
 
@@ -324,7 +326,7 @@ module.exports = {
             return {
                 name: matches[3],
                 soulMate: matches[2],  //dockerComposeName
-                suffix: (matches[4] == "json") ? null : matches[3], //couldn't make a proper regexp for that
+                suffix: (matches[4] == "json") ? null : matches[4], //couldn't make a proper regexp for that
                 type: "simpleStackInstance"
             };
         }
@@ -334,7 +336,7 @@ module.exports = {
             return {
                 name: matches[3],
                 soulMate: matches[2], //stackDefinitionName
-                suffix: (matches[4] == "json") ? null : matches[3], //couldn't make a proper regexp for that
+                suffix: (matches[4] == "json") ? null : matches[4], //couldn't make a proper regexp for that
                 type: "stackInstance"
             };
         }
