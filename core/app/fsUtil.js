@@ -6,6 +6,9 @@ var YAML = require('yamljs');
 var _ = require("underscore");
 var resourceUtil = require("./resourceUtil");
 var configuration = require("./configuration");
+var utils = require("./utils");
+var configuration = require("./configuration");
+var _ = require("underscore");
 
 module.exports = {
 
@@ -64,6 +67,15 @@ module.exports = {
         let usedStackDefinitions = []; // List<String>
         singles.forEach(single => {
             if (single.type === "simpleStackInstance" || single.type === "stackInstance") {
+                let alreadyExisiting = instances.find(instance => { return instance.instanceName == single.name});
+                if(alreadyExisiting){
+                    alreadyExisiting.invalid = true;
+                    console.warn(`     ${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`)
+                    utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, single.name, {
+                        warn: `${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`
+                    });
+                    return;
+                }
                 let instance = {
                     instanceName: single.name,
                     path: single.path,
@@ -93,6 +105,8 @@ module.exports = {
                 instances.push(instance);
             }
         });
+
+        instances = _.where(instances, instance => {return !instance.invalid});
 
         return {
             instances: instances,

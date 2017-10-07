@@ -1,9 +1,32 @@
 var exec = require('child_process').exec;
 var execSync = require('child_process').execSync;
 var fs = require('fs');
+var configuration = require("./configuration");
+
 
 module.exports = {
 
+    writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
+        var resultJson = {};
+        if (fs.existsSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile)) {
+            var resultTest = fs.readFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile).toString();
+            resultJson = JSON.parse(resultTest);
+        }
+        if (resultJson[key]) {
+            if (!Array.isArray(resultJson[key])) {
+                var previous = resultJson[key];
+                resultJson[key] = [];
+                resultJson[key].push(previous)
+            }
+            resultJson[key].push(value);
+        } else
+            resultJson[key] = value;
+        if (!fs.existsSync(configuration.repoFolder + configuration.artifactDir)) {
+            fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
+        }
+        console.log(`     ${key}: Add to resultJson `, value);
+        fs.writeFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile, JSON.stringify(resultJson));
+    },
 
     execCmd: function (cmd, callback, printStdout = false) {
         exec(cmd, function (error, stdout, stderr) {

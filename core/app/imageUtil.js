@@ -11,7 +11,7 @@ module.exports = {
         //TODO refactor
         if (couple.clean) {
             console.log("Either Dockerfile or config file for", couple.name, "has been deleted, doint nothing, GC wil be there soon... ");
-            gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, couple.name, {result: "has been unscheduled"});
+            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, couple.name, {result: "has been unscheduled"});
             return;
         } else {
             var data;
@@ -44,7 +44,7 @@ module.exports = {
         utils.execCmd(dockerTag, function (error, stdout, stderr) {
             var dockerPush = "docker push " + config.push;
             utils.execCmd(dockerPush, function (error, stdout, stderr) {
-                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.push, gitlabUtil.getState(error, stderr, stdout));
+                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.push, gitlabUtil.getState(error, stderr, stdout));
             })
         })
     },
@@ -57,7 +57,7 @@ module.exports = {
 
         var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " . ";
         utils.execCmd(dockerBuild, function (error, stdout, stderr) {
-            gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.tag, gitlabUtil.getState(error, stderr, stdout));
+            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.tag, gitlabUtil.getState(error, stderr, stdout));
 
             if (config.push) this.pushImage(config);
         })

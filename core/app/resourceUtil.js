@@ -149,7 +149,7 @@ module.exports = {
 
             //TODO read if enabled
             //stackUtil.manageStack(instance, intermediateCompose); //TODO pass remove if
-            
+
             if (instance.dockercomposeName) {
 
 
@@ -165,12 +165,12 @@ module.exports = {
                 let result = utils.execCmdSync(configCmd, true);
 
                 if (result.error) {
-                    gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                    utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
                         error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${dc}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }
-                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
                     result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
                 });
 
@@ -199,7 +199,7 @@ module.exports = {
                                 });
                             }
                             if (!dc) {
-                                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
                                     error: `${instance.instanceName}: compose file ${composeName} doesn't seem to exist. Stack will not be deployed.`
                                 });
                                 skip = true;
@@ -211,7 +211,7 @@ module.exports = {
 
                         })
                     } else {
-                        gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                        utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
                             error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} doesn't have a 'composes' array with valid docker composes names. Stack will not be deployed`
                         });
                         return;
@@ -227,12 +227,12 @@ module.exports = {
                 let result = utils.execCmdSync(configCmd, true);
 
                 if (result.error) {
-                    gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                    utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
                         error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${composeFiles}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }
-                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
                     result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
                 });
 
