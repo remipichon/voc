@@ -7,8 +7,6 @@ var configuration = require("./configuration");
 module.exports = {
 
     writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
-        console.log(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, key, value);
-
         var resultJson = {};
         if (fs.existsSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile)) {
             var resultTest = fs.readFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile).toString();
@@ -26,7 +24,7 @@ module.exports = {
         if (!fs.existsSync(configuration.repoFolder + configuration.artifactDir)) {
             fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
         }
-        console.log("resultJson", resultJson);
+        console.log(`     ${key}: Add to resultJson `, value);
         fs.writeFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile, JSON.stringify(resultJson));
     },
 

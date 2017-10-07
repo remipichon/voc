@@ -5,6 +5,7 @@ var _ = require("underscore");
 var configuration = require("./configuration");
 var utils = require("./utils");
 var gitlabUtil = require("./gitlabUtil");
+//don't import fsutil (circular deps)
 
 module.exports = {
     /**
@@ -20,7 +21,8 @@ module.exports = {
      * <StackDefinition>
      *     * name   <String>
      *     * path   <String> absolute path
-     *     * dockercomposes List<DockerCompose>
+     *     * dockercomposes List<DockerCompose> ??? not in object before reading file
+     *     * dockercomposesCmdReady <String>  pre-formated cmd ready ( -f xxx -f yyy) ??? not in object before reading file
      *
      *
      * <Instance>
@@ -48,7 +50,7 @@ module.exports = {
 
         //remove dockercomposes not used by any instances
         stackDefinitions.forEach(stackDefinition => {
-            let stackDefinitionConfig = fs.readFileSync(stackDefinition.name, {encoding: 'utf-8'});
+            let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path, {encoding: 'utf-8'});
             if (stackDefinitionConfig.dockercomposes && Array.isArray(stackDefinitionConfig.dockercomposes)) {
                 stackDefinitionConfig.dockercomposes.forEach(dockercomposeRelativePath => {
                     let dockercomposeName = resourceUtil.getTypeAndResourceName(dockercomposeRelativePath);
@@ -123,6 +125,17 @@ module.exports = {
         }
     },
 
+    getInstanceEnvs: function (instance) {
+        let instanceConfig = utils.readFileSyncToJson(instance.path)
+        let env = "";
+        if (instanceConfig.parameters && Array.isArray(instanceConfig.parameters)) {
+            instanceConfig.parameters.forEach(param => {
+                env += `${ param }`
+            });
+        }
+        return env;
+    },
+
     /**
      * @summary perform actions for each triggeredInstances
      * @param triggeredInstances        List<Instance>
@@ -133,45 +146,97 @@ module.exports = {
         let dir = configuration.repoFolder + configuration.artifactDir;
 
         triggeredInstances.forEach(instance => {
-            if(instance.dockercomposeName){
 
-                let instanceConfig = utils.readFileSyncToJson(instance.path);
-                let env = "";
-                if(instanceConfig.parameters){
-                    instanceConfig.parameters.forEach(param => {
-                        env += `${ param }`
-                    });
-                }
-                let dc = dockercomposes.find(compose => { return compose.name == instance.dockercomposeName});
+            //TODO read if enabled
+            //stackUtil.manageStack(instance, intermediateCompose); //TODO pass remove if
+            
+            if (instance.dockercomposeName) {
+
+
+                let env = this.getInstanceEnvs(instance);
+                let dc = dockercomposes.find(compose => {
+                    return compose.name == instance.dockercomposeName
+                });
 
                 let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
                 let configCmd = `${env} docker-compose -f ${dc.path} config > ${intermediateCompose}`;
 
-                console.log("*******",configCmd)
+                console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
                 let result = utils.execCmdSync(configCmd, true);
 
-                if(result.error){
-                    gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {
-                        error: `An error occurred while generating intermediate compose file for ${instance.instanceName} from ${dc}. Stack will not be deployed. Error: ${result.error} `
+                if (result.error) {
+                    gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                        error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${dc}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }
-                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {result:
-                        `Successfully built ${intermediateCompose}`
+                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                    result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
+                });
+
+                stackUtil.manageStack(instance, intermediateCompose); //TODO pass remove if
+            }
+            if (instance.stackDefinitionName) {
+                let env = this.getInstanceEnvs(instance);
+                let stackDefinition = stackDefinitions.find(sd => {
+                    return sd.name = instance.stackDefinitionName
+                });
+
+                let skip = false;
+                if (!stackDefinition.dockercomposesCmdReady) {
+                    let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path);
+                    stackDefinition.dockercomposesCmdReady = "";
+                    stackDefinition.dockercomposes = [];
+                    if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
+                        stackDefinitionConfig.composes.forEach(composeName => {
+                            let dc = dockercomposes.find(compose => {
+                                return compose.name == composeName
+                            });
+                            if(!dc){
+                                composeName = this.getTypeAndResourceName(composeName).name;
+                                dc = dockercomposes.find(compose => {
+                                    return compose.name == composeName
+                                });
+                            }
+                            if (!dc) {
+                                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                                    error: `${instance.instanceName}: compose file ${composeName} doesn't seem to exist. Stack will not be deployed.`
+                                });
+                                skip = true;
+                                return;
+                            }
+
+                            stackDefinition.dockercomposesCmdReady += ` -f ${dc.path} `;
+                            stackDefinition.dockercomposes.push(dc.name);
+
+                        })
+                    } else {
+                        gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                            error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} doesn't have a 'composes' array with valid docker composes names. Stack will not be deployed`
+                        });
+                        return;
+                    }
+                }
+                if (skip) return;
+
+                let composeFiles = stackDefinition.dockercomposesCmdReady;
+                let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
+                let configCmd = `${env} docker-compose ${composeFiles} config > ${intermediateCompose}`;
+
+                console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
+                let result = utils.execCmdSync(configCmd, true);
+
+                if (result.error) {
+                    gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                        error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${composeFiles}. Stack will not be deployed. Error: ${result.error} `
+                    });
+                    return;
+                }
+                gitlabUtil.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                    result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
                 });
 
                 stackUtil.manageStack(instance, intermediateCompose);
-            }
-            if(instance.stackDefinitionName){
-                //TODO read stackDef dockercomposes + instance Envs and generate intermediate compose
-                //                DCF=' -f docker-compose.yml '
-                // let configCmd = `${env} docker-compose ${composeFiles} config > docker-compose.intermediate.${instance.instanceName}.yml`;
-
-                let dc = {
-                    name: `docker-compose.intermediate.${instance.name}.yml`,
-                    path: `/path/to/docker-compose.intermediate.${instance.name}.yml`
-                };
-                stackUtil.manageStack(instance, dc);
             }
             //TODO images
         });
@@ -179,14 +244,16 @@ module.exports = {
     },
 
     _isResourceFile: function (pattern, path) {
-        return pattern.exec(path) !== null
+        let match = pattern.exec(path)
+        if(match && match[0] != ".json") return true;
+        return false;
     },
 
     resourceTypeRegex: {
         "dockercompose": /docker-compose\.([a-zA-Z0-9_-]+)\.yml$/m,           //docker-compose.<dc-name>.yml
         "stackDefinition": /stack-definition\.([a-zA-Z0-9_-]+)\.json$/m,       //stack-definition.<sd-name>.json
-        "stackInstance": /stack-instance\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<sd-name>.<si-name>[.<suffix>].json
-        "simpleStackInstance": /simple-stack-instance\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<dc-name>.<si-name>.json
+        "stackInstance": /(^stack-instance|\/stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<sd-name>.<si-name>[.<suffix>].json
+        "simpleStackInstance": /(^simple-stack-instance|\/simple-stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<dc-name>.<si-name>.json
         "dockerfile": /Dockerfile_([a-zA-Z0-9]+)$/m,
         "imageConfig": /Dockerfile_([a-zA-Z0-9]+)_config\.json$/m
     },
@@ -224,9 +291,9 @@ module.exports = {
         return this._isResourceFile(this.resourceTypeRegex.imageConfig, fileName);
     },
 
-    _getResourceName(pattern, path, matchIndex){
+    _getResourceName(pattern, path, matchIndex = null){
         var match = pattern.exec(path);
-        //console.log(pattern, path,match)
+        // console.log("pattern",pattern, "path",path, "match",match)
         if (match) {
             if (matchIndex)
                 return match[matchIndex];
@@ -255,9 +322,9 @@ module.exports = {
         if (this.isSimpleStackInstance(path)) {
             let matches = this._getResourceName(this.resourceTypeRegex.simpleStackInstance, path);
             return {
-                name: matches[2],
-                soulMate: matches[1],  //dockerComposeName
-                suffix: (matches[3] == "json") ? null : matches[3], //couldn't make a proper regexp for that
+                name: matches[3],
+                soulMate: matches[2],  //dockerComposeName
+                suffix: (matches[4] == "json") ? null : matches[3], //couldn't make a proper regexp for that
                 type: "simpleStackInstance"
             };
         }
@@ -265,9 +332,9 @@ module.exports = {
         if (this.isStackInstance(path)) {
             let matches = this._getResourceName(this.resourceTypeRegex.stackInstance, path);
             return {
-                name: matches[2],
-                soulMate: matches[1], //stackDefinitionName
-                suffix: (matches[3] == "json") ? null : matches[3], //couldn't make a proper regexp for that
+                name: matches[3],
+                soulMate: matches[2], //stackDefinitionName
+                suffix: (matches[4] == "json") ? null : matches[3], //couldn't make a proper regexp for that
                 type: "stackInstance"
             };
         }

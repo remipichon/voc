@@ -57,6 +57,8 @@ module.exports = {
             return {name: stackDefinition.name, path: stackDefinition.path}
         });
 
+        // console.log("***** debug singles\n",singles,"\n********");
+
 
         //populating instances
         let usedStackDefinitions = []; // List<String>

@@ -5,13 +5,12 @@ var fs = require('fs');
 module.exports = {
 
 
-    execCmd: function (cmd, callback) {
-        console.log("exec cmd", cmd);
+    execCmd: function (cmd, callback, printStdout = false) {
         exec(cmd, function (error, stdout, stderr) {
             // command output is in stdout
             if (error) console.error("error", error);
-            console.log(cmd, "stdout is");
-            console.log(stdout);
+            if(printStdout)
+                console.log(`cmd ${cmd} stdout is\n${stdout}`);
             if (stderr) console.error("stderr", stderr);
             if (callback) callback(error, stdout, stderr)
         });
