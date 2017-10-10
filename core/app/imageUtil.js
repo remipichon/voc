@@ -1,45 +1,24 @@
 'use strict';
 
-var fs = require('fs');
 var _ = require("underscore");
 var gitlabUtil = require("./gitlabUtil");
 var configuration = require("./configuration");
 
 module.exports = {
 
-    manageImage(couple) {
-        //TODO refactor
-        if (couple.clean) {
-            console.log("Either Dockerfile or config file for", couple.name, "has been deleted, doint nothing, GC wil be there soon... ");
-            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, couple.name, {result: "has been unscheduled"});
+    manageImage(instance, dockerfilePath) {
+        if (instance.toClean) {
+            console.log("Either Dockerfile or config file for", instance.name, "has been deleted, doint nothing, GC wil be there soon... ");
+            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.name, {result: "has been unscheduled"});
             return;
-        } else {
-            var data;
-            try {
-                data = fs.readFileSync(couple.config, {encoding: 'utf-8'});
-            } catch (err) {
-                if (err.code === 'ENOENT') {
-                    console.log("file not found for " + couple.config);
-                } else {
-                    console.error(`Error while reading file ${couple.config}:`, err);
-                    throw err;
-                }
-            }
-
-            if (data) {
-                console.log('Config file for\n', couple.dockerfile, "\n", data);
-
-                var config = JSON.parse(data);
-                this.buildPushImage(couple.dockerfile, config);
-
-            } else {
-                console.info(`Action was not performed because ${configFile} was not found`);
-            }
+        }
+        var config = utils.readFileSyncToJson(instance.path);
+        if(this.buildImage(config, dockerfilePath) && config.push){
+            this.pushImage(config);
         }
     },
 
     pushImage(config) {
-        //TODO refactor
         var dockerTag = "docker tag " + config.tag + " " + config.push;
         utils.execCmd(dockerTag, function (error, stdout, stderr) {
             var dockerPush = "docker push " + config.push;
@@ -49,17 +28,23 @@ module.exports = {
         })
     },
 
-    buildPushImage(Dockerfile, config) {
-        //TODO refactor
+    buildImage(config, Dockerfile) {
         if (!config.tag) {
             console.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
         }
 
         var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " . ";
-        utils.execCmd(dockerBuild, function (error, stdout, stderr) {
-            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.tag, gitlabUtil.getState(error, stderr, stdout));
+        let result = utils.execCmdSync(dockerBuild, true);
 
-            if (config.push) this.pushImage(config);
-        })
+        if (result.error) {
+            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.name, {
+                error: `${config.name}: An error occurred while building image from ${Dockerfile}. Image will not be pushed. Error: ${result.error} `
+            });
+            return false;
+        }
+        utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+            result: `${config.name}: Successfully built ${Dockerfile}`
+        });
+        return true;
     }
 };

@@ -5,6 +5,7 @@ var _ = require("underscore");
 var configuration = require("./configuration");
 var utils = require("./utils");
 var gitlabUtil = require("./gitlabUtil");
+var imageUtil = require("./imageUtil");
 //don't import fsutil (circular deps)
 
 module.exports = {
@@ -142,7 +143,7 @@ module.exports = {
      * @param stackDefinitions          List<StackDefinition>
      * @param dockercomposes            List<DockerCompose>
      */
-    triggerInstance(triggeredInstances, stackDefinitions, dockercomposes){
+    triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles){
         let dir = configuration.repoFolder + configuration.artifactDir;
 
         triggeredInstances.forEach(instance => {
@@ -240,7 +241,11 @@ module.exports = {
 
                 stackUtil.manageStack(instance, intermediateCompose);
             }
-            //TODO images
+            if (instance.image){
+                let dockerfilePath = _.find(dockerfiles, df => { return df.name == instance.name}).path;
+                imageUtil.manageImage(instance, dockerfilePath);
+            }
+
         });
 
     },
@@ -256,8 +261,8 @@ module.exports = {
         "stackDefinition": /stack-definition\.([a-zA-Z0-9_-]+)\.json$/m,       //stack-definition.<sd-name>.json
         "stackInstance": /(^stack-instance|\/stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<sd-name>.<si-name>[.<suffix>].json
         "simpleStackInstance": /(^simple-stack-instance|\/simple-stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<dc-name>.<si-name>.json
-        "dockerfile": /Dockerfile_([a-zA-Z0-9]+)$/m,
-        "imageConfig": /Dockerfile_([a-zA-Z0-9]+)_config\.json$/m
+        "dockerfile": /Dockerfile\.([a-zA-Z0-9]+)$/m,
+        "imageConfig": /image\.([a-zA-Z0-9]+)\.json$/m
     },
 
     /**

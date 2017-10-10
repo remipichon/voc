@@ -14,6 +14,7 @@ module.exports = {
         let vocResources = fsUtil.getVocResources(allResourcePaths);
         let instances = vocResources.instances;
         let dockercomposes = vocResources.dockercomposes;
+        var dockerfiles = vocResources.dockerfiles;
         let stackDefinitions = vocResources.stackDefinitions;
         let usedStackDefinitions = vocResources.usedStackDefinitions;
         console.log("***** Here is what I could extract from the file system *****");
@@ -22,6 +23,8 @@ module.exports = {
         console.log("   dockercomposes\n    ", dockercomposes);
         console.log("   *****                                                   *****");
         console.log("   stackDefinitions\n  ", stackDefinitions);
+        console.log("   *****                                                   *****");
+        console.log("   dockerfiles\n  ", dockerfiles);
         console.log("   *****                                                   *****");
         console.log("   usedStackDefinitions\n  ", usedStackDefinitions);
         console.log("*****  That's all from the file system                   *****");
@@ -32,9 +35,12 @@ module.exports = {
         console.log("   ", stackDefinitions);
         console.log("***** Here are all actually used docker composes *****");
         console.log("   ", dockercomposes);
+        console.log("***** Here are all actually used docker composes *****");
+        console.log("   ", dockerfiles);
 
 
-        let contextPaths = fsUtil.getContextPaths(dockercomposes);
+        let imageconfigs = _.where(instances, instance => { return instance.imageConfig});
+        let contextPaths = fsUtil.getContextPaths(dockercomposes, imageconfigs);
         console.log("***** Here are all the contexts used by one of the valid used docker composes *****");
         console.log("   ",contextPaths);
 
@@ -49,13 +55,10 @@ module.exports = {
         triggeredInstances.forEach(instance => {
             //!!!!!!!   it's not only to display a sumary, IT DOES SET the .build
             let actions = "";
-            //TODO support image
-            // if(instance.dockerfile)
-            //     actions = "built";
-            // else if(instance.dockercompose)
-            //     actions = "built and deployed";
-
             let doWeBuild = false;
+            if(instance.imageConfig)
+                doWeBuild = true;
+
             if (instance.stackDefinitionName) {
                 let stackDef = _.find(stackDefinitions, stackDefinition => {
                     return stackDefinition.name === instance.stackDefinitionName;
@@ -83,6 +86,6 @@ module.exports = {
         console.log("****************");
         console.log("Here comes Moby");
         console.log("****************");
-        resourceUtil.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes);
+        resourceUtil.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles);
     }
 };

@@ -21,6 +21,7 @@ module.exports = {
         let singles = [];       // name, type, path, if instance: soulMateName, if instance: suffix
         let instances = [];     // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
         let dockercomposes = [];    //name, path
+        let dockerfiles = []; //name, path
         let stackDefinitions = [];  //name, path, dockercomposes (names)
 
         //populating singles
@@ -29,21 +30,18 @@ module.exports = {
             let name = typeAndResourceName.name;
             let type = typeAndResourceName.type;
 
-            if (type == "dockerfile" || type == "imageconfig") {
-                //TODO support image
-                console.warn("dockerfile and imageconfig are not supported yet");
-            } else {
-                let single = {
-                    name: name,
-                    type: type,
-                    path: path
-                };
+            let single = {
+                name: name,
+                type: type,
+                path: path
+            };
+            if (type != "dockerfile" && type != "imageconfig")  {
                 if (typeAndResourceName.soulMate) //only instances have soul mate
                     single.soulMateName = typeAndResourceName.soulMate;
                 if (typeAndResourceName.suffix)  //only instances have soul suffix
                     single.suffix = typeAndResourceName.suffix;
-                singles.push(single);
             }
+            singles.push(single);
         });
 
         dockercomposes = _.filter(singles, single => {
@@ -51,6 +49,14 @@ module.exports = {
         });
         dockercomposes = _.map(dockercomposes, dockercompose => {
             return {name: dockercompose.name, path: dockercompose.path}
+        });
+
+
+        dockerfiles = _.filter(singles, single => {
+            return single.type === "dockerfile"
+        });
+        dockerfiles = _.map(dockerfiles, dockerfiles => {
+            return {name: dockerfiles.name, path: dockerfiles.path}
         });
 
         stackDefinitions = _.filter(singles, single => {
@@ -66,20 +72,20 @@ module.exports = {
         //populating instances
         let usedStackDefinitions = []; // List<String>
         singles.forEach(single => {
+            let alreadyExisiting = instances.find(instance => { return instance.instanceName == single.name});
+            if(alreadyExisiting){
+                alreadyExisiting.invalid = true;
+                console.warn(`     ${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`)
+                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, single.name, {
+                    warn: `${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`
+                });
+                return;
+            }
+            let instance = {
+                path: single.path,
+                resourceName: single.name
+            };
             if (single.type === "simpleStackInstance" || single.type === "stackInstance") {
-                let alreadyExisiting = instances.find(instance => { return instance.instanceName == single.name});
-                if(alreadyExisiting){
-                    alreadyExisiting.invalid = true;
-                    console.warn(`     ${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`)
-                    utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, single.name, {
-                        warn: `${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`
-                    });
-                    return;
-                }
-                let instance = {
-                    path: single.path,
-                    resourceName: single.name
-                };
                 if(single.suffix)
                     instance.instanceName = single.name + '.' + single.suffix;
                 else
@@ -108,6 +114,13 @@ module.exports = {
                 }
                 instances.push(instance);
             }
+            if(single.type == "dockerfile"){/*nothing to do*/}
+            if(single.type == "imageconfig"){
+                instance.image = true;
+                instances.push(instance);
+            }
+
+            instances.push(instance);
         });
 
         instances = _.where(instances, instance => {return !instance.invalid});
@@ -116,12 +129,13 @@ module.exports = {
             instances: instances,
             dockercomposes: dockercomposes,
             stackDefinitions: stackDefinitions,
-            usedStackDefinitions: usedStackDefinitions
+            usedStackDefinitions: usedStackDefinitions,
+            dockerfiles:dockerfiles
         }
 
     },
 
-    getContextPaths: function (dockercomposes) {
+    getContextPaths: function (dockercomposes, imageconfigs) {
         //get all the contexts
         let contextPaths = [];  //  path, name
         dockercomposes.forEach(dc => {
@@ -142,19 +156,17 @@ module.exports = {
             }
         });
 
-        //TODO get context for image
-        // if(couple.dockerfile){
-        //     //dockerfile: config.context (relative to current dir) or current dir
-        //     let config = JSON.parse(fs.readFileSync(couple.config, {encoding: 'utf-8'}));
-        //     let path = fsUtil.removeLastPathPart(config.config);
-        //     if(config.context){
-        //         path = `${path}/${config.context}`
-        //     }
-        //     path = configuration.repoFolder+path;
-        //     path = path.replace("\/\/","/");//justincase
-        //     contextPaths.push({name: couple.name, path: path});
-        //
-
+        imageconfigs.forEach(imageconfig => {
+            console.log("df.path",imageconfig.path)
+                let config = JSON.parse(fs.readFileSync(imageconfig.path, {encoding: 'utf-8'}));
+                let path = fsUtil.removeLastPathPart(imageconfig.path);
+                if(config.context){
+                    path = `${path}/${config.context}`
+                }
+                path = configuration.repoFolder+path;
+                path = path.replace("\/\/","/");//justincase
+                contextPaths.push({name: imageconfig.name, path: path});
+        });
 
         return contextPaths;
     },
