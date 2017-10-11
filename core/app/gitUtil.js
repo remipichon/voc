@@ -36,12 +36,18 @@ module.exports = {
             }
 
             //is updated files part of resource context ?
-            const updatedFileDirectory = fsUtil.removeLastPathPart(fileName);
+            console.log("fileName",fileName)
+            const updatedFileDirectory = utils.removeLastPathPart(fileName);
+            console.log("updatedFileDirectory",updatedFileDirectory)
             let updatedContextPaths = _.filter(contextPaths, function (context) {
                 return updatedFileDirectory.startsWith(context.directory);
             });
+            console.log("updatedContextPaths",updatedContextPaths)
 
             updatedContextPaths.forEach(updatedContext => {
+
+                //TODO updatedContext has only .name and .directory
+                //todo support all types
                 if (updatedContext.type == "dockercompose") {
                     let dockercompose = dockercomposes.find(dc => {
                         return dc.name === updatedContext.name

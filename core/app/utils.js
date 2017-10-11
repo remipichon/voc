@@ -6,6 +6,11 @@ var configuration = require("./configuration");
 
 module.exports = {
 
+    removeLastPathPart: function (path) {
+        let dir = /^(.+)\/(.*)$/m.exec(path);
+        return (dir) ? dir[1] : "/";
+    },
+
     writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
         var resultJson = {};
         if (fs.existsSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile)) {

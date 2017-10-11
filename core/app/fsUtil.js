@@ -35,7 +35,7 @@ module.exports = {
                 type: type,
                 path: path
             };
-            if (type == "simpleStackInstance" || type != "stackInstance")  {
+            if (type == "simpleStackInstance" || type == "stackInstance")  {
                 single.soulMateName = typeAndResourceName.soulMate;
                 single.suffix = typeAndResourceName.suffix;
             }
@@ -113,7 +113,7 @@ module.exports = {
                 instances.push(instance);
             }
             if(single.type == "dockerfile"){/*nothing to do*/}
-            if(single.type == "imageconfig"){
+            if(single.type == "imageConfig"){
                 instance.image = true;
                 instances.push(instance);
             }
@@ -131,12 +131,12 @@ module.exports = {
 
     },
 
-    getContextPaths: function (dockercomposes, imageconfigs) {
+    getContextPaths: function (dockercomposes, imageConfigs) {
         //get all the contexts
         let contextPaths = [];  //  path, name
         dockercomposes.forEach(dc => {
             let dockercompose = YAML.load(dc.path);
-            let path = this.removeLastPathPart(dc.path);
+            let path = utils.removeLastPathPart(dc.path);
             if (dockercompose.services) {
                 Object.keys(dockercompose.services).forEach(name => {
                     let service = dockercompose.services[name];
@@ -152,25 +152,17 @@ module.exports = {
             }
         });
 
-        imageconfigs.forEach(imageconfig => {
-            console.log("df.path",imageconfig);
-                let config = JSON.parse(fs.readFileSync(imageconfig.path, {encoding: 'utf-8'}));
-                let path = this.removeLastPathPart(imageconfig.path);
-                if(config.context){
-                    path = `${path}/${config.context}`
-                }
-                path = configuration.repoFolder+path;
-                path = path.replace("\/\/","/");//justincase
-                contextPaths.push({name: imageconfig.name, path: path});
+        imageConfigs.forEach(imageConfig => {
+            let config = JSON.parse(fs.readFileSync(imageConfig.path, {encoding: 'utf-8'}));
+            let path = utils.removeLastPathPart(imageConfig.path);
+            if(config.context){
+                path = `${path}/${config.context}`
+            }
+            path = path.replace("\/\/","/");//justincase
+            contextPaths.push({name: imageConfig.resourceName, directory: path});
         });
 
         return contextPaths;
-    },
-
-
-    removeLastPathPart: function (path) {
-        let dir = /^(.+)\/(.*)$/m.exec(path);
-        return (dir) ? dir[1] : "/";
     },
 
     /**

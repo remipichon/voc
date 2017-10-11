@@ -123,6 +123,19 @@ module.exports = {
             });
             ssi.changed = true;
             ssi.toClean = clean;
+        } else if (resource.type == "imageConfig"){
+            let imageConfig = _.find(instances, instance => {
+                return instance.resourceName === resource.name;
+            });
+            imageConfig.changed = true;
+            imageConfig.toClean = clean;
+        } else if (resource.type == "dockerfile"){
+            //something to do ?
+            let imageConfig = _.find(instances, instance => {
+                return instance.resourceName === resource.name;
+            });
+            imageConfig.changed = true;
+            imageConfig.toClean = clean;
         }
     },
 
@@ -242,7 +255,7 @@ module.exports = {
                 stackUtil.manageStack(instance, intermediateCompose);
             }
             if (instance.image){
-                let dockerfilePath = _.find(dockerfiles, df => { return df.name == instance.name}).path;
+                let dockerfilePath = _.find(dockerfiles, df => { return df.name == instance.resourceName}).path;
                 imageUtil.manageImage(instance, dockerfilePath);
             }
 

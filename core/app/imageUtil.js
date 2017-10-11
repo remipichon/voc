@@ -3,6 +3,7 @@
 var _ = require("underscore");
 var gitlabUtil = require("./gitlabUtil");
 var configuration = require("./configuration");
+var utils = require("./utils");
 
 module.exports = {
 
@@ -33,17 +34,17 @@ module.exports = {
             console.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
         }
 
-        var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " . ";
+        var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " " + utils.removeLastPathPart(Dockerfile) ;
         let result = utils.execCmdSync(dockerBuild, true);
 
         if (result.error) {
-            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.name, {
-                error: `${config.name}: An error occurred while building image from ${Dockerfile}. Image will not be pushed. Error: ${result.error} `
+            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.tag, {
+                error: `${config.tag}: An error occurred while building image from ${Dockerfile}. Image will not be pushed. Error: ${result.error} `
             });
             return false;
         }
-        utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
-            result: `${config.name}: Successfully built ${Dockerfile}`
+        utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.tag, {
+            result: `${config.tag}: Successfully built ${Dockerfile}`
         });
         return true;
     }

@@ -35,13 +35,13 @@ module.exports = {
         console.log("   ", stackDefinitions);
         console.log("***** Here are all actually used docker composes *****");
         console.log("   ", dockercomposes);
-        console.log("***** Here are all actually used docker composes *****");
+        console.log("***** Here are all actually used dockerfiles *****");
         console.log("   ", dockerfiles);
 
 
-        let imageconfigs = _.where(instances, instance => { return instance.imageConfig});
-        let contextPaths = fsUtil.getContextPaths(dockercomposes, imageconfigs);
-        console.log("***** Here are all the contexts used by one of the valid used docker composes *****");
+        let imageConfigs = _.where(instances, instance => { return instance.imageConfig});
+        let contextPaths = fsUtil.getContextPaths(dockercomposes, imageConfigs);
+        console.log("***** Here are all the contexts used by one of the valid used docker composes or one of the valid image config *****");
         console.log("   ",contextPaths);
 
 
@@ -54,9 +54,10 @@ module.exports = {
         console.log("***** Summary of what is going to be effectively done according to updated files *****");
         triggeredInstances.forEach(instance => {
             //!!!!!!!   it's not only to display a sumary, IT DOES SET the .build
+            //TODO put what is mandatory to a method
             let actions = "";
             let doWeBuild = false;
-            if(instance.imageConfig)
+            if(instance.image)
                 doWeBuild = true;
 
             if (instance.stackDefinitionName) {
@@ -75,11 +76,21 @@ module.exports = {
                 doWeBuild = dockercompose.hasBuild;
             }
             instance.toBuild = doWeBuild;
-            if (doWeBuild)
-                actions = `build`;
-            actions = `${actions} and deployed`;
 
-            console.log(`   - ${instance.instanceName} has been scheduled to be ${actions}`)
+
+            ////// log part
+            let name;
+            if (doWeBuild)
+                actions = "build";
+            if(instance.image) {
+                name = instance.resourceName
+            } else {
+                actions = `${actions} and deployed`;
+                name = instance.instanceName
+            }
+
+
+            console.log(`   - ${name} has been scheduled to be ${actions}`)
         });
 
 
