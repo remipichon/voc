@@ -35,11 +35,9 @@ module.exports = {
                 type: type,
                 path: path
             };
-            if (type != "dockerfile" && type != "imageconfig")  {
-                if (typeAndResourceName.soulMate) //only instances have soul mate
-                    single.soulMateName = typeAndResourceName.soulMate;
-                if (typeAndResourceName.suffix)  //only instances have soul suffix
-                    single.suffix = typeAndResourceName.suffix;
+            if (type == "simpleStackInstance" || type != "stackInstance")  {
+                single.soulMateName = typeAndResourceName.soulMate;
+                single.suffix = typeAndResourceName.suffix;
             }
             singles.push(single);
         });
@@ -119,8 +117,6 @@ module.exports = {
                 instance.image = true;
                 instances.push(instance);
             }
-
-            instances.push(instance);
         });
 
         instances = _.where(instances, instance => {return !instance.invalid});
@@ -157,9 +153,9 @@ module.exports = {
         });
 
         imageconfigs.forEach(imageconfig => {
-            console.log("df.path",imageconfig.path)
+            console.log("df.path",imageconfig);
                 let config = JSON.parse(fs.readFileSync(imageconfig.path, {encoding: 'utf-8'}));
-                let path = fsUtil.removeLastPathPart(imageconfig.path);
+                let path = this.removeLastPathPart(imageconfig.path);
                 if(config.context){
                     path = `${path}/${config.context}`
                 }
