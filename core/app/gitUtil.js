@@ -45,9 +45,6 @@ module.exports = {
             console.log("updatedContextPaths",updatedContextPaths)
 
             updatedContextPaths.forEach(updatedContext => {
-
-                //TODO updatedContext has only .name and .directory
-                //todo support all types
                 if (updatedContext.type == "dockercompose") {
                     let dockercompose = dockercomposes.find(dc => {
                         return dc.name === updatedContext.name
