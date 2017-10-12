@@ -8,7 +8,7 @@ var fsUtil = require("./fsUtil");
 
 module.exports = {
 
-    getUpdatedInstances: function (files, instances, stackDefinitions, contextPaths, dockercomposes) {
+    getUpdatedInstances: function (files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs) {
         files.forEach(file => {
             let fileName = file.file;
 
@@ -54,6 +54,16 @@ module.exports = {
                     });
                     let resource = resourceUtil.getTypeAndResourceName(dockercompose.path);
 
+                    if (!resource) {
+                        console.warn(`resource ${updatedContext.name} doest not reference a valid resource`);
+                        return;
+                    }
+                    resourceUtil.triggerInstancesForResource(resource, instances, stackDefinitions);
+                } else if(updatedContext.type == "imageConfig"){
+                    let imageConfig = imageConfigs.find(ic => {
+                        return ic.resourceName === updatedContext.name
+                    });
+                    let resource = resourceUtil.getTypeAndResourceName(imageConfig.path);
                     if (!resource) {
                         console.warn(`resource ${updatedContext.name} doest not reference a valid resource`);
                         return;

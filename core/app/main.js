@@ -17,6 +17,7 @@ module.exports = {
         var dockerfiles = vocResources.dockerfiles;
         let stackDefinitions = vocResources.stackDefinitions;
         let usedStackDefinitions = vocResources.usedStackDefinitions;
+        let imageConfigs = _.filter(instances, instance => { return instance.isImage});
         console.log("***** Here is what I could extract from the file system *****");
         console.log("   instances\n    ", instances);
         console.log("   *****                                                   *****");
@@ -27,6 +28,8 @@ module.exports = {
         console.log("   dockerfiles\n  ", dockerfiles);
         console.log("   *****                                                   *****");
         console.log("   usedStackDefinitions\n  ", usedStackDefinitions);
+        console.log("   *****                                                   *****");
+        console.log("   imageConfigs\n  ", imageConfigs);
         console.log("*****  That's all from the file system                   *****");
 
 
@@ -37,9 +40,11 @@ module.exports = {
         console.log("   ", dockercomposes);
         console.log("***** Here are all actually used dockerfiles *****");
         console.log("   ", dockerfiles);
+        //TODO clean imageConfig
+        console.log("***** Here are all actually used imageConfigs NOT CLEANED *****");
+        console.log("   ", imageConfigs);
 
 
-        let imageConfigs = _.where(instances, instance => { return instance.imageConfig});
         let contextPaths = fsUtil.getContextPaths(dockercomposes, imageConfigs);
         console.log("***** Here are all the contexts used by one of the valid used docker composes or one of the valid image config *****");
         console.log("   ",contextPaths);
@@ -50,14 +55,14 @@ module.exports = {
         console.log("***** All updated files *****\n    ", files);
 
 
-        let triggeredInstances = gitUtil.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes);
+        let triggeredInstances = gitUtil.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs);
         console.log("***** Summary of what is going to be effectively done according to updated files *****");
         triggeredInstances.forEach(instance => {
             //!!!!!!!   it's not only to display a sumary, IT DOES SET the .build
             //TODO put what is mandatory to a method
             let actions = "";
             let doWeBuild = false;
-            if(instance.image)
+            if(instance.isImage)
                 doWeBuild = true;
 
             if (instance.stackDefinitionName) {
@@ -82,7 +87,7 @@ module.exports = {
             let name;
             if (doWeBuild)
                 actions = "build";
-            if(instance.image) {
+            if(instance.isImage) {
                 name = instance.resourceName
             } else {
                 actions = `${actions} and deployed`;

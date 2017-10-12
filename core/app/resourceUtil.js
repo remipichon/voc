@@ -13,7 +13,7 @@ module.exports = {
      * Types
      *
      *
-     * <Resource>
+     * <Resource>               everything than can be deduced from the file name only (quickly split into either SD, I, DC, DF)
      *     * name <String>
      *     * type <String> [dockercompose|stackDefinition|simpleStackInstance|stackInstance|dockerfile|imageConfig]
      *     * [soulMate if type=simpleStackInstance or type=stackInstance]
@@ -25,19 +25,30 @@ module.exports = {
      *     * dockercomposes List<DockerCompose> ??? not in object before reading file
      *     * dockercomposesCmdReady <String>  pre-formated cmd ready ( -f xxx -f yyy) ??? not in object before reading file
      *
-     *
-     * <Instance>
+     * <Instance>               any simpleStackInstance, stackInstance or imageConfig
      *     * instanceName   <String>
      *     * path           <String> absolute path
      *     * [stackDefinitionName   <String> if type=si]
      *     * [dockercomposeName     <String> if type=ssi]
+     *     * [isImage           <Boolean> if type=imageConfig]
      *     * toBuild           <Boolean>
      *     * toClean           <Boolean>
-     *
      *
      * <DockerCompose>
      *     * name   <String>
      *     * path   <String> absolute path
+     *
+     * <DockerFile>
+     *     * name   <String>
+     *     * path   <String> absolute path
+     *
+     *
+     *
+     *
+     * <ContextPath>
+     *     * name       <String>
+     *     * directory  <String> absolute path without filename, ending with /
+     *     * type       <String> [dockercompose|imageconfig]
      *
      */
 
@@ -129,7 +140,7 @@ module.exports = {
             });
             imageConfig.changed = true;
             imageConfig.toClean = clean;
-        } else if (resource.type == "dockerfile"){
+        } else if (resource.type == "dockerfile"){ //resource type dockerfile and imageConfig have the same 'name' but are not stored in the same arrays (dockerfile is never an Instance)
             //something to do ?
             let imageConfig = _.find(instances, instance => {
                 return instance.resourceName === resource.name;
@@ -181,13 +192,13 @@ module.exports = {
                 let result = utils.execCmdSync(configCmd, true);
 
                 if (result.error) {
-                    utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                    utils.writeResult(instance.instanceName, {
                         error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${dc}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }
-                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
-                    result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
+                utils.writeResult(instance.instanceName, {
+                    result: `${instance.instanceName}: Successfully config intermediate compose file ${intermediateCompose}`
                 });
 
                 stackUtil.manageStack(instance, intermediateCompose); //TODO pass remove if
@@ -215,7 +226,7 @@ module.exports = {
                                 });
                             }
                             if (!dc) {
-                                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                                utils.writeResult(instance.instanceName, {
                                     error: `${instance.instanceName}: compose file ${composeName} doesn't seem to exist. Stack will not be deployed.`
                                 });
                                 skip = true;
@@ -227,7 +238,7 @@ module.exports = {
 
                         })
                     } else {
-                        utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                        utils.writeResult(instance.instanceName, {
                             error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} doesn't have a 'composes' array with valid docker composes names. Stack will not be deployed`
                         });
                         return;
@@ -243,18 +254,18 @@ module.exports = {
                 let result = utils.execCmdSync(configCmd, true);
 
                 if (result.error) {
-                    utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                    utils.writeResult(instance.instanceName, {
                         error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${composeFiles}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }
-                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.instanceName, {
+                utils.writeResult(instance.instanceName, {
                     result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
                 });
 
                 stackUtil.manageStack(instance, intermediateCompose);
             }
-            if (instance.image){
+            if (instance.isImage){
                 let dockerfilePath = _.find(dockerfiles, df => { return df.name == instance.resourceName}).path;
                 imageUtil.manageImage(instance, dockerfilePath);
             }

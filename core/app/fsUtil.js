@@ -74,7 +74,7 @@ module.exports = {
             if(alreadyExisiting){
                 alreadyExisiting.invalid = true;
                 console.warn(`     ${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`)
-                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, single.name, {
+                utils.writeResult(single.name, {
                     warn: `${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`
                 });
                 return;
@@ -112,9 +112,8 @@ module.exports = {
                 }
                 instances.push(instance);
             }
-            if(single.type == "dockerfile"){/*nothing to do*/}
             if(single.type == "imageConfig"){
-                instance.image = true;
+                instance.isImage = true;
                 instances.push(instance);
             }
         });
@@ -140,11 +139,11 @@ module.exports = {
             if (dockercompose.services) {
                 Object.keys(dockercompose.services).forEach(name => {
                     let service = dockercompose.services[name];
-                    if (service.build && service.build.context) {
+                    if (service.build && service.build) {
                         dc.hasBuild = true;
                         contextPaths.push({
                             name: dc.name,
-                            directory: `${path}/${service.build.context}`,
+                            directory: `${path}${service.build.context}`,
                             type: "dockercompose"
                         });
                     }
@@ -154,12 +153,17 @@ module.exports = {
 
         imageConfigs.forEach(imageConfig => {
             let config = JSON.parse(fs.readFileSync(imageConfig.path, {encoding: 'utf-8'}));
+            //TODO path should be the Dockerfile, not the imageconfig  #7 "context to build image, relative from where the Dockerfile is found,"
             let path = utils.removeLastPathPart(imageConfig.path);
             if(config.context){
-                path = `${path}/${config.context}`
+                path = `${path}${config.context}`
             }
             path = path.replace("\/\/","/");//justincase
-            contextPaths.push({name: imageConfig.resourceName, directory: path});
+            contextPaths.push({
+                name: imageConfig.resourceName,
+                directory: path,
+                type: 'imageConfig'
+            });
         });
 
         return contextPaths;

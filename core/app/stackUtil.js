@@ -16,12 +16,12 @@ module.exports = {
             if(instance.toBuild){
                 let result = composeUtil.build(dockercomposePath);
                 if(result.error){
-                    utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {
+                    utils.writeResult(stackName, {
                         error: `${stackName}: An error occurred while building from ${dockercomposePath}. Stack will not be deployed. Error: ${result.error} `
                     });
                     return;
                 }
-                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {result: result});
+                utils.writeResult(stackName, {result: result});
             }
             let instanceConfig = utils.readFileSyncToJson(instance.path);
 
@@ -50,13 +50,13 @@ module.exports = {
         } else if (action == "remove") {
             shDockerStackDeploy = "docker stack rm " + stackName;
         } else {
-            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, {error: "Action was not defined for stack"});
+            utils.writeResult(stackName, {error: "Action was not defined for stack"});
             console.error(`${stackName}: Action not any of create, update or remove. Skipping`);
             return;
         }
         console.info(`     ${stackName}: Stack is going to be ${action} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
         utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
-            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, stackName, gitlabUtil.getState(error, stderr, stdout));
+            utils.writeResult(stackName, gitlabUtil.getState(error, stderr, stdout));
         })
     }
 

@@ -10,7 +10,7 @@ module.exports = {
     manageImage(instance, dockerfilePath) {
         if (instance.toClean) {
             console.log("Either Dockerfile or config file for", instance.name, "has been deleted, doint nothing, GC wil be there soon... ");
-            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, instance.name, {result: "has been unscheduled"});
+            utils.writeResult(instance.name, {result: "has been unscheduled"});
             return;
         }
         var config = utils.readFileSyncToJson(instance.path);
@@ -24,7 +24,7 @@ module.exports = {
         utils.execCmd(dockerTag, function (error, stdout, stderr) {
             var dockerPush = "docker push " + config.push;
             utils.execCmd(dockerPush, function (error, stdout, stderr) {
-                utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.push, gitlabUtil.getState(error, stderr, stdout));
+                utils.writeResult(config.push, gitlabUtil.getState(error, stderr, stdout));
             })
         })
     },
@@ -38,12 +38,12 @@ module.exports = {
         let result = utils.execCmdSync(dockerBuild, true);
 
         if (result.error) {
-            utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.tag, {
+            utils.writeResult(config.tag, {
                 error: `${config.tag}: An error occurred while building image from ${Dockerfile}. Image will not be pushed. Error: ${result.error} `
             });
             return false;
         }
-        utils.writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, config.tag, {
+        utils.writeResult(config.tag, {
             result: `${config.tag}: Successfully built ${Dockerfile}`
         });
         return true;

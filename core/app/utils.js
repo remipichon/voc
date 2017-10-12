@@ -6,12 +6,22 @@ var configuration = require("./configuration");
 
 module.exports = {
 
+    /**
+     * @summary remove file part of a path (/path/to/file => /path/to/  or /path/to/ => /path/to/ )
+     * @param path
+     * @returns {string}
+     */
     removeLastPathPart: function (path) {
         let dir = /^(.+)\/(.*)$/m.exec(path);
-        return (dir) ? dir[1] : "/";
+        return (dir) ? dir[1] + "/" : "/";
     },
 
-    writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
+
+    writeResult: function(key, value){
+        this._writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, key, value);
+    },
+
+    _writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
         var resultJson = {};
         if (fs.existsSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile)) {
             var resultTest = fs.readFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile).toString();
