@@ -26,7 +26,8 @@ module.exports = {
      *     * dockercomposesCmdReady <String>  pre-formated cmd ready ( -f xxx -f yyy) ??? not in object before reading file
      *
      * <Instance>               any simpleStackInstance, stackInstance or imageConfig
-     *     * instanceName   <String>
+     *     * [instanceName   <String> if type=si or type=ssi]
+     *     * resourceName    <String> if type=si or type=ssi: =instanceName+suffix, else: =resourceName
      *     * path           <String> absolute path
      *     * [stackDefinitionName   <String> if type=si]
      *     * [dockercomposeName     <String> if type=ssi]
@@ -42,7 +43,7 @@ module.exports = {
      *     * name   <String>
      *     * path   <String> absolute path
      *
-     *
+     * <ImageConfig> is same type as <Instance> without stackDefinitionName dockercomposeName but isImage=true
      *
      *
      * <ContextPath>
@@ -53,7 +54,7 @@ module.exports = {
      */
 
 
-    cleanUnusedVocResources: function (stackDefinitions, usedStackDefinitions, dockercomposes) {
+    cleanUnusedVocResources: function (stackDefinitions, usedStackDefinitions, dockercomposes, imageConfigs, dockerfiles) {
         //remove stack definitions not used by any instances
         stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
             return _.contains(usedStackDefinitions, stackDefinition.name);
@@ -87,7 +88,101 @@ module.exports = {
             return dockercompose.used
         });
 
+        //remove imageConfigs without a Dockerfile
+        imageConfigs = _.filter(imageConfig => {
+           return _.find(dockercomposes, dc => { dc.name == imageConfig.resourceName})
+        });
+
     },
+
+    getTriggeredInstancesFromCommitActions: function (commitActions, imageConfigs, instances) {
+        let triggeredInstances = [];
+        console.info("***** Commit actions found *****");
+        console.log(commitActions);
+        console.info("*****  *****");
+
+        if (_.where(commitActions, {action: "doAll"}).length != 0) {
+            console.log("build all imageconfig and build and deploy all ss and ssi")
+            imageConfigs.forEach(ic => {
+                ic.toBuild = true
+            });
+            triggeredInstances = triggeredInstances.concat(imageConfigs);
+
+            let s_ssi = instances.filter(i => {
+                return i.stackDefinitionName || i.dockercomposeName
+            });
+            s_ssi.forEach(i => {
+                i.toBuild = true;
+            });
+            triggeredInstances = triggeredInstances.concat(s_ssi)
+        } else {
+            if (_.where(commitActions, {action: "buildAll"}).length != 0) {
+                console.log("build all imageconfig");
+                imageConfigs.forEach(ic => {
+                    ic.toBuild = true
+                });
+                triggeredInstances = triggeredInstances.concat(imageConfigs);
+            } else {
+                if (_.where(commitActions, {action: "deployAll"}).length != 0) {
+                    console.log("build and deploy all ss and ssi");
+                    let s_ssi = instances.filter(i => {
+                        return i.stackDefinitionName || i.dockercomposeName
+                    });
+                    s_ssi.forEach(i => {
+                        i.toBuild = true;
+                    });
+                    triggeredInstances = triggeredInstances.concat(s_ssi)
+                } else {
+                    if (_.where(commitActions, {action: "removeAll"}).length != 0) {
+                        console.log("remove all ss and ssi");
+                        let s_ssi = instances.filter(i => {
+                            return i.stackDefinitionName || i.dockercomposeName
+                        });
+                        s_ssi.forEach(i => {
+                            i.toClean = true;
+                        });
+                        triggeredInstances = triggeredInstances.concat(s_ssi)
+                    } else {
+                        let actions = _.where(commitActions, {action: "buildResourceName"});
+                        actions.forEach(action => {
+                            console.log("build image", action.resourceName);
+                            let res = instances.filter(i => {
+                                return i.resourceName == action.resourceName && i.stackDefinitionName && !i.dockercomposeName
+                            });
+                            res.forEach(i => {
+                                i.toBuild = true
+                            });
+                            triggeredInstances = triggeredInstances.concat(res)
+                        });
+                        actions = _.where(commitActions, {action: "deployInstanceName"});
+                        actions.forEach(action => {
+                            console.log("build and deploy", action.resourceName);
+                            let res = instances.filter(i => {
+                                return i.instanceName == action.resourceName
+                            });
+                            res.forEach(i => {
+                                i.toBuild = true
+                            });
+                            triggeredInstances = triggeredInstances.concat(res)
+                        });
+                        actions = _.where(commitActions, {action: "removeInstanceName"});
+                        actions.forEach(action => {
+                            console.log("remove", action.resourceName);
+                            let res = instances.filter(i => {
+                                return i.instanceName == action.resourceName
+                            });
+                            res.forEach(i => {
+                                i.toClean = true
+                            });
+                            triggeredInstances = triggeredInstances.concat(res)
+                        });
+                    }
+                }
+            }
+        }
+        return triggeredInstances;
+    },
+
 
     /**
      * @summary Set .changed=true for all instances which are dependant on resource
@@ -161,6 +256,96 @@ module.exports = {
         return env;
     },
 
+    generateIntermediateComposeForSSI: function (instance, dockercomposes) {
+        let dir = configuration.repoFolder + configuration.artifactDir;
+
+        let env = this.getInstanceEnvs(instance);
+        let dc = dockercomposes.find(compose => {
+            return compose.name == instance.dockercomposeName
+        });
+
+        let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
+        let configCmd = `${env} docker-compose -f ${dc.path} config > ${intermediateCompose}`;
+
+        console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
+        let result = utils.execCmdSync(configCmd, true);
+
+        if (result.error) {
+            utils.writeResult(instance.instanceName, {
+                error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${dc}. Stack will not be deployed. Error: ${result.error} `
+            });
+            return null;
+        }
+        utils.writeResult(instance.instanceName, {
+            result: `${instance.instanceName}: Successfully config intermediate compose file ${intermediateCompose}`
+        });
+        return intermediateCompose;
+    },
+
+    generateIntermediateComposeForSI: function (instance, stackDefinitions, dockercomposes) {
+        let dir = configuration.repoFolder + configuration.artifactDir;
+
+        let env = this.getInstanceEnvs(instance);
+        let stackDefinition = stackDefinitions.find(sd => {
+            return sd.name = instance.stackDefinitionName
+        });
+
+        let skip = false;
+        if (!stackDefinition.dockercomposesCmdReady) {
+            let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path);
+            stackDefinition.dockercomposesCmdReady = "";
+            stackDefinition.dockercomposes = [];
+            if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
+                stackDefinitionConfig.composes.forEach(composeName => {
+                    let dc = dockercomposes.find(compose => {
+                        return compose.name == composeName
+                    });
+                    if (!dc) {
+                        composeName = this.getTypeAndResourceName(composeName).name;
+                        dc = dockercomposes.find(compose => {
+                            return compose.name == composeName
+                        });
+                    }
+                    if (!dc) {
+                        utils.writeResult(instance.instanceName, {
+                            error: `${instance.instanceName}: compose file ${composeName} doesn't seem to exist. Stack will not be deployed.`
+                        });
+                        skip = true;
+                        return null;
+                    }
+
+                    stackDefinition.dockercomposesCmdReady += ` -f ${dc.path} `;
+                    stackDefinition.dockercomposes.push(dc.name);
+
+                })
+            } else {
+                utils.writeResult(instance.instanceName, {
+                    error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} doesn't have a 'composes' array with valid docker composes names. Stack will not be deployed`
+                });
+                return null;
+            }
+        }
+        if (skip) return null;
+
+        let composeFiles = stackDefinition.dockercomposesCmdReady;
+        let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
+        let configCmd = `${env} docker-compose ${composeFiles} config > ${intermediateCompose}`;
+
+        console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
+        let result = utils.execCmdSync(configCmd, true);
+
+        if (result.error) {
+            utils.writeResult(instance.instanceName, {
+                error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${composeFiles}. Stack will not be deployed. Error: ${result.error} `
+            });
+            return null;
+        }
+        utils.writeResult(instance.instanceName, {
+            result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
+        });
+        return intermediateCompose;
+    },
+
     /**
      * @summary perform actions for each triggeredInstances
      * @param triggeredInstances        List<Instance>
@@ -168,102 +353,18 @@ module.exports = {
      * @param dockercomposes            List<DockerCompose>
      */
     triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles){
-        let dir = configuration.repoFolder + configuration.artifactDir;
 
         triggeredInstances.forEach(instance => {
 
-            //TODO read if enabled
-            //stackUtil.manageStack(instance, intermediateCompose); //TODO pass remove if
-
-            //TODO check for same resource name and check if deploy target is different
-
             if (instance.dockercomposeName) {
-
-
-                let env = this.getInstanceEnvs(instance);
-                let dc = dockercomposes.find(compose => {
-                    return compose.name == instance.dockercomposeName
-                });
-
-                let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
-                let configCmd = `${env} docker-compose -f ${dc.path} config > ${intermediateCompose}`;
-
-                console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
-                let result = utils.execCmdSync(configCmd, true);
-
-                if (result.error) {
-                    utils.writeResult(instance.instanceName, {
-                        error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${dc}. Stack will not be deployed. Error: ${result.error} `
-                    });
-                    return;
-                }
-                utils.writeResult(instance.instanceName, {
-                    result: `${instance.instanceName}: Successfully config intermediate compose file ${intermediateCompose}`
-                });
-
-                stackUtil.manageStack(instance, intermediateCompose); //TODO pass remove if
+                let intermediateCompose = this.generateIntermediateComposeForSSI(instance, dockercomposes);
+                if(intermediateCompose)
+                    stackUtil.manageStack(instance, intermediateCompose);
             }
             if (instance.stackDefinitionName) {
-                let env = this.getInstanceEnvs(instance);
-                let stackDefinition = stackDefinitions.find(sd => {
-                    return sd.name = instance.stackDefinitionName
-                });
-
-                let skip = false;
-                if (!stackDefinition.dockercomposesCmdReady) {
-                    let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path);
-                    stackDefinition.dockercomposesCmdReady = "";
-                    stackDefinition.dockercomposes = [];
-                    if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
-                        stackDefinitionConfig.composes.forEach(composeName => {
-                            let dc = dockercomposes.find(compose => {
-                                return compose.name == composeName
-                            });
-                            if(!dc){
-                                composeName = this.getTypeAndResourceName(composeName).name;
-                                dc = dockercomposes.find(compose => {
-                                    return compose.name == composeName
-                                });
-                            }
-                            if (!dc) {
-                                utils.writeResult(instance.instanceName, {
-                                    error: `${instance.instanceName}: compose file ${composeName} doesn't seem to exist. Stack will not be deployed.`
-                                });
-                                skip = true;
-                                return;
-                            }
-
-                            stackDefinition.dockercomposesCmdReady += ` -f ${dc.path} `;
-                            stackDefinition.dockercomposes.push(dc.name);
-
-                        })
-                    } else {
-                        utils.writeResult(instance.instanceName, {
-                            error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} doesn't have a 'composes' array with valid docker composes names. Stack will not be deployed`
-                        });
-                        return;
-                    }
-                }
-                if (skip) return;
-
-                let composeFiles = stackDefinition.dockercomposesCmdReady;
-                let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
-                let configCmd = `${env} docker-compose ${composeFiles} config > ${intermediateCompose}`;
-
-                console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
-                let result = utils.execCmdSync(configCmd, true);
-
-                if (result.error) {
-                    utils.writeResult(instance.instanceName, {
-                        error: `${instance.instanceName}: An error occurred while generating intermediate compose file from ${composeFiles}. Stack will not be deployed. Error: ${result.error} `
-                    });
-                    return;
-                }
-                utils.writeResult(instance.instanceName, {
-                    result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
-                });
-
-                stackUtil.manageStack(instance, intermediateCompose);
+                let intermediateCompose = this.generateIntermediateComposeForSI(instance, stackDefinitions, dockercomposes);
+                if(intermediateCompose)
+                    stackUtil.manageStack(instance, intermediateCompose);
             }
             if (instance.isImage){
                 let dockerfilePath = _.find(dockerfiles, df => { return df.name == instance.resourceName}).path;
