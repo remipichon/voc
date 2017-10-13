@@ -8,7 +8,7 @@ var composeUtil = require("./composeUtil");
 module.exports = {
 
     manageStack(instance, dockercomposePath) {
-        let stackName = instance.resourceName;
+        let stackName = instance.instanceName;
 
         if (instance.toClean) {
             this.deployStack(stackName, "remove");
@@ -21,6 +21,8 @@ module.exports = {
                     });
                     return;
                 }
+                if(result == '')
+                    result = `${stackName}: Nothing to build from ${dockercomposePath}`;
                 utils.writeResult(stackName, {result: result});
             }
             let instanceConfig = utils.readFileSyncToJson(instance.path);
@@ -44,17 +46,18 @@ module.exports = {
      */
     deployStack(stackName, action, composeFile) {
         //TODO make use of dockerUtil
+        let dnsStackName = stackName.replace('.', '_');
         var shDockerStackDeploy;
         if (action == "create" || action == "update") {
-            shDockerStackDeploy = "docker stack deploy --compose-file " + composeFile + ' ' + stackName;
+            shDockerStackDeploy = "docker stack deploy --compose-file " + composeFile + ' ' + dnsStackName;
         } else if (action == "remove") {
-            shDockerStackDeploy = "docker stack rm " + stackName;
+            shDockerStackDeploy = "docker stack rm " + dnsStackName;
         } else {
             utils.writeResult(stackName, {error: "Action was not defined for stack"});
             console.error(`${stackName}: Action not any of create, update or remove. Skipping`);
             return;
         }
-        console.info(`     ${stackName}: Stack is going to be ${action} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
+        console.info(`     ${stackName}: Stack is going to be ${action} as ${dnsStackName} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
         utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
             utils.writeResult(stackName, gitlabUtil.getState(error, stderr, stdout));
         })
