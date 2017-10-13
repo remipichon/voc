@@ -1,12 +1,12 @@
 'use strict';
 
+var _ = require("underscore");
 var fsService = require("./fsService");
-var fsUtil = require("./fsUtil");
+var resourceService = require("./resourceService");
 var gitService = require("./gitService");
 var configuration = require("./configuration");
+var fsUtil = require("./fsUtil");
 var resourceUtil = require("./resourceUtil");
-var _ = require("underscore");
-var resourceService = require("./resourceService");
 
 
 module.exports = {

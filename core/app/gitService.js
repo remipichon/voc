@@ -1,8 +1,8 @@
 'use strict';
 
 var _ = require("underscore");
-var resourceUtil = require("./resourceUtil");
 var configuration = require("./configuration");
+var resourceUtil = require("./resourceUtil");
 var utils = require("./utils");
 
 module.exports = {

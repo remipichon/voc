@@ -1,11 +1,11 @@
 'use strict';
 
+var _ = require("underscore");
 var resourceUtil = require("./resourceUtil");
 var stackService = require("./stackService");
-var _ = require("underscore");
+var imageService = require("./imageService");
 var configuration = require("./configuration");
 var utils = require("./utils");
-var imageService = require("./imageService");
 
 module.exports = {
     /**

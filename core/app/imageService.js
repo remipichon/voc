@@ -1,7 +1,7 @@
 'use strict';
 
-var gitlabUtil = require("./gitlabUtil");
 var utils = require("./utils");
+var gitlabUtil = require("./gitlabUtil");
 var fsUtil = require("./fsUtil");
 
 module.exports = {

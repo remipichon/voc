@@ -1,6 +1,6 @@
 
-var gitlabUtil = require("./gitlabUtil");
 var utils = require("./utils");
+var gitlabUtil = require("./gitlabUtil");
 var composeUtil = require("./composeUtil");
 
 module.exports = {
@@ -43,7 +43,7 @@ module.exports = {
      * @param composeFile   <String> absolute path to single docker compose
      */
     deployStack(stackName, action, composeFile) {
-        //TODO make use of dockerUtil
+        //cannot use docker API because stack is a client feature only
         let dnsStackName = stackName.replace('.', '_');
         var shDockerStackDeploy;
         if (action == "create" || action == "update") {
