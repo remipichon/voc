@@ -1,6 +1,6 @@
 'use strict';
 
-var fsUtil = require("./fsUtil");
+var fsService = require("./fsService");
 var gitUtil = require("./gitUtil");
 var configuration = require("./configuration");
 var resourceUtil = require("./resourceUtil");
@@ -43,8 +43,8 @@ module.exports = {
     main: async function () {
 
         console.info(`***** Reading directory to find VOC resources files: ${configuration.repoFolder} *****`);
-        let allResourcePaths = await fsUtil.walkResourceFilePromise(configuration.repoFolder);
-        let vocResources = fsUtil.getVocResources(allResourcePaths);
+        let allResourcePaths = await fsService.walkResourceFilePromise(configuration.repoFolder);
+        let vocResources = fsService.getVocResources(allResourcePaths);
         let instances = vocResources.instances;
         let dockercomposes = vocResources.dockercomposes;
         var dockerfiles = vocResources.dockerfiles;
@@ -79,7 +79,7 @@ module.exports = {
         console.log("   ", imageConfigs);
 
 
-        let contextPaths = fsUtil.getContextPaths(dockercomposes, imageConfigs);
+        let contextPaths = fsService.getContextPaths(dockercomposes, imageConfigs);
         console.log("***** Here are all the contexts used by one of the valid used docker composes or one of the valid image config *****");
         console.log("   ", contextPaths);
 

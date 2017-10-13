@@ -4,7 +4,6 @@ var _ = require("underscore");
 var resourceUtil = require("./resourceUtil");
 var configuration = require("./configuration");
 var utils = require("./utils");
-var fsUtil = require("./fsUtil");
 
 module.exports = {
 

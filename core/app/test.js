@@ -1,7 +1,7 @@
 var utils = require("./utils");
 //var YAML = require('yamljs');
 var _ = require("underscore");
-var fsUtil = require("./fsUtil");
+var fsService = require("./fsService");
 var resourceUtil = require("./resourceUtil");
 
 
@@ -43,7 +43,7 @@ async function testWalk(){
 
 
     console.log("avant");
-    var res = await fsUtil.walkResourceFilePromise("/app/pouet")
+    var res = await fsService.walkResourceFilePromise("/app/pouet")
     console.log("rest",res);
     console.log("apres")
 
