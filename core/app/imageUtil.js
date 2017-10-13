@@ -4,6 +4,7 @@ var _ = require("underscore");
 var gitlabUtil = require("./gitlabUtil");
 var configuration = require("./configuration");
 var utils = require("./utils");
+var fsUtil = require("./fsUtil");
 
 module.exports = {
 
@@ -34,7 +35,7 @@ module.exports = {
             console.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
         }
 
-        var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " " + utils.removeLastPathPart(Dockerfile) ;
+        var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " " + fsUtil.removeLastPathPart(Dockerfile) ;
         let result = utils.execCmdSync(dockerBuild, true);
 
         if (result.error) {

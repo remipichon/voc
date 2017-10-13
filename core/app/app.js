@@ -2,14 +2,17 @@ var composeUtil = require("./composeUtil");
 var configuration = require("./configuration");
 var dockerUtil = require("./dockerUtil");
 var fsService = require("./fsService");
+var fsUtil = require("./fsUtil");
 var gitlabUtil = require("./gitlabUtil");
 var gitUtil = require("./gitUtil");
 var imageUtil = require("./imageUtil");
 var resourceUtil = require("./resourceUtil");
+var resourceService = require("./resourceService");
 var stackUtil = require("./stackUtil");
 var utils = require("./utils");
 var _ = require("underscore");
 var main = require("./main");
+var YAML = require('yamljs');
 
 
 if (!process.env.CI_PROJECT_DIR) {

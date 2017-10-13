@@ -36,7 +36,7 @@ module.exports = {
 
             //is updated files part of resource context ?
             console.log("fileName",fileName)
-            const updatedFileDirectory = utils.removeLastPathPart(fileName);
+            const updatedFileDirectory = fsUtil.removeLastPathPart(fileName);
             console.log("updatedFileDirectory",updatedFileDirectory)
             let updatedContextPaths = _.filter(contextPaths, function (context) {
                 return updatedFileDirectory.startsWith(context.directory);

@@ -54,7 +54,7 @@ module.exports = {
      */
 
 
-    cleanUnusedVocResources: function (stackDefinitions, usedStackDefinitions, dockercomposes, imageConfigs, dockerfiles) {
+    /*OK*/cleanUnusedVocResources: function (stackDefinitions, usedStackDefinitions, dockercomposes, imageConfigs, dockerfiles) {
         //remove stack definitions not used by any instances
         stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
             return _.contains(usedStackDefinitions, stackDefinition.name);
@@ -66,7 +66,7 @@ module.exports = {
             let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path, {encoding: 'utf-8'});
             if (stackDefinitionConfig.dockercomposes && Array.isArray(stackDefinitionConfig.dockercomposes)) {
                 stackDefinitionConfig.dockercomposes.forEach(dockercomposeRelativePath => {
-                    let dockercomposeName = resourceUtil.getTypeAndResourceName(dockercomposeRelativePath);
+                    let dockercomposeName = this.getTypeAndResourceName(dockercomposeRelativePath);
                     if (!dockercomposeName) {
                         console.warn(`Stack definition is looking for docker compose ${dockercomposeRelativePath} which is not a valid file name format, skipping`);
                     }
@@ -375,13 +375,13 @@ module.exports = {
 
     },
 
-    _isResourceFile: function (pattern, path) {
+    /*OK*/_isResourceFile: function (pattern, path) {
         let match = pattern.exec(path)
         if(match && match[0] != ".json") return true;
         return false;
     },
 
-    resourceTypeRegex: {
+    /*OK*/resourceTypeRegex: {
         "dockercompose": /docker-compose\.([a-zA-Z0-9_-]+)\.yml$/m,           //docker-compose.<dc-name>.yml
         "stackDefinition": /stack-definition\.([a-zA-Z0-9_-]+)\.json$/m,       //stack-definition.<sd-name>.json
         "stackInstance": /(^stack-instance|\/stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<sd-name>.<si-name>[.<suffix>].json
@@ -395,35 +395,35 @@ module.exports = {
      * @param path <String> relative or absolute path or just file name
      * @returns {true|false}
      */
-    isResourceFile: function (path) {
+    /*OK*/isResourceFile: function (path) {
         return this.isComposeFile(path) || this.isStackDefinition(path) || this.isStackInstance(path) || this.isSimpleStackInstance(path) || this.isImageConfig(path) || this.isDockerfile(path);
     },
 
-    isComposeFile: function (fileName) {
+    /*OK*/isComposeFile: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.dockercompose, fileName);
     },
 
-    isStackDefinition: function (fileName) {
+    /*OK*/isStackDefinition: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.stackDefinition, fileName);
     },
 
-    isStackInstance: function (fileName) {
+    /*OK*/isStackInstance: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.stackInstance, fileName);
     },
 
-    isSimpleStackInstance: function (fileName) {
+    /*OK*/isSimpleStackInstance: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.simpleStackInstance, fileName);
     },
 
-    isDockerfile: function (fileName) {
+    /*OK*/isDockerfile: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.dockerfile, fileName);
     },
 
-    isImageConfig: function (fileName) {
+    /*OK*/isImageConfig: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.imageConfig, fileName);
     },
 
-    _getResourceName(pattern, path, matchIndex = null){
+    /*OK*/_getResourceName(pattern, path, matchIndex = null){
         var match = pattern.exec(path);
         // console.log("pattern",pattern, "path",path, "match",match)
         if (match) {
@@ -440,7 +440,7 @@ module.exports = {
      * @param path <String> relative or absolute path or just file name
      * @returns <Resource>
      */
-    getTypeAndResourceName(path){
+    /*OK*/getTypeAndResourceName(path){
         if (this.isComposeFile(path))
             return {
                 name: this._getResourceName(this.resourceTypeRegex.dockercompose, path, 1),

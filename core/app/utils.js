@@ -6,15 +6,7 @@ var configuration = require("./configuration");
 
 module.exports = {
 
-    /**
-     * @summary remove file part of a path (/path/to/file => /path/to/  or /path/to/ => /path/to/ )
-     * @param path
-     * @returns {string}
-     */
-    removeLastPathPart: function (path) {
-        let dir = /^(.+)\/(.*)$/m.exec(path);
-        return (dir) ? dir[1] + "/" : "/";
-    },
+
 
 
     writeResult: function(key, value){
