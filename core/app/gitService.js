@@ -7,7 +7,39 @@ var utils = require("./utils");
 
 module.exports = {
 
-    getUpdatedInstances: function (files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs) {
+    getTriggeredInstancesFromModifiedFiles: function (instances, stackDefinitions, contextPaths, dockercomposes) {
+        console.info("***** Reading git commit payload to find which files has been modified *****");
+        let files = gitService.getGitDiffModifiedFile();
+        console.log("***** All updated files *****\n    ", files);
+        let triggeredInstances = this.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes);
+
+        triggeredInstances.forEach(instance => {
+            let actions = "";
+            let doWeBuild = false;
+            if (instance.image)
+                doWeBuild = true;
+
+            if (instance.stackDefinitionName) {
+                let stackDef = _.find(stackDefinitions, stackDefinition => {
+                    return stackDefinition.name === instance.stackDefinitionName;
+                });
+                if (stackDef.dockercomposes)
+                    doWeBuild = _.find(stackDef.dockercomposes, dockercompose => {
+                            return dockercompose.hasBuild
+                        }) != "undefined";
+            }
+            if (instance.dockercomposeName) {
+                let dockercompose = _.find(dockercomposes, dockercompose => {
+                    return dockercompose.name === instance.dockercomposeName;
+                });
+                doWeBuild = dockercompose.hasBuild;
+            }
+            instance.toBuild = doWeBuild;
+        });
+        return triggeredInstances;
+    },
+
+    /*OK to go in any service*/getUpdatedInstances: function (files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs) {
         files.forEach(file => {
             let fileName = file.file;
 

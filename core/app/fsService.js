@@ -2,25 +2,16 @@
 
 var fs = require('fs');
 var path = require('path');
-var YAML = require('yamljs');
-var _ = require("underscore");
 var resourceUtil = require("./resourceUtil");
-var configuration = require("./configuration");
 var utils = require("./utils");
-var configuration = require("./configuration");
 var _ = require("underscore");
 var fsUtil = require("./fsUtil");
 
 module.exports = {
-
-
-
-
-
     /**
      * thanks to https://stackoverflow.com/questions/5827612/node-js-fs-readdir-recursive-directory-search
      */
-    /*OK*/_walkResourceFile: function (dir, done) {
+    _walkResourceFile: function (dir, done) {
         var self = this;
         var results = [];
         fs.readdir(dir, function (err, list) {
@@ -51,7 +42,7 @@ module.exports = {
      * @param dir <String>   relative or absolute path
      * @returns {Promise}
      */
-    /*OK*/walkResourceFilePromise: function (dir) {
+    walkResourceFilePromise: function (dir) {
         var self = this;
         return new Promise((resolve, reject) => {
             self._walkResourceFile(dir, (err, allPaths) => {

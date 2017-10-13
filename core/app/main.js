@@ -2,7 +2,7 @@
 
 var fsService = require("./fsService");
 var fsUtil = require("./fsUtil");
-var gitUtil = require("./gitUtil");
+var gitService = require("./gitService");
 var configuration = require("./configuration");
 var resourceUtil = require("./resourceUtil");
 var _ = require("underscore");
@@ -11,37 +11,7 @@ var resourceService = require("./resourceService");
 
 module.exports = {
 
-    getTriggeredInstancesFromModifiedFiles: function (instances, stackDefinitions, contextPaths, dockercomposes) {
-        console.info("***** Reading git commit payload to find which files has been modified *****");
-        let files = gitUtil.getGitDiffModifiedFile();
-        console.log("***** All updated files *****\n    ", files);
-        let triggeredInstances = gitUtil.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes);
 
-        triggeredInstances.forEach(instance => {
-            let actions = "";
-            let doWeBuild = false;
-            if (instance.image)
-                doWeBuild = true;
-
-            if (instance.stackDefinitionName) {
-                let stackDef = _.find(stackDefinitions, stackDefinition => {
-                    return stackDefinition.name === instance.stackDefinitionName;
-                });
-                if (stackDef.dockercomposes)
-                    doWeBuild = _.find(stackDef.dockercomposes, dockercompose => {
-                            return dockercompose.hasBuild
-                        }) != "undefined";
-            }
-            if (instance.dockercomposeName) {
-                let dockercompose = _.find(dockercomposes, dockercompose => {
-                    return dockercompose.name === instance.dockercomposeName;
-                });
-                doWeBuild = dockercompose.hasBuild;
-            }
-            instance.toBuild = doWeBuild;
-        });
-        return triggeredInstances;
-    },
 
     main: async function () {
 
@@ -89,11 +59,11 @@ module.exports = {
 
         let triggeredInstances;
         console.info("***** Reading git commit message to get commit actions *****");
-        let commitActions = gitUtil.getGitCommitAction();
+        let commitActions = gitService.getGitCommitAction();
         if (commitActions.length != 0) {
             triggeredInstances = resourceUtil.getTriggeredInstancesFromCommitActions(commitActions, imageConfigs, instances);
         } else {
-            triggeredInstances = this.getTriggeredInstancesFromModifiedFiles(instances, stackDefinitions, contextPaths, dockercomposes);
+            triggeredInstances = gitService.getTriggeredInstancesFromModifiedFiles(instances, stackDefinitions, contextPaths, dockercomposes);
         }
 
         console.log("***** Summary of what is going to be effectively done according to updated files or commit actions *****");
@@ -118,6 +88,6 @@ module.exports = {
         console.log("****************");
         console.log("Here comes Moby");
         console.log("****************");
-        resourceUtil.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles);
+        resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles);
     }
 };

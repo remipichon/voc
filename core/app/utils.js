@@ -61,7 +61,6 @@ module.exports = {
         return stdout
     },
 
-    //for circular dependencies reasons TODO fix that
     readFileSyncToJson: function(path){
         var data;
         try {
