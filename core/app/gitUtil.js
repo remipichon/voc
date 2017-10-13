@@ -77,6 +77,33 @@ module.exports = {
     },
 
 
+    commitAction: {
+        buildAll: /(\[build\-all\])/m,
+        deployAll: /(\[deploy\-all\])/m,
+        doAll: /(\[do\-all\])/m,
+        removeAll: /(\[remove\-all\])/m,
+        buildDeployAll: /(\[build\-deploy\-all\])/m,
+        buildResourceName: /(\[build\-([a-zA-Z0-9]+)\])/m,
+        deployInstanceName: /(\[deploy\-([a-zA-Z0-9]+)\])/m,
+        removeInstanceName: /(\[remove\-([a-zA-Z0-9]+)\])/m
+    },
+
+    getGitCommitAction(){
+        let stdout = utils.execCmdSync("cd " + configuration.repoFolder + "; git log -1 --pretty=%B");
+        let actions = [];
+        Object.keys(this.commitAction).forEach(action => {
+            let match = this.commitAction[action].exec(stdout);
+            if(match){
+                let res = {action: action};
+                if(match[2])
+                    res.resourceName = match[2];
+                actions.push(res);
+            }
+        });
+        return actions;
+    },
+
+
     getGitDiffModifiedFile() {
         var modifiedFiles = "cd " + configuration.repoFolder + ";git diff-tree --no-commit-id --name-status -r $(git rev-parse HEAD)";
 
