@@ -1,11 +1,7 @@
 'use strict';
 
-var stackService = require("./stackService");
 var _ = require("underscore");
-var configuration = require("./configuration");
 var utils = require("./utils");
-var gitlabUtil = require("./gitlabUtil");
-//don't import fsutil (circular deps)
 
 module.exports = {
     /**

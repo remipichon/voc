@@ -1,7 +1,5 @@
 
-var _ = require("underscore");
 var gitlabUtil = require("./gitlabUtil");
-var configuration = require("./configuration");
 var utils = require("./utils");
 var composeUtil = require("./composeUtil");
 

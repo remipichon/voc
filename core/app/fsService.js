@@ -3,15 +3,13 @@
 var fs = require('fs');
 var path = require('path');
 var resourceUtil = require("./resourceUtil");
-var utils = require("./utils");
-var _ = require("underscore");
-var fsUtil = require("./fsUtil");
 
 module.exports = {
     /**
      * thanks to https://stackoverflow.com/questions/5827612/node-js-fs-readdir-recursive-directory-search
      */
     _walkResourceFile: function (dir, done) {
+
         var self = this;
         var results = [];
         fs.readdir(dir, function (err, list) {
