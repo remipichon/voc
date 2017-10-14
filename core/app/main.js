@@ -79,7 +79,7 @@ module.exports = {
             if (instance.dockercomposeName || instance.stackDefinitionName) {
                 name = instance.instanceName;
                 if (!instance.toClean)
-                    actions = `${actions} and deployed`;
+                    actions = `${actions} and deployed if enabled`;
             }
             console.log(`   - ${name} has been scheduled to be ${actions}`)
         });

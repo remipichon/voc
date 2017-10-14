@@ -55,9 +55,13 @@ module.exports = {
             console.error(`${stackName}: Action not any of create, update or remove. Skipping`);
             return;
         }
-        console.info(`     ${stackName}: Stack is going to be ${action} as ${dnsStackName} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
+        console.info(`     ${stackName}: Stack ${dnsStackName} is going to be ${action} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
         utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
-            utils.writeResult(stackName, gitlabUtil.getState(error, stderr, stdout));
+            let state = gitlabUtil.getState(error, stderr, stdout);
+            if(action === "remove")
+                if(state.result && state.result.indexOf("Nothing found in stack") !== -1)
+                    state.result = `Stack ${stackName} has already been removed, nothing has be done because there was nothing to do`;
+            utils.writeResult(stackName, state);
         })
     }
 

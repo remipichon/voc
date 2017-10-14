@@ -66,17 +66,18 @@ module.exports = {
         //populating instances
         let usedStackDefinitions = []; // List<String>
         singles.forEach(single => {
-            let alreadyExisiting = instances.find(instance => {
-                return instance.instanceName == single.name
-            });
-            if (alreadyExisiting) {
-                alreadyExisiting.invalid = true;
-                console.warn(`     ${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`)
-                utils.writeResult(single.name, {
-                    warn: `${single.name}: instance already exists, please remove one. Both have been marker invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`
-                });
-                return;
-            }
+            //TODO doesntwork
+            // let alreadyExisiting = instances.find(instance => {
+            //     return instance.instanceName == single.name
+            // });
+            // if (alreadyExisiting) {
+            //     alreadyExisiting.invalid = true;
+            //     console.warn(`     ${single.name}: instance already exists, please remove one. Both have been marked invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`)
+            //     utils.writeResult(single.name, {
+            //         warn: `${single.name}: instance already exists, please remove one. Both have been marked invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`
+            //     });
+            //     return;
+            // }
             let instance = {
                 path: single.path,
                 resourceName: single.name
