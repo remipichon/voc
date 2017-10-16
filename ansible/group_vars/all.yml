@@ -27,7 +27,7 @@ gitlab_dict:
   gid: 998
   http_port: 80
   https_port: 443
-  git_port: 2222
+  git_port: 22
   role_path: "{{ gitlab_root_path }}/role/"
   data_path: "{{ gitlab_root_path }}/data/"
   config_path: "{{ gitlab_root_path }}/config/"
