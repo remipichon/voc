@@ -66,7 +66,6 @@
     mode: "0644"
   tags:
     - init
-    - debug
     
 - name: Ensure Gitlab compose file is updated
   template:
@@ -74,5 +73,7 @@
     src: "{{ _gitlab_dict.docker_compose | default('docker-compose.yml.j2') }}"
     dest: "{{ _gitlab_dict.role_path }}/docker-compose.yml"
     mode: "0644"
+  tags:
+    - debug
     
 - include: deploy/{{ _gitlab_dict.deploy.mode }}.yml

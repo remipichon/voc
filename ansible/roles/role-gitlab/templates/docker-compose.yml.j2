@@ -3,8 +3,6 @@ version: "{{ _gitlab_dict.deploy.compose_version }}"
 services:
   gitlab:
     image: "{{ _gitlab_dict.image.name }}:{{ _gitlab_dict.image.version }}"
-    healthcheck:
-      {{ _gitlab_dict.healthcheck | to_nice_yaml(indent=2) | indent(width=6) }}
     networks:
       internal:
 {% for item in _gitlab_dict.deploy.networks %}
@@ -24,13 +22,12 @@ services:
       - "{{ _gitlab_dict.data_path }}:/var/opt/gitlab"
       - "{{ _gitlab_dict.log_path }}:/var/log/gitlab"
       - "{{ _gitlab_dict.config_path }}:/etc/gitlab"
-      - "{{ _gitlab_dict.config_path }}/omniauth_callbacks_controller.rb:/opt/gitlab/embedded/service/gitlab-rails/app/controllers/omniauth_callbacks_controller.rb"
-{% for ligne in _gitlab_dict.volumes | default([]) %}
-      - "{{ ligne }}"
+{% for line in _gitlab_dict.volumes | default([]) %}
+      - "{{ line }}"
 {% endfor %}
     environment:
-{% for ligne in _gitlab_dict.environment | default([]) %}
-      - "{{ ligne }}"
+{% for key, value in _gitlab_dict.environment.items() | default([]) %}
+      - {{ key }}={{ value }}
 {% endfor %}
 {% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.deploy.definition is defined %}
     deploy:
@@ -51,20 +48,6 @@ services:
 {% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.deploy.definition is defined %}
     deploy:
       {{ _gitlab_dict.deploy.definition | to_nice_yaml(indent=2) | indent(width=6) }}
-{% endif %}
-{% endif %}
- 
-{% if not _gitlab_dict.redis.keep_internal %}
-  {{ _gitlab_dict.redis.hostname }}:
-    image: "{{ _gitlab_dict.redis.image.name }}:{{ _gitlab_dict.redis.image.version }}"
-    networks:
-      internal:
-    volumes:
-      - "{{ _gitlab_dict.redis.config_path }}/redis.conf:/usr/local/etc/redis/redis.conf"
-      - "{{ _gitlab_dict.redis.data_path }}:/data"
-{% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.redis.deploy is defined %}
-    deploy:
-      {{ _gitlab_dict.redis.deploy | to_nice_yaml(indent=2) | indent(width=6) }}
 {% endif %}
 {% endif %}
 

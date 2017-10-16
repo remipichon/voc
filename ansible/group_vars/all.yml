@@ -1,13 +1,8 @@
 ---
 username: 'voc'
+deploy_mode: 'swarm'
+compose_version: '3'
 
-directories:
-  - "/home/{{ username }}/gitlab"
-  - "/home/{{ username }}/gitlab/config"
-  - "/home/{{ username }}/gitlab/logs"
-  - "/home/{{ username }}/gitlab/data"
-  - "/home/{{ username }}/gitlab-runner"
-  - "/home/{{ username }}/gitlab-runner/config"
 
 main_dir: "/home/{{ username }}/voc/core/"
 
@@ -18,7 +13,9 @@ repo_version: "HEAD"
 
 docker_compose_version: "1.15.0"
 
-# Gitlab configuration
+########################
+# Gitlab configuration #
+########################
 
 gitlab_root_path: "/data/voc/gitlab"
 gitlab_dict:
@@ -37,8 +34,6 @@ gitlab_dict:
   log_path: "{{ gitlab_root_path }}/log/"
   healthcheck:
     retries: 10
-  redis:
-    keep_internal: true
   db:
     deploy_postgresql: true
     image:
@@ -52,8 +47,8 @@ gitlab_dict:
     password: "s3cR3t"
   deploy:
     networks: []
-    mode: 'default'
-    compose_version: '3'
+    mode: "{{ deploy_mode }}"
+    compose_version: "{{ compose_version }}"
     delegate_to: "{{ inventory_hostname }}"
     force_pull: no
   configuration:
@@ -70,6 +65,3 @@ gitlab_dict:
     enable_https: false
   environment:
     GITLAB_ROOT_PASSWORD: "5uP325eC23t"
-    http_proxy: "{{ proxy_env.http_proxy | default('') }}"
-    https_proxy: "{{ proxy_env.https_proxy | default('') }}"
-    no_proxy: "{{ proxy_env.no_proxy | default('') }}"

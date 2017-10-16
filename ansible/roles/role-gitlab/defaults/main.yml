@@ -1,11 +1,6 @@
 ---
 gitlab_root_path: "/data/voc/gitlab"
 
-proxy_env:
-  https_proxy: ""
-  http_proxy: ""
-  no_proxy: ""
-
 gitlab_dict:
   name: gitlab
   image:

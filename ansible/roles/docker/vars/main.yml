@@ -1,2 +1,6 @@
 ---
-# vars file for docker
+package:
+  - "docker-engine"
+  - "python-pip"
+  - "python-dev"
+  - "build-essential"

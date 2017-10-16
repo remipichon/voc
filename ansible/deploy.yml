@@ -1,5 +1,15 @@
 ---
 - hosts: app
   become: yes
+  environment:
+    PYTHONPATH: "{{ lookup('env','PYTHONPATH') }}:/usr/local/lib/python2.7/dist-packages:/usr/local/lib/python2.7/site-packages"
   roles:
+    - docker
     - role-gitlab
+
+  tasks:
+    - name: Ensure Gitlab stack has an up-to-date configuration
+      command: docker stack deploy -c "{{ in_gitlab_dict.role_path }}/docker-compose.yml" "{{ in_gitlab_dict.name }}"
+      delegate_facts: True
+      delegate_to: "{{ in_gitlab_dict.deploy.delegate_to | default(inventory_hostname) }}"
+
