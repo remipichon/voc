@@ -50,7 +50,7 @@ gitlab_rails['db_port'] = {{ _gitlab_dict.db.port }}
 ##! Docs: https://docs.gitlab.com/ce/administration/container_registry.html
 ################################################################################
 
-# registry_external_url 'https://registry.gitlab.example.com'
+registry_external_url 'https://{{ gitlab_dict.registry.host }}:{{ gitlab_dict.registry.port }}'
 
 ### Settings used by GitLab application
 # gitlab_rails['registry_enabled'] = true
@@ -107,6 +107,23 @@ gitlab_rails['db_port'] = {{ _gitlab_dict.db.port }}
 # registry['default_notifications_backoff'] = "1s"
 # registry['default_notifications_headers'] = {}
 
+
+################################################################################
+## Registry NGINX
+################################################################################
+
+# All the settings defined in the "GitLab NGINX" section are also available in this "Registry NGINX" section
+# You just have to change the key "nginx['some_settings']" with "registry_nginx['some_settings']"
+
+# Below you can find settings that are exclusive to "Registry NGINX"
+registry_nginx['enable'] = true
+registry_nginx['listen_port'] = 5000
+registry_nginx['listen_https'] = false
+
+registry_nginx['proxy_set_headers'] = {
+  "X-Forwarded-Proto" => "https",
+  "X-Forwarded-Ssl" => "on"
+}
 
 ################################################################################
 ## GitLab User Settings
