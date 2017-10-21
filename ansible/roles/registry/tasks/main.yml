@@ -1,0 +1,23 @@
+---
+- name: Ensure registry config path is available
+  file:
+    dest: "{{ _gitlab_dict.registry.config_path }}"
+    state: directory
+  tags:
+    - init
+  when: _gitlab_dict.registry.enabled
+
+- name: Ensure registry cert path is available
+  file:
+    dest: "{{ _gitlab_dict.registry.cert_path }}"
+    state: directory
+  tags:
+    - init
+  when: _gitlab_dict.registry.enabled
+
+- name: Ensure registry configuration file is updated
+  template:
+    backup: yes
+    src: "registry-config.yml.j2"
+    dest: "{{ _gitlab_dict.registry.config_path }}/config.yml"
+    mode: "0644"

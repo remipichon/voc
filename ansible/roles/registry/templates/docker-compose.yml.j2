@@ -1,0 +1,9 @@
+version: "{{ _gitlab_dict.deploy.compose_version }}"
+
+services:
+  registry:
+    image: "{{ _gitlab_dict.registry.image.name }}:{{ _gitlab_dict.registry.image.version }}"
+    ports:
+      - 5000
+    volumes:
+      - "{{ _gitlab_dict.registry.config_path }}/config.yml:/etc/docker/registry/config.yml"
