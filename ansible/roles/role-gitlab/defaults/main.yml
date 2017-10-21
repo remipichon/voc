@@ -35,8 +35,8 @@ gitlab_dict:
     delegate_to: "{{ inventory_hostname }}"
     force_pull: no
   configuration:
-    external_url: http://localhost
-    ssh_host: localhost
+    external_url: "http://{{ ansible_default_ipv4.address }}"
+    ssh_host: "{{ ansible_default_ipv4.address }}"
     time_zone: "Europe/Paris"
     download_path: /var/opt/gitlab/tmp/repositories
     backup:

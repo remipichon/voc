@@ -7,9 +7,67 @@
     - docker
     - role-gitlab
 
-  tasks:
-    - name: Ensure Gitlab stack has an up-to-date configuration
-      command: docker stack deploy -c "{{ in_gitlab_dict.role_path }}/docker-compose.yml" "{{ in_gitlab_dict.name }}"
-      delegate_facts: True
-      delegate_to: "{{ gitlab_dict.deploy.delegate_to | default(inventory_hostname) }}"
+  pre_tasks:
+    - name: Check if 'mode' var is defined
+      fail:
+        msg: "You need to define '-e mode={host, remote, both}'"
+      when: mode is undefined
 
+    - name: Make sure we have a 'wheel' group
+      group:
+        name: wheel
+        state: present
+
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: "^%wheel"
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+        validate: visudo -cf %s
+
+    - name: Add user to wheel group
+      user:
+        name: "{{ username }}"
+        groups: wheel
+        shell: "/bin/bash"
+        append: yes
+
+    - name: Create VOC directory
+      file:
+        path: "{{ voc_path }}"
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: 0755
+
+  tasks:
+    - block:
+      - name: Generate intermediate compose file in mode '{{ mode }}'
+        shell: "docker-compose
+        -f {{ gitlab_dict.role_path }}/docker-compose.yml
+        config > {{ voc_path }}/docker-compose.yml"
+
+  #    - name: Ensure Gitlab stack has an up-to-date configuration
+  #      command: docker stack deploy -c "{{ voc_path }}/docker-compose.yml" voc
+  #      delegate_facts: True
+  #      delegate_to: "{{ gitlab_dict.deploy.delegate_to | default(inventory_hostname) }}"
+  #      tags:
+  #        - deploy
+
+      - name: Build the stack
+        command: docker-compose -f {{ voc_path }}/docker-compose.yml build
+
+      - name: Get Swarm status
+        shell: "docker info | grep Swarm | cut -d' ' -f2"
+        register: swarm_status
+
+      - name: Initialize Swarm master
+        command: "docker swarm init --advertise-addr {{ ansible_default_ipv4.address }}"
+        delegate_facts: True
+        delegate_to: "{{ swarm_master }}"
+        when: swarm_status.stdout != 'active'
+
+      - name: Run it
+        command: docker stack deploy --compose-file {{ voc_path }}/docker-compose.yml voc
+      tags: debug

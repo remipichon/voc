@@ -75,5 +75,3 @@
     mode: "0644"
   tags:
     - debug
-    
-- include: deploy/{{ _gitlab_dict.deploy.mode }}.yml

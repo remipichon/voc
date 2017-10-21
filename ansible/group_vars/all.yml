@@ -4,11 +4,13 @@ deploy_mode: 'swarm'
 compose_version: '3'
 
 
-main_dir: "/home/{{ username }}/voc/core/"
+voc_path: "/data/voc/"
 
 
 repo_url: "https://github.com/remipichon/voc.git"
 repo_version: "HEAD"
+
+swarm_master: keizersgrasht
 
 
 docker_compose_version: "1.15.0"
@@ -17,7 +19,7 @@ docker_compose_version: "1.15.0"
 # Gitlab configuration #
 ########################
 
-gitlab_root_path: "/data/voc/gitlab"
+gitlab_root_path: "{{ voc_path }}/gitlab/"
 gitlab_dict:
   name: gitlab
   image:
