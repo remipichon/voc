@@ -1,0 +1,18 @@
+---
+nginxrp_root_path: "{{ voc_path }}/nginx-proxy"
+
+nginxrp_dict:
+  name: nginx-proxy
+  image:
+    name: jwilder/nginx-proxy
+    version: 0.4.0
+  http_port: 80
+  https_port: 443
+  role_path: "{{ nginxrp_root_path }}/role/"
+  certs_path: "{{ nginxrp_root_path }}/certs/"
+  vhost_path: "{{ nginxrp_root_path }}/vhost/"
+  log_path: "{{ nginxrp_root_path }}/log/"
+  healthcheck:
+    retries: 10
+  deploy:
+    compose_version: '3'
