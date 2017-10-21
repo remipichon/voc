@@ -3,6 +3,8 @@ username: 'voc'
 deploy_mode: 'swarm'
 compose_version: '3'
 
+domain_name: "ansible.remip.eu"
+
 
 voc_path: "/data/voc/"
 
@@ -67,3 +69,4 @@ gitlab_dict:
     enable_https: false
   environment:
     GITLAB_ROOT_PASSWORD: "5uP325eC23t"
+    VIRTUAL_HOST: "{{ domain_name }}"
