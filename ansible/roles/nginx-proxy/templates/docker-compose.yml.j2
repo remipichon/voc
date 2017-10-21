@@ -1,0 +1,18 @@
+version: "{{ nginxrp_dict.deploy.compose_version }}"
+
+services:
+  "{{ nginxrp_dict.name }}":
+    image: "{{ nginxrp_dict.image.name }}:{{ nginxrp_dict.image.version }}"
+    networks:
+      internal:
+    ports:
+      - "{{ nginxrp_dict.http_port }}:80"
+      - "{{ nginxrp_dict.https_port }}:443"
+    volumes:
+      - "{{ nginxrp_dict.certs_path }}:/etc/nginx/certs"
+      - "{{ nginxrp_dict.vhost_path }}:/etc/nginx/vhost.d:ro"
+      - '/var/run/docker.sock:/tmp/docker.sock'
+
+networks:
+  internal:
+    external: false

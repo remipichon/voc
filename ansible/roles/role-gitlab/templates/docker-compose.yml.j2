@@ -15,8 +15,8 @@ services:
 {% endif %}
 {% endfor %}
     ports:
-      - "{{ _gitlab_dict.http_port }}:80"
-      - "{{ _gitlab_dict.https_port }}:443"
+      - "80"
+      - "443"
       - "{{ _gitlab_dict.git_port }}:22"
     volumes:
       - "{{ _gitlab_dict.data_path }}:/var/opt/gitlab"

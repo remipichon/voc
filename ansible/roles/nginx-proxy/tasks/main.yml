@@ -1,0 +1,31 @@
+---
+- name: Ensure nginx-proxy TLS certs path for proxied containers is available
+  file:
+    path: "{{ nginxrp_dict.certs_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Ensure nginx-proxy vhost path is available
+  file:
+    path: "{{ nginxrp_dict.vhost_path }}"
+    state: directory
+    owner: root
+    group: docker
+    mode: 02775
+
+- name: Ensure nginx-proxy role path is available
+  file:
+    path: "{{ nginxrp_dict.role_path }}"
+    state: directory
+    owner: root
+    group: docker
+    mode: 02775
+
+- name: Ensure nginx-proxy compose file is updated
+  template:
+    backup: yes
+    src: "docker-compose.yml.j2"
+    dest: "{{ nginxrp_dict.role_path }}/docker-compose.yml"
+    mode: "0644"

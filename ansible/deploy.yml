@@ -6,6 +6,7 @@
   roles:
     - docker
     - role-gitlab
+    - nginx-proxy
 
   pre_tasks:
     - name: Check if 'mode' var is defined
@@ -46,6 +47,7 @@
       - name: Generate intermediate compose file in mode '{{ mode }}'
         shell: "docker-compose
         -f {{ gitlab_dict.role_path }}/docker-compose.yml
+        -f {{ nginxrp_dict.role_path }}/docker-compose.yml
         config > {{ voc_path }}/docker-compose.yml"
 
   #    - name: Ensure Gitlab stack has an up-to-date configuration
