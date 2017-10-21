@@ -73,5 +73,3 @@
     src: "{{ _gitlab_dict.docker_compose | default('docker-compose.yml.j2') }}"
     dest: "{{ _gitlab_dict.role_path }}/docker-compose.yml"
     mode: "0644"
-  tags:
-    - debug
