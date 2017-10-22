@@ -1,23 +1,42 @@
 ---
 - name: Ensure registry config path is available
   file:
-    dest: "{{ _gitlab_dict.registry.config_path }}"
+    dest: "{{ registry_dict.config_path }}"
     state: directory
   tags:
     - init
-  when: _gitlab_dict.registry.enabled
 
 - name: Ensure registry cert path is available
   file:
-    dest: "{{ _gitlab_dict.registry.cert_path }}"
+    dest: "{{ registry_dict.cert_path }}"
     state: directory
   tags:
     - init
-  when: _gitlab_dict.registry.enabled
+
+- name: Ensure registry role path is available
+  file:
+    dest: "{{ registry_dict.role_path }}"
+    state: directory
+  tags:
+    - init
+
+- name: Ensure registry data path is available
+  file:
+    dest: "{{ registry_dict.data_path }}"
+    state: directory
+  tags:
+    - init
 
 - name: Ensure registry configuration file is updated
   template:
     backup: yes
     src: "registry-config.yml.j2"
-    dest: "{{ _gitlab_dict.registry.config_path }}/config.yml"
+    dest: "{{ registry_dict.config_path }}/config.yml"
+    mode: "0644"
+
+- name: Ensure registry compose file is updated
+  template:
+    backup: yes
+    src: "docker-compose.yml.j2"
+    dest: "{{ registry_dict.role_path }}/docker-compose.yml"
     mode: "0644"

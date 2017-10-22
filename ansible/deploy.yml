@@ -7,6 +7,7 @@
     - docker
     - role-gitlab
     - nginx-proxy
+    - registry
 
   pre_tasks:
     - name: Check if 'mode' var is defined
@@ -48,6 +49,7 @@
         shell: "docker-compose
         -f {{ gitlab_dict.role_path }}/docker-compose.yml
         -f {{ nginxrp_dict.role_path }}/docker-compose.yml
+        -f {{ registry_dict.role_path }}/docker-compose.yml
         config > {{ voc_path }}/docker-compose.yml"
 
   #    - name: Ensure Gitlab stack has an up-to-date configuration

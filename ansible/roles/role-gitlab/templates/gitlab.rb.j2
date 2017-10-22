@@ -50,7 +50,7 @@ gitlab_rails['db_port'] = {{ _gitlab_dict.db.port }}
 ##! Docs: https://docs.gitlab.com/ce/administration/container_registry.html
 ################################################################################
 
-registry_external_url 'https://{{ gitlab_dict.registry.host }}:{{ gitlab_dict.registry.port }}'
+registry_external_url 'https://{{ registry_dict.host }}:{{ registry_dict.port }}'
 
 ### Settings used by GitLab application
 # gitlab_rails['registry_enabled'] = true

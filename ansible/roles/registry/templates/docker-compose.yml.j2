@@ -1,9 +1,13 @@
-version: "{{ _gitlab_dict.deploy.compose_version }}"
+version: "{{ compose_version }}"
 
 services:
   registry:
-    image: "{{ _gitlab_dict.registry.image.name }}:{{ _gitlab_dict.registry.image.version }}"
+    image: "{{ registry_dict.image.name }}:{{ registry_dict.image.version }}"
+    networks:
+      internal:
     ports:
       - 5000
     volumes:
-      - "{{ _gitlab_dict.registry.config_path }}/config.yml:/etc/docker/registry/config.yml"
+      - "{{ registry_dict.config_path }}/config.yml:/etc/docker/registry/config.yml"
+      - "{{ registry_dict.cert_path }}:/certs"
+      - "{{ registry_dict.data_path }}:/var/lib/registry"

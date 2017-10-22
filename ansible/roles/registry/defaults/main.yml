@@ -7,7 +7,7 @@ registry_dict:
   enabled: true
   host: "registry.{{ domain_name }}"
   port: "5000"
-  role: "{{ registry_root_path }}/role"
+  role_path: "{{ registry_root_path }}/role"
   config_path: "{{ registry_root_path }}/config"
   data_path: "{{ registry_root_path }}/data"
   cert_path: "{{ registry_root_path }}/certs"
