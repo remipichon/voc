@@ -69,4 +69,23 @@ gitlab_dict:
     enable_https: false
   environment:
     GITLAB_ROOT_PASSWORD: "5uP325eC23t"
-    VIRTUAL_HOST: "{{ domain_name }}"
+    VIRTUAL_HOST: "gitlab.{{ domain_name }}"
+
+########################
+# Registry configuration #
+########################
+
+registry_root_path: "{{ voc_path }}/registry"
+registry_dict:
+  image:
+    name: registry
+    version: 2
+  enabled: true
+  host: "registry.{{ domain_name }}"
+  port: "5000"
+  role_path: "{{ registry_root_path }}/role"
+  config_path: "{{ registry_root_path }}/config"
+  data_path: "{{ registry_root_path }}/data"
+  cert_path: "{{ registry_root_path }}/certs"
+  environment:
+    VIRTUAL_HOST: "registry.{{ domain_name }}"
