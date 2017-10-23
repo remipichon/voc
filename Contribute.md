@@ -36,9 +36,10 @@ Each time the runner will start using the latest code in the volume. Just retry 
 
 Want to quickly test some JS code without anything around it ? (assuming you have some valid conf at 'voc-configuration' and code at 'voc')
 ````
-docker exec -ti $(docker run -d -v '/var/run/docker.sock:/var/run/docker.sock' -v $(pwd)/voc-configuration/:/voc-configuration -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null) bash
+ID=$(docker run -d -p 9229:9229 -v '/var/run/docker.sock:/var/run/docker.sock' -v $(pwd)/voc-configuration/:/voc-configuration -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null)
+docker exec -ti $ID bash
 cd /app
-DEV=true CI_PROJECT_DIR=/voc-configuration node app.js
+DEV=true CI_PROJECT_DIR=/voc-configuration node --inspect --inspect-brk=0.0.0.0 app.js
 ````
 
 > if CI_PROJECT_DIR points to a repo, running above command will do the same as triggering the runner
@@ -50,6 +51,12 @@ delete the 'localhost' entry from your known_hosts (not working)
 sed -i '/localhost/c\ /' ~/.ssh/known_hosts
 ````
 
+### Debug runner app
+above command already setup eveything for remote debug to work. Use your favorite tool from the list https://nodejs.org/en/docs/inspector/
+* Webstorm: Chromium Remote seems to be working better
+* port is default, 9228
+* made to work with V8
+* tested on Webstorm and Chromium based Chrome
 
 
 ## Email Mediation app
