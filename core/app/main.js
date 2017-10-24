@@ -24,7 +24,6 @@ module.exports = {
         var dockerfiles = vocResources.dockerfiles;
         let stackDefinitions = vocResources.stackDefinitions;
         let repos = vocResources.repos;
-        // let usedStackDefinitions = vocResources.usedStackDefinitions;
         let imageConfigs = _.filter(instances, instance => {
             return instance.isImage
         });

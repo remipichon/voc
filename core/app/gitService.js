@@ -28,22 +28,27 @@ module.exports = {
                     console.info(`Instance ${instance.resourceName} is using a stack definition ${stackDef.name} which is in remote repo mode. Instance is flagged as 'build'. Indeed, we don't know yet if any of stack defintion docker composes has build dependencies.`);
                     doWeBuild = true;
                 } else
-                if (stackDef.dockercomposes)
-                    doWeBuild = _.find(stackDef.dockercomposes, dockercompose => {
-                            return dockercompose.hasBuild
-                        }) != "undefined";
+                    if (stackDef.dockercomposes)
+                        doWeBuild = _.find(stackDef.dockercomposes, dockercompose => {
+                                return dockercompose.hasBuild
+                            }) != "undefined";
             }
             if (instance.dockercomposeName) {
-                let dockercompose = _.find(dockercomposes, dockercompose => {
-                    return dockercompose.name === instance.dockercomposeName;
-                });
-                if(!dockercompose){
-                    instance.toDiscard = true;
-                    utils.writeResult(instance.instanceName, {
-                        warning: `${instance.instanceName}: is refering to docker compose ${instance.dockercomposeName} which doesnt exist. Instance will be discarded`
-                    });
+                if(instance.remote){
+                    console.info(`Instance ${instance.resourceName} is in remote mode and is using a docker compose ${instance.dockercomposeName}. Instance is flagged as 'build'. Indeed, we don't know yet if the docker composes has build dependencies.`);
+                    doWeBuild = true;
                 } else {
-                    doWeBuild = dockercompose.hasBuild;
+                    let dockercompose = _.find(dockercomposes, dockercompose => {
+                        return dockercompose.name === instance.dockercomposeName;
+                    });
+                    if (!dockercompose) {
+                        instance.toDiscard = true;
+                        utils.writeResult(instance.instanceName, {
+                            warning: `${instance.instanceName}: is refering to docker compose ${instance.dockercomposeName} which doesnt exist. Instance will be discarded`
+                        });
+                    } else {
+                        doWeBuild = dockercompose.hasBuild;
+                    }
                 }
             }
             instance.toBuild = doWeBuild;

@@ -1,7 +1,13 @@
 'use strict';
 
+var fs = require('fs');
+var path = require('path');
+var _ = require("underscore");
 var YAML = require('yamljs');
 var fs = require('fs');
+var configuration = require("./configuration");
+var utils = require('./utils');
+var resourceUtil = require("./resourceUtil");
 
 module.exports = {
     /**
@@ -53,39 +59,53 @@ module.exports = {
         return contextPaths;
     },
 
-    cloneAndWalkRemoteRepo: function (config, repos) {
-        console.log("config",config)
-        let repo;
+    cloneAndWalkRemoteRepo: function (config, repos, instanceName = "no instance name given") {
+        let repoconfig;
         if (config.repo) {
             if (typeof config.repo == "string") {
-                repo = _.find(repos, repo => {
-                    return repo.name === repo
+                let repo = _.find(repos, repo => {
+                    return repo.name === config.repo
                 });
+                repoconfig = utils.readFileSyncToJson(repo.path);
+                repoconfig.name = config.repo;
             } else if (typeof config.repo == "object") {
-                repo = config.repo
+                repoconfig = config.repo
             }
         }
-        if (!repo) {
-            return null;
-        }
-        let repoconfig = utils.readFileSyncToJson(repo.path);
-        let result = utils.execCmdSync(`git clone ${repoconfig.url} ${configuration.remoteRepoFolder}/${repo.name}`, true);
-        if (result.error) {
-            utils.writeResult(repo.name, {
-                error: `${repo.name}: An error occurred while cloning ${repo.url} into ${configuration.remoteRepoFolder}. Related stacks will not be deployed. Error: ${result.error} `
+        if (!repoconfig) {
+            utils.writeResult(instanceName, {
+                error: `${instanceName}: Instance's 'repo' is miss configured. Either the 'repo' string doesn't refer to a defined repos or the 'repo' object is not valid. Related stacks will not be deployed.`
             });
             return null;
         }
-        utils.writeResult(repo.name, {
-            result: `${repo.name}: Successfully cloned remote repo ${repo.url}`
-        });
-        return this.walkResourceFileSync(`${configuration.remoteRepoFolder}/${repo.name}`);
+        let result = utils.execCmdSync(`git clone ${repoconfig.url} ${configuration.remoteRepoFolder}/${repoconfig.name}`, true);
+        if (result.error) {
+            if(result.error.message.indexOf("already exists and is not an empty directory") !== -1){
+                let resultPull = utils.execCmdSync(`cd ${configuration.remoteRepoFolder}/${repoconfig.name}; git checkout master;`, true);
+                if(resultPull.error){
+                    utils.writeResult(repoconfig.name, {
+                        error: `${repoconfig.name}: It seems like ${repoconfig.url} have already been cloned into ${configuration.remoteRepoFolder}. An error occured while checkout master. Error: ${resultPull.error}`
+                    });
+                } else
+                    utils.writeResult(repoconfig.name, {
+                        warning: `${repoconfig.name}: It seems like ${repoconfig.url} have already been cloned into ${configuration.remoteRepoFolder}. It has been checkout to master, let's assume we can use it`
+                    });
+            } else {
+                utils.writeResult(repoconfig.name, {
+                    error: `${repoconfig.name}: An error occurred while cloning ${repoconfig.url} into ${configuration.remoteRepoFolder}. Related stacks will not be deployed. Error: ${result.error} `
+                });
+                return null;
+            }
+        } else
+            utils.writeResult(repoconfig.name, {
+                result: `${repoconfig.name}: Successfully cloned remote repo ${repoconfig.url}`
+            });
+        return this.walkResourceFileSync(`${configuration.remoteRepoFolder}/${repoconfig.name}`);
     },
 
     walkResourceFileSync: function (dir) {
-
         var self = this;
-        var results = [];
+        let results = [];
         let list;
         try {
             list = fs.readdirSync(dir);
@@ -103,7 +123,7 @@ module.exports = {
                 return err;
             }
             if (stat && stat.isDirectory()) {
-                let res = self.walkResourceFileSync(file)
+                let res = self.walkResourceFileSync(file);
                 results = results.concat(res);
                 if (!--pending) return results;
             } else {
@@ -113,5 +133,7 @@ module.exports = {
                 if (!--pending) return results;
             }
         });
+
+        return results;
     },
 }

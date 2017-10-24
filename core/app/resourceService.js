@@ -68,11 +68,10 @@ module.exports = {
             return {name: repo.name, path: repo.path}
         });
 
-        console.log("***** debug singles\n",singles,"\n********");
+        // console.log("***** debug singles\n",singles,"\n********");
 
 
         //populating instances
-        // let usedStackDefinitions = []; // List<String>
         singles.forEach(single => {
             //TODO doesntwork
             // let alreadyExisiting = instances.find(instance => {
@@ -107,7 +106,6 @@ module.exports = {
                         }
                     }
                     instance.stackDefinitionName = single.soulMateName;
-                    // usedStackDefinitions.push(stackDefinition.name);
                 }
                 if (single.type === "simpleStackInstance" || single.type === "simpleStackInstanceRemote") {
                     if(!single.remote) {//soulmate is not there yet for remote, check is later
@@ -139,7 +137,6 @@ module.exports = {
             instances: instances,
             dockercomposes: dockercomposes,
             stackDefinitions: stackDefinitions,
-            // usedStackDefinitions: usedStackDefinitions,
             dockerfiles: dockerfiles,
             repos: repos
         }
@@ -163,8 +160,8 @@ module.exports = {
         let searchDC;
 
         if(instance.remote){
-            console.log("remote")
-            let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(instance, repos);
+            let instanceConfig = utils.readFileSyncToJson(instance.path);
+            let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(instanceConfig, repos, instance.instanceName);
             if(!allRemoteResourcePaths) return null;
             let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
             if(!vocResourcesRemote){
@@ -173,7 +170,7 @@ module.exports = {
                 });
                 return null;
             }
-            console.log(`   remote dockercomposes from ${instance.repo}\n    `, vocResourcesRemote.dockercomposes);
+            console.log(`   remote dockercomposes from ${instanceConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
             searchDC = vocResourcesRemote.dockercomposes;
         } else {
             searchDC = dockercomposes;
@@ -203,21 +200,22 @@ module.exports = {
 
     generateIntermediateComposeForSI: function (instance, stackDefinitions, dockercomposes, repos) {
         let env = this.getInstanceEnvs(instance);
-
         let dir = configuration.repoFolder + configuration.artifactDir;
         let stackDefinition = stackDefinitions.find(sd => {
-            return sd.name = instance.stackDefinitionName
+            return sd.name == instance.stackDefinitionName
         });
-
+        console.log(`   ${instance.instanceName}: About to configure intermediate compose file from stack definition ${stackDefinition.name}`);
         let skip = false;
         if (!stackDefinition.dockercomposesCmdReady) {
             let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path);
             stackDefinition.dockercomposesCmdReady = "";
             stackDefinition.dockercomposes = [];
             if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
+                console.log(`   ${stackDefinition.name}: stack definition has 'composes' defined, looking for them`);
                 let searchDC;
                 if(stackDefinition.remote){
-                    let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(stackDefinitionConfig, repos);
+                    console.log(`   stack definition ${stackDefinition.name} is in remote repo mode, now cloning ${typeof stackDefinitionConfig.repo == "string"? stackDefinitionConfig.repo: stackDefinitionConfig.repo.name} to get remote dockercomposes`);
+                    let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(stackDefinitionConfig, repos, instance.instanceName);
                     if(!allRemoteResourcePaths) return null;
                     let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
                     if(!vocResourcesRemote){
@@ -226,9 +224,10 @@ module.exports = {
                         });
                         return null;
                     }
-                    console.log(`   remote dockercomposes from ${stackDefinitionConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
+                    console.log(`   remote dockercomposes from remote repo ${stackDefinitionConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
                     searchDC = vocResourcesRemote.dockercomposes;
                 } else {
+                    console.log(`   stack definition ${stackDefinition.name} is in local repo mode, using local repo to get dockercomposes`);
                     searchDC = dockercomposes;
                 }
                 stackDefinitionConfig.composes.forEach(composeName => {

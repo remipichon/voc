@@ -2,6 +2,7 @@ var utils = require("./utils");
 //var YAML = require('yamljs');
 var _ = require("underscore");
 var fsService = require("./fsService");
+var fsUtil = require("./fsUtil");
 var resourceUtil = require("./resourceUtil");
 
 
@@ -46,6 +47,27 @@ async function testWalk(){
     var res = await fsService.walkResourceFilePromise("/app/pouet")
     console.log("rest",res);
     console.log("apres")
+
+    return res;
+
+}
+
+function testWalkSync(){
+
+    // console.log("****************************async")
+    // utils.walkResourceFile("/Users/pichr1/work2/voc/core/app", function(err,res){console.log("final res",res)})
+
+    // console.log("*****************************promise")
+    // utils.walkResourceFilePromise("/Users/remi/work/voc-configuration").then((allPaths) => {
+    //     console.log("allpath",allPaths)
+    // }).catch(error => console.error("error",error));
+    //
+    // console.log("end of method");
+
+
+    var res = fsUtil.walkResourceFileSync("/voc-configuration/")
+    console.log("res",res);
+
 
     return res;
 
@@ -115,5 +137,7 @@ function testCmdSync(){
 // var tr = testWalk()
 // console.log("apres apres",tr);
 
-testIsResourceFile();
+var tr = testWalkSync()
+
+// testIsResourceFile();
 // testIsResourceFile();

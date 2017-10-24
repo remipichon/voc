@@ -228,7 +228,6 @@ module.exports = {
                 instance.toClean = clean;
             });
         } else if (resource.type === "stackInstance" || resource.type === "simpleStackInstance" || resource.type === "simpleStackInstanceRemote") {
-            console.log("=======================resource",resource)
             let si = _.find(instances, instance => {
                 return instance.instanceName === resource.name;
             });
@@ -268,7 +267,7 @@ module.exports = {
         "imageConfigRemote": /image\.remote-repo\.(.+)\.json$/m,            //image.remote-repo.<Docker.file-name>.json
         "simpleStackInstanceRemote": /(^simple-stack-instance|\/simple-stack-instance)\.remote-repo\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json/m,    //simple-stack-instance.remote-repo.<d.c-name>.<si-name>.json
         "stackDefinitionRemote": /stack-definition\.remote-repo\.(.+)\.json$/m,  //stack-definition.remote-repo.<s.d-name>.json
-        "repos": /repo\.([a-zA-Z0-9]+).json$/m
+        "repos": /repo\.([a-zA-Z0-9_-]+).json$/m
     },
 
     /**
