@@ -4,12 +4,13 @@ var _ = require("underscore");
 var configuration = require("./configuration");
 var resourceUtil = require("./resourceUtil");
 var utils = require("./utils");
+var fsUtil = require("./fsUtil");
 
 module.exports = {
 
     getTriggeredInstancesFromModifiedFiles: function (instances, stackDefinitions, contextPaths, dockercomposes) {
         console.info("***** Reading git commit payload to find which files has been modified *****");
-        let files = gitService.getGitDiffModifiedFile();
+        let files = this.getGitDiffModifiedFile();
         console.log("***** All updated files *****\n    ", files);
         let triggeredInstances = this.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes);
 
@@ -23,6 +24,10 @@ module.exports = {
                 let stackDef = _.find(stackDefinitions, stackDefinition => {
                     return stackDefinition.name === instance.stackDefinitionName;
                 });
+                if(stackDef.remote){
+                    console.info(`Instance ${instance.resourceName} is using a stack definition ${stackDef.name} which is in remote repo mode. Instance is flagged as 'build'. Indeed, we don't know yet if any of stack defintion docker composes has build dependencies.`);
+                    doWeBuild = true;
+                } else
                 if (stackDef.dockercomposes)
                     doWeBuild = _.find(stackDef.dockercomposes, dockercompose => {
                             return dockercompose.hasBuild
@@ -32,7 +37,14 @@ module.exports = {
                 let dockercompose = _.find(dockercomposes, dockercompose => {
                     return dockercompose.name === instance.dockercomposeName;
                 });
-                doWeBuild = dockercompose.hasBuild;
+                if(!dockercompose){
+                    instance.toDiscard = true;
+                    utils.writeResult(instance.instanceName, {
+                        warning: `${instance.instanceName}: is refering to docker compose ${instance.dockercomposeName} which doesnt exist. Instance will be discarded`
+                    });
+                } else {
+                    doWeBuild = dockercompose.hasBuild;
+                }
             }
             instance.toBuild = doWeBuild;
         });
@@ -75,6 +87,7 @@ module.exports = {
             });
             console.log("updatedContextPaths",updatedContextPaths)
 
+            //on remote mode, only resource files can be found on local VOC repo
             updatedContextPaths.forEach(updatedContext => {
                 if (updatedContext.type == "dockercompose") {
                     let dockercompose = dockercomposes.find(dc => {

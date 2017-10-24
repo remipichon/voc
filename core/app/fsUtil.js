@@ -52,4 +52,66 @@ module.exports = {
 
         return contextPaths;
     },
+
+    cloneAndWalkRemoteRepo: function (config, repos) {
+        console.log("config",config)
+        let repo;
+        if (config.repo) {
+            if (typeof config.repo == "string") {
+                repo = _.find(repos, repo => {
+                    return repo.name === repo
+                });
+            } else if (typeof config.repo == "object") {
+                repo = config.repo
+            }
+        }
+        if (!repo) {
+            return null;
+        }
+        let repoconfig = utils.readFileSyncToJson(repo.path);
+        let result = utils.execCmdSync(`git clone ${repoconfig.url} ${configuration.remoteRepoFolder}/${repo.name}`, true);
+        if (result.error) {
+            utils.writeResult(repo.name, {
+                error: `${repo.name}: An error occurred while cloning ${repo.url} into ${configuration.remoteRepoFolder}. Related stacks will not be deployed. Error: ${result.error} `
+            });
+            return null;
+        }
+        utils.writeResult(repo.name, {
+            result: `${repo.name}: Successfully cloned remote repo ${repo.url}`
+        });
+        return this.walkResourceFileSync(`${configuration.remoteRepoFolder}/${repo.name}`);
+    },
+
+    walkResourceFileSync: function (dir) {
+
+        var self = this;
+        var results = [];
+        let list;
+        try {
+            list = fs.readdirSync(dir);
+        } catch(err) {
+            return err;
+        }
+        var pending = list.length;
+        if (!pending) return results;
+        list.forEach(function (file) {
+            file = path.resolve(dir, file);
+            let stat;
+            try {
+                stat = fs.statSync(file)
+            } catch(err) {
+                return err;
+            }
+            if (stat && stat.isDirectory()) {
+                let res = self.walkResourceFileSync(file)
+                results = results.concat(res);
+                if (!--pending) return results;
+            } else {
+                if (resourceUtil.isResourceFile(file)) {
+                    results.push(file);
+                }
+                if (!--pending) return results;
+            }
+        });
+    },
 }

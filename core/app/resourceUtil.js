@@ -19,6 +19,7 @@ module.exports = {
      *     * path   <String> absolute path
      *     * dockercomposes List<DockerCompose> ??? not in object before reading file
      *     * dockercomposesCmdReady <String>  pre-formated cmd ready ( -f xxx -f yyy) ??? not in object before reading file
+     *     * [remoteRepo: <Boolean>]
      *
      * <Instance>               any simpleStackInstance, stackInstance or imageConfig
      *     * [instanceName   <String> if type=si or type=ssi]
@@ -29,6 +30,7 @@ module.exports = {
      *     * [isImage           <Boolean> if type=imageConfig]
      *     * toBuild           <Boolean>
      *     * toClean           <Boolean>
+     *     * [repo             <Repo> or <String> if type=si]
      *
      * <DockerCompose>
      *     * name   <String>
@@ -46,30 +48,42 @@ module.exports = {
      *     * directory  <String> absolute path without filename, ending with /
      *     * type       <String> [dockercompose|imageconfig]
      *
+     *
+     * <Repo>
+     *     * name
+     *     * url
+     *
      */
 
 
-    cleanUnusedVocResources: function (stackDefinitions, usedStackDefinitions, dockercomposes, imageConfigs, dockerfiles) {
-        //remove stack definitions not used by any instances
-        stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
-            return _.contains(usedStackDefinitions, stackDefinition.name);
-        });
+    cleanUnusedVocResources: function (instances, stackDefinitions, dockercomposes, imageConfigs, dockerfiles) {
+        // //TODO remove stack definitions not used by any instances (no diff between remote and local)
+        // let usedStackDefinitionNames = _.filter(instances TODO get all stackDef whose name is found in instances
+        // stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
+        //     return _.contains(usedStackDefinitionNames, stackDefinition.name);
+        // });
 
 
         //remove dockercomposes not used by any instances
         stackDefinitions.forEach(stackDefinition => {
+            if(stackDefinition.remoteRepo){
+                console.info(`Stack definition ${stackDefinition.name} is in remote repo mode, its docker composes dependencies will be verified just before docker compose config time`);
+                return;
+            }
             let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path, {encoding: 'utf-8'});
             if (stackDefinitionConfig.dockercomposes && Array.isArray(stackDefinitionConfig.dockercomposes)) {
                 stackDefinitionConfig.dockercomposes.forEach(dockercomposeRelativePath => {
-                    let dockercomposeName = this.getTypeAndResourceName(dockercomposeRelativePath);
+                    let dockercomposeName = this.getTypeAndResourceName(dockercomposeRelativePath).name;
                     if (!dockercomposeName) {
-                        console.warn(`Stack definition is looking for docker compose ${dockercomposeRelativePath} which is not a valid file name format, skipping`);
+                        console.warn(`Stack definition ${stackDefinition.name} is looking for docker compose ${dockercomposeRelativePath} which is not a valid file name format. Stack def`);
+                        return;
                     }
                     let usedDockercompose = dockercomposes.find(dockercompose => {
                         return dockercompose.name === dockercomposeName
                     });
                     if (!usedDockercompose) {
-                        console.warn(`Stack definition is looking for docker compose ${dockercomposeRelativePath} which could'nt be found, skipping`);
+                        console.warn(`Stack definition ${stackDefinition.name} is looking for docker compose ${dockercomposeRelativePath} which could'nt be found, skipping`);
+                        return;
                     }
                     usedDockercompose.used = true;
                 });
@@ -85,7 +99,7 @@ module.exports = {
 
         //remove imageConfigs without a Dockerfile
         imageConfigs = _.filter(imageConfig => {
-           return _.find(dockercomposes, dc => { dc.name == imageConfig.resourceName})
+           return imageConfig.remote || _.find(dockercomposes, dc => { dc.name == imageConfig.resourceName})
         });
 
     },
@@ -187,6 +201,7 @@ module.exports = {
      * @param clean         <Boolean>=false
      */
     triggerInstancesForResource (resource, instances, stackDefinitions, clean = false) {
+        //support repo updated
         if (resource.type === "dockercompose") {
             //all simpleStackInstance
             _.filter(instances, instance => {
@@ -205,26 +220,22 @@ module.exports = {
                 instance.changed = true;
                 instance.toClean = clean;
             });
-        } else if (resource.type === "stackDefinition") {
+        } else if (resource.type === "stackDefinition" || resource.type === "stackDefinitionRemote") {
             _.filter(instances, instance => {
                 return instance.stackDefinitionName === resource.name;
             }).forEach(instance => {
                 instance.changed = true;
                 instance.toClean = clean;
             });
-        } else if (resource.type === "stackInstance") {
+        } else if (resource.type === "stackInstance" || resource.type === "simpleStackInstance" || resource.type === "simpleStackInstanceRemote") {
+            console.log("=======================resource",resource)
             let si = _.find(instances, instance => {
                 return instance.instanceName === resource.name;
             });
             si.changed = true;
             si.toClean = clean;
-        } else if (resource.type === "simpleStackInstance") {
-            let ssi = _.find(instances, instance => {
-                return instance.instanceName === resource.name;
-            });
-            ssi.changed = true;
-            ssi.toClean = clean;
         } else if (resource.type == "imageConfig"){
+            //TODO support image remote mode
             let imageConfig = _.find(instances, instance => {
                 return instance.resourceName === resource.name;
             });
@@ -251,9 +262,13 @@ module.exports = {
         "dockercompose": /docker-compose\.([a-zA-Z0-9_-]+)\.yml$/m,           //docker-compose.<dc-name>.yml
         "stackDefinition": /stack-definition\.([a-zA-Z0-9_-]+)\.json$/m,       //stack-definition.<sd-name>.json
         "stackInstance": /(^stack-instance|\/stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<sd-name>.<si-name>[.<suffix>].json
-        "simpleStackInstance": /(^simple-stack-instance|\/simple-stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<dc-name>.<si-name>.json
+        "simpleStackInstance": /(^simple-stack-instance|\/simple-stack-instance)(?!\.remote-repo)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //simple-stack-instance.<dc-name>.<si-name>.json
         "dockerfile": /Dockerfile\.([a-zA-Z0-9]+)$/m,
-        "imageConfig": /image\.([a-zA-Z0-9]+)\.json$/m
+        "imageConfig": /image\.([a-zA-Z0-9]+)\.json$/m,
+        "imageConfigRemote": /image\.remote-repo\.(.+)\.json$/m,            //image.remote-repo.<Docker.file-name>.json
+        "simpleStackInstanceRemote": /(^simple-stack-instance|\/simple-stack-instance)\.remote-repo\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json/m,    //simple-stack-instance.remote-repo.<d.c-name>.<si-name>.json
+        "stackDefinitionRemote": /stack-definition\.remote-repo\.(.+)\.json$/m,  //stack-definition.remote-repo.<s.d-name>.json
+        "repos": /repo\.([a-zA-Z0-9]+).json$/m
     },
 
     /**
@@ -262,7 +277,11 @@ module.exports = {
      * @returns {true|false}
      */
     isResourceFile: function (path) {
-        return this.isComposeFile(path) || this.isStackDefinition(path) || this.isStackInstance(path) || this.isSimpleStackInstance(path) || this.isImageConfig(path) || this.isDockerfile(path);
+        return this.isComposeFile(path)
+            || this.isStackDefinition(path) || this.isStackDefinitionRemote(path)
+            || this.isStackInstance(path) || this.isSimpleStackInstance(path) || this.isSimpleStackInstanceRemote(path)
+            || this.isImageConfig(path) ||  this.isImageConfigRemote(path)|| this.isDockerfile(path)
+            || this.isRepo(path);
     },
 
     isComposeFile: function (fileName) {
@@ -273,6 +292,10 @@ module.exports = {
         return this._isResourceFile(this.resourceTypeRegex.stackDefinition, fileName);
     },
 
+    isStackDefinitionRemote: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.stackDefinitionRemote, fileName);
+    },
+
     isStackInstance: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.stackInstance, fileName);
     },
@@ -281,12 +304,24 @@ module.exports = {
         return this._isResourceFile(this.resourceTypeRegex.simpleStackInstance, fileName);
     },
 
+    isSimpleStackInstanceRemote: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.simpleStackInstanceRemote, fileName);
+    },
+
     isDockerfile: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.dockerfile, fileName);
     },
 
     isImageConfig: function (fileName) {
         return this._isResourceFile(this.resourceTypeRegex.imageConfig, fileName);
+    },
+
+    isImageConfigRemote: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.imageConfigRemote, fileName);
+    },
+
+    isRepo: function (fileName) {
+        return this._isResourceFile(this.resourceTypeRegex.repos, fileName);
     },
 
     _getResourceName(pattern, path, matchIndex = null){
@@ -317,6 +352,12 @@ module.exports = {
                 name: this._getResourceName(this.resourceTypeRegex.stackDefinition, path, 1),
                 type: "stackDefinition"
             };
+        if (this.isStackDefinitionRemote(path))
+            return {
+                name: this._getResourceName(this.resourceTypeRegex.stackDefinitionRemote, path, 1),
+                type: "stackDefinitionRemote",
+                remote: true
+            };
         if (this.isSimpleStackInstance(path)) {
             let matches = this._getResourceName(this.resourceTypeRegex.simpleStackInstance, path);
             return {
@@ -326,7 +367,16 @@ module.exports = {
                 type: "simpleStackInstance"
             };
         }
-        //isSimpleStackInstance has to be before isStackInstance because isStackInstance matches as well simpleStackInstance (regex not perfect)
+        if (this.isSimpleStackInstanceRemote(path)) {
+            let matches = this._getResourceName(this.resourceTypeRegex.simpleStackInstanceRemote, path);
+            return {
+                name: matches[3],
+                soulMate: matches[2],  //dockerComposeName
+                suffix: (matches[4] == "json") ? null : matches[4], //couldn't make a proper regexp for that
+                type: "simpleStackInstanceRemote",
+                remote: true
+            };
+        }
         if (this.isStackInstance(path)) {
             let matches = this._getResourceName(this.resourceTypeRegex.stackInstance, path);
             return {
@@ -345,6 +395,17 @@ module.exports = {
             return {
                 name: this._getResourceName(this.resourceTypeRegex.imageConfig, path, 1),
                 type: "imageConfig"
+            };
+        if (this.isImageConfigRemote(path))
+            return {
+                name: this._getResourceName(this.resourceTypeRegex.imageConfigRemote, path, 1),
+                type: "imageConfigRemote",
+                remote: true
+            };
+        if (this.isRepo(path))
+            return {
+                name: this._getResourceName(this.resourceTypeRegex.repos, path, 1),
+                type: "repo",
             };
         return null;
     },

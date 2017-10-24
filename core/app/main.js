@@ -17,12 +17,14 @@ module.exports = {
 
         console.info(`***** Reading directory to find VOC resources files: ${configuration.repoFolder} *****`);
         let allResourcePaths = await fsService.walkResourceFilePromise(configuration.repoFolder);
+        console.log("DEBUG allResourcePaths",allResourcePaths);
         let vocResources = resourceService.getVocResources(allResourcePaths);
         let instances = vocResources.instances;
         let dockercomposes = vocResources.dockercomposes;
         var dockerfiles = vocResources.dockerfiles;
         let stackDefinitions = vocResources.stackDefinitions;
-        let usedStackDefinitions = vocResources.usedStackDefinitions;
+        let repos = vocResources.repos;
+        // let usedStackDefinitions = vocResources.usedStackDefinitions;
         let imageConfigs = _.filter(instances, instance => {
             return instance.isImage
         });
@@ -35,13 +37,12 @@ module.exports = {
         console.log("   *****                                                   *****");
         console.log("   dockerfiles\n  ", dockerfiles);
         console.log("   *****                                                   *****");
-        console.log("   usedStackDefinitions\n  ", usedStackDefinitions);
-        console.log("   *****                                                   *****");
         console.log("   imageConfigs\n  ", imageConfigs);
+        console.log("   *****                                                   *****");
+        console.log("   repos\n  ", repos);
         console.log("*****  That's all from the file system                   *****");
 
-
-        resourceUtil.cleanUnusedVocResources(stackDefinitions, usedStackDefinitions, dockercomposes, imageConfigs, dockerfiles);
+        resourceUtil.cleanUnusedVocResources(instances, stackDefinitions, dockercomposes, imageConfigs, dockerfiles);
         console.log("***** Here are all actually used stack definitions *****");
         console.log("   ", stackDefinitions);
         console.log("***** Here are all actually used docker composes *****");
@@ -66,6 +67,8 @@ module.exports = {
             triggeredInstances = gitService.getTriggeredInstancesFromModifiedFiles(instances, stackDefinitions, contextPaths, dockercomposes);
         }
 
+        triggeredInstances = _.filter(triggeredInstances, instance => { return !instance.toDiscard});
+
         console.log("***** Summary of what is going to be effectively done according to updated files or commit actions *****");
         triggeredInstances.forEach(instance => {
             let name, actions;
@@ -79,15 +82,15 @@ module.exports = {
             if (instance.dockercomposeName || instance.stackDefinitionName) {
                 name = instance.instanceName;
                 if (!instance.toClean)
-                    actions = `${actions} and deployed if enabled`;
+                    actions = `${actions? actions + " and " : ""}deployed if enabled`;
             }
             console.log(`   - ${name} has been scheduled to be ${actions}`)
         });
 
 
         console.log("****************");
-        console.log("Here comes Moby");
+        console.log("Here comes Moby (ang Git if remote mode)");
         console.log("****************");
-        resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles);
+        resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos);
     }
 };

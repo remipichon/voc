@@ -2,6 +2,7 @@
 
 var _ = require("underscore");
 var resourceUtil = require("./resourceUtil");
+var fsUtil = require("./fsUtil");
 var stackService = require("./stackService");
 var imageService = require("./imageService");
 var configuration = require("./configuration");
@@ -17,26 +18,27 @@ module.exports = {
         let singles = [];       // name, type, path, if instance: soulMateName, if instance: suffix
         let instances = [];     // instanceName, path, if type==si: stackDefinitionName, if type==ssi: dockercomposeName
         let dockercomposes = [];    //name, path
-        let dockerfiles = []; //name, path
+        let dockerfiles; //name, path
         let stackDefinitions = [];  //name, path, dockercomposes (names)
+        let repos = [];
 
         //populating singles
         allResourcePaths.forEach(path => {
             let typeAndResourceName = resourceUtil.getTypeAndResourceName(path);
-            let name = typeAndResourceName.name;
-            let type = typeAndResourceName.type;
 
             let single = {
-                name: name,
-                type: type,
-                path: path
+                name: typeAndResourceName.name,
+                type: typeAndResourceName.type,
+                path: path,
+                remote: typeAndResourceName.remote || false
             };
-            if (type == "simpleStackInstance" || type == "stackInstance") {
+            if (typeAndResourceName.type == "simpleStackInstance" || typeAndResourceName.type == "simpleStackInstanceRemote" || typeAndResourceName.type == "stackInstance") {
                 single.soulMateName = typeAndResourceName.soulMate;
                 single.suffix = typeAndResourceName.suffix;
             }
             singles.push(single);
         });
+
 
         dockercomposes = _.filter(singles, single => {
             return single.type === "dockercompose"
@@ -44,7 +46,6 @@ module.exports = {
         dockercomposes = _.map(dockercomposes, dockercompose => {
             return {name: dockercompose.name, path: dockercompose.path}
         });
-
 
         dockerfiles = _.filter(singles, single => {
             return single.type === "dockerfile"
@@ -54,17 +55,24 @@ module.exports = {
         });
 
         stackDefinitions = _.filter(singles, single => {
-            return single.type === "stackDefinition"
+            return single.type === "stackDefinition" || single.type == "stackDefinitionRemote"
         });
         stackDefinitions = _.map(stackDefinitions, stackDefinition => {
-            return {name: stackDefinition.name, path: stackDefinition.path}
+            return {name: stackDefinition.name, path: stackDefinition.path, remote: stackDefinition.remote}
         });
 
-        // console.log("***** debug singles\n",singles,"\n********");
+        repos = _.filter(singles, repo => {
+            return repo.type === "repo"
+        });
+        repos = _.map(repos, repo => {
+            return {name: repo.name, path: repo.path}
+        });
+
+        console.log("***** debug singles\n",singles,"\n********");
 
 
         //populating instances
-        let usedStackDefinitions = []; // List<String>
+        // let usedStackDefinitions = []; // List<String>
         singles.forEach(single => {
             //TODO doesntwork
             // let alreadyExisiting = instances.find(instance => {
@@ -80,40 +88,46 @@ module.exports = {
             // }
             let instance = {
                 path: single.path,
-                resourceName: single.name
+                resourceName: single.name,
+                remote: single.remote
             };
-            if (single.type === "simpleStackInstance" || single.type === "stackInstance") {
+            if (single.type === "simpleStackInstance" || single.type === "simpleStackInstanceRemote" || single.type === "stackInstance") {
                 if (single.suffix)
                     instance.instanceName = single.name + '.' + single.suffix;
                 else
                     instance.instanceName = single.name;
                 if (single.type === "stackInstance") {
-                    let stackDefinition = _.find(stackDefinitions, stackDefinition => {
-                        return stackDefinition.name == single.soulMateName
-                    });
-                    if (!stackDefinition) {
-                        console.warn(`File ${single.name} with path ${single.path} is looking for stack definition ${single.soulMateName} which is not defined`);
-                        return;
+                    if(!single.remote) {//soulmate is not there yet for remote, check is later
+                        let stackDefinition = _.find(stackDefinitions, stackDefinition => { //we don't make distinctions between remoteRepo and others as any SI can refer to either types
+                            return stackDefinition.name == single.soulMateName
+                        });
+                        if (!stackDefinition) {
+                            console.warn(`File ${single.name} with path ${single.path} is looking for stack definition ${single.soulMateName} which is not defined`);
+                            return;
+                        }
                     }
-                    instance.stackDefinitionName = stackDefinition.name;
-                    usedStackDefinitions.push(stackDefinition.name);
+                    instance.stackDefinitionName = single.soulMateName;
+                    // usedStackDefinitions.push(stackDefinition.name);
                 }
-                if (single.type === "simpleStackInstance") {
-                    let usedDockercompose = _.find(dockercomposes, dockercompose => {
-                        return dockercompose.name == single.soulMateName
-                    });
-                    if (!usedDockercompose) {
-                        console.warn(`File ${single.name} with path ${single.path} is looking for dockercompose ${single.soulMateName} which couldn't not be found, skipping`);
-                        return;
+                if (single.type === "simpleStackInstance" || single.type === "simpleStackInstanceRemote") {
+                    if(!single.remote) {//soulmate is not there yet for remote, check is later
+                        let usedDockercompose = _.find(dockercomposes, dockercompose => {
+                            return dockercompose.name == single.soulMateName
+                        });
+                        if (!usedDockercompose) {
+                            console.warn(`File ${single.name} with path ${single.path} is looking for dockercompose ${single.soulMateName} which couldn't not be found, skipping`);
+                            return;
+                        }
+                        usedDockercompose.used = true;
                     }
-                    instance.dockercomposeName = usedDockercompose.name;
-                    usedDockercompose.used = true;
+                    instance.dockercomposeName = single.soulMateName;
                 }
                 instances.push(instance);
             }
             if (single.type == "imageConfig") {
                 instance.isImage = true;
                 instances.push(instance);
+                //TODO support imageConfigRemote
             }
         });
 
@@ -125,8 +139,9 @@ module.exports = {
             instances: instances,
             dockercomposes: dockercomposes,
             stackDefinitions: stackDefinitions,
-            usedStackDefinitions: usedStackDefinitions,
-            dockerfiles: dockerfiles
+            // usedStackDefinitions: usedStackDefinitions,
+            dockerfiles: dockerfiles,
+            repos: repos
         }
 
     },
@@ -142,11 +157,29 @@ module.exports = {
         return env;
     },
 
-    generateIntermediateComposeForSSI: function (instance, dockercomposes) {
-        let dir = configuration.repoFolder + configuration.artifactDir;
-
+    generateIntermediateComposeForSSI: function (instance, dockercomposes, repos) {
         let env = this.getInstanceEnvs(instance);
-        let dc = dockercomposes.find(compose => {
+        let dir = configuration.repoFolder + configuration.artifactDir;
+        let searchDC;
+
+        if(instance.remote){
+            console.log("remote")
+            let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(instance, repos);
+            if(!allRemoteResourcePaths) return null;
+            let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
+            if(!vocResourcesRemote){
+                utils.writeResult(instance.instanceName, {
+                    error: `${instance.instanceName}: is in repo mode but 'repo' is not correctly defined. Either it doesn't 'repo' name referring a defined repo in repos.json or doesn't have a valid one shot'repo' config. Stack will not be deployed`
+                });
+                return null;
+            }
+            console.log(`   remote dockercomposes from ${instance.repo}\n    `, vocResourcesRemote.dockercomposes);
+            searchDC = vocResourcesRemote.dockercomposes;
+        } else {
+            searchDC = dockercomposes;
+        }
+
+        let dc = searchDC.find(compose => {
             return compose.name == instance.dockercomposeName
         });
 
@@ -168,10 +201,10 @@ module.exports = {
         return intermediateCompose;
     },
 
-    generateIntermediateComposeForSI: function (instance, stackDefinitions, dockercomposes) {
-        let dir = configuration.repoFolder + configuration.artifactDir;
-
+    generateIntermediateComposeForSI: function (instance, stackDefinitions, dockercomposes, repos) {
         let env = this.getInstanceEnvs(instance);
+
+        let dir = configuration.repoFolder + configuration.artifactDir;
         let stackDefinition = stackDefinitions.find(sd => {
             return sd.name = instance.stackDefinitionName
         });
@@ -182,13 +215,29 @@ module.exports = {
             stackDefinition.dockercomposesCmdReady = "";
             stackDefinition.dockercomposes = [];
             if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
+                let searchDC;
+                if(stackDefinition.remote){
+                    let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(stackDefinitionConfig, repos);
+                    if(!allRemoteResourcePaths) return null;
+                    let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
+                    if(!vocResourcesRemote){
+                        utils.writeResult(instance.instanceName, {
+                            error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} is in repo mode but repo is not correctly defined. Either the stack definition doesn't have a 'repo' name referring a defined repo in repos.json or doesn't have a valid one shot'repo' config. Stack will not be deployed`
+                        });
+                        return null;
+                    }
+                    console.log(`   remote dockercomposes from ${stackDefinitionConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
+                    searchDC = vocResourcesRemote.dockercomposes;
+                } else {
+                    searchDC = dockercomposes;
+                }
                 stackDefinitionConfig.composes.forEach(composeName => {
-                    let dc = dockercomposes.find(compose => {
+                    let dc = searchDC.find(compose => {
                         return compose.name == composeName
                     });
                     if (!dc) {
                         composeName = resourceUtil.getTypeAndResourceName(composeName).name;
-                        dc = dockercomposes.find(compose => {
+                        dc = searchDC.find(compose => {
                             return compose.name == composeName
                         });
                     }
@@ -239,22 +288,26 @@ module.exports = {
      * @param triggeredInstances        List<Instance>
      * @param stackDefinitions          List<StackDefinition>
      * @param dockercomposes            List<DockerCompose>
+     * @param repos                     List<Repo>
      */
-    triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles){
+    triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos){
 
         triggeredInstances.forEach(instance => {
 
             if (instance.dockercomposeName) {
-                let intermediateCompose = this.generateIntermediateComposeForSSI(instance, dockercomposes);
+                let intermediateCompose = this.generateIntermediateComposeForSSI(instance, dockercomposes, repos);
                 if(intermediateCompose)
                     stackService.manageStack(instance, intermediateCompose);
             }
             if (instance.stackDefinitionName) {
-                let intermediateCompose = this.generateIntermediateComposeForSI(instance, stackDefinitions, dockercomposes);
+                //clone repo and generate right dockerfile paths for stackDefintion
+                let intermediateCompose = this.generateIntermediateComposeForSI(instance, stackDefinitions, dockercomposes, repos);
                 if(intermediateCompose)
                     stackService.manageStack(instance, intermediateCompose);
             }
             if (instance.isImage){
+                //todo support imageConfigRemote
+                //clone remote repo (async) and generate right dockerfilePath
                 let dockerfilePath = _.find(dockerfiles, df => { return df.name == instance.resourceName}).path;
                 imageService.manageImage(instance, dockerfilePath);
             }
