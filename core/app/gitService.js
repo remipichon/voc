@@ -17,7 +17,7 @@ module.exports = {
         triggeredInstances.forEach(instance => {
             let actions = "";
             let doWeBuild = false;
-            if (instance.image)
+            if (instance.isImage)
                 doWeBuild = true;
 
             if (instance.stackDefinitionName) {
@@ -56,7 +56,7 @@ module.exports = {
         return triggeredInstances;
     },
 
-    /*OK to go in any service*/getUpdatedInstances: function (files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs) {
+    getUpdatedInstances: function (files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs) {
         files.forEach(file => {
             let fileName = file.file;
 

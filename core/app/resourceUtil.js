@@ -25,12 +25,15 @@ module.exports = {
      *     * [instanceName   <String> if type=si or type=ssi]
      *     * resourceName    <String> if type=si or type=ssi: =instanceName+suffix, else: =resourceName
      *     * path           <String> absolute path
+     *     * remote         <Boolean> is local or remote ([docker-code-remote-mode] supported only)
      *     * [stackDefinitionName   <String> if type=si]
      *     * [dockercomposeName     <String> if type=ssi]
      *     * [isImage           <Boolean> if type=imageConfig]
      *     * toBuild           <Boolean>
      *     * toClean           <Boolean>
-     *     * [repo             <Repo> or <String> if type=si]
+     *     * [repo             <Repo> or <String> if type=si or if type=imageConfig]
+     *
+     *     imageConfig.resourceName correspond to dockercompose.name, one can be used to find its soulmate
      *
      * <DockerCompose>
      *     * name   <String>
@@ -56,13 +59,28 @@ module.exports = {
      */
 
 
-    cleanUnusedVocResources: function (instances, stackDefinitions, dockercomposes, imageConfigs, dockerfiles) {
+    cleanUnusedVocResources: function (instances, stackDefinitions, dockercomposes, dockerfiles) {
         // //TODO remove stack definitions not used by any instances (no diff between remote and local)
-        // let usedStackDefinitionNames = _.filter(instances TODO get all stackDef whose name is found in instances
+        // let usedStackDefinitionNames = _.filter(instances  get all stackDef whose name is found in instances
         // stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
         //     return _.contains(usedStackDefinitionNames, stackDefinition.name);
         // });
 
+        //remove duplicate resourceName
+        let duplicates = _.groupBy(instances, i => { return i.resourceName});
+        _.forEach(duplicates, (duplicate, resourceName) => {
+            if(duplicate.length !== 1){
+                let allPaths = "";
+                _.forEach(duplicate, instance => {
+                    instance.toDiscard = true;
+                    allPaths += instance.path + "  |  "
+                });
+                utils.writeResult(resourceName, {
+                    warn: `${resourceName}: more than one instance have been found. All of them will be discarded: ${allPaths}`
+                });
+            }
+        });
+        instances = _.filter(instances, i => { return !i.toDiscard});
 
         //remove dockercomposes not used by any instances
         stackDefinitions.forEach(stackDefinition => {
@@ -98,9 +116,17 @@ module.exports = {
         });
 
         //remove imageConfigs without a Dockerfile
-        imageConfigs = _.filter(imageConfig => {
-           return imageConfig.remote || _.find(dockercomposes, dc => { dc.name == imageConfig.resourceName})
+        let imageConfigs = _.filter(instances, imageConfig => {
+           return imageConfig.isImage && (imageConfig.remote || _.find(dockercomposes, dc => { dc.name == imageConfig.resourceName}))
         });
+
+        return {
+            instances: instances,
+            dockercomposes: dockercomposes,
+            stackDefinitions: stackDefinitions,
+            dockerfiles: dockerfiles,
+            imageConfigs: imageConfigs
+        }
 
     },
 
@@ -234,14 +260,14 @@ module.exports = {
             si.changed = true;
             si.toClean = clean;
         } else if (resource.type == "imageConfig"){
-            //TODO support image remote mode
+            //nothing to do to support remote image config
             let imageConfig = _.find(instances, instance => {
                 return instance.resourceName === resource.name;
             });
             imageConfig.changed = true;
             imageConfig.toClean = clean;
         } else if (resource.type == "dockerfile"){ //resource type dockerfile and imageConfig have the same 'name' but are not stored in the same arrays (dockerfile is never an Instance)
-            //something to do ?
+            //nothing to do to support remote image config (a Docker related files cannot be a remote, it's either local or not existing in the dockerfiles list)
             let imageConfig = _.find(instances, instance => {
                 return instance.resourceName === resource.name;
             });
@@ -262,8 +288,8 @@ module.exports = {
         "stackDefinition": /stack-definition\.([a-zA-Z0-9_-]+)\.json$/m,       //stack-definition.<sd-name>.json
         "stackInstance": /(^stack-instance|\/stack-instance)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //stack-instance.<sd-name>.<si-name>[.<suffix>].json
         "simpleStackInstance": /(^simple-stack-instance|\/simple-stack-instance)(?!\.remote-repo)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json$/m,  //simple-stack-instance.<dc-name>.<si-name>.json
-        "dockerfile": /Dockerfile\.([a-zA-Z0-9]+)$/m,
-        "imageConfig": /image\.([a-zA-Z0-9]+)\.json$/m,
+        "dockerfile": /Dockerfile\.([a-zA-Z0-9_-]+)$/m,
+        "imageConfig": /image\.([a-zA-Z0-9_-]+)\.json$/m,
         "imageConfigRemote": /image\.remote-repo\.(.+)\.json$/m,            //image.remote-repo.<Docker.file-name>.json
         "simpleStackInstanceRemote": /(^simple-stack-instance|\/simple-stack-instance)\.remote-repo\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)|\.json/m,    //simple-stack-instance.remote-repo.<d.c-name>.<si-name>.json
         "stackDefinitionRemote": /stack-definition\.remote-repo\.(.+)\.json$/m,  //stack-definition.remote-repo.<s.d-name>.json

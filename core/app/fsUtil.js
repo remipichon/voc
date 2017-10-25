@@ -20,7 +20,7 @@ module.exports = {
         return (dir) ? dir[1] + "/" : "/";
     },
 
-    getContextPaths: function (dockercomposes, imageConfigs) {
+    getContextPaths: function (dockercomposes, dockerfiles, imageConfigs) {
         //get all the contexts
         let contextPaths = [];  //  path, name
         dockercomposes.forEach(dc => {
@@ -41,10 +41,11 @@ module.exports = {
             }
         });
 
-        imageConfigs.forEach(imageConfig => {
+        _.filter(imageConfigs, ic => { return !ic.remote }).forEach(imageConfig => {
+            let dockerfile = _.find(dockerfiles, dc => { return dc.name == imageConfigs.resourceName});
             let config = JSON.parse(fs.readFileSync(imageConfig.path, {encoding: 'utf-8'}));
-            //TODO path should be the Dockerfile, not the imageconfig  #7 "context to build image, relative from where the Dockerfile is found,"
-            let path = this.removeLastPathPart(imageConfig.path);
+            //TODO path should be the Dockerfile, not the imageconfig  #7 "context to build image, relative from where the Dockerfile is found," => to test
+            let path = this.removeLastPathPart(dockerfile.path);
             if(config.context){
                 path = `${path}${config.context}`
             }
@@ -59,7 +60,7 @@ module.exports = {
         return contextPaths;
     },
 
-    cloneAndWalkRemoteRepo: function (config, repos, instanceName = "no instance name given") {
+    cloneAndWalkRemoteRepo: function (config, repos, resourceName = "no resource name given") {
         let repoconfig;
         if (config.repo) {
             if (typeof config.repo == "string") {
@@ -73,15 +74,15 @@ module.exports = {
             }
         }
         if (!repoconfig) {
-            utils.writeResult(instanceName, {
-                error: `${instanceName}: Instance's 'repo' is miss configured. Either the 'repo' string doesn't refer to a defined repos or the 'repo' object is not valid. Related stacks will not be deployed.`
+            utils.writeResult(resourceName, {
+                error: `${resourceName}: Instance's 'repo' is miss configured. Either the 'repo' string doesn't refer to a defined repos or the 'repo' object is not valid. Related stacks will not be deployed.`
             });
             return null;
         }
         let result = utils.execCmdSync(`git clone ${repoconfig.url} ${configuration.remoteRepoFolder}/${repoconfig.name}`, true);
         if (result.error) {
             if(result.error.message.indexOf("already exists and is not an empty directory") !== -1){
-                let resultPull = utils.execCmdSync(`cd ${configuration.remoteRepoFolder}/${repoconfig.name}; git checkout master;`, true);
+                let resultPull = utils.execCmdSync(`cd ${configuration.remoteRepoFolder}/${repoconfig.name}; git fetch; git checkout master; git pull`, true);
                 if(resultPull.error){
                     utils.writeResult(repoconfig.name, {
                         error: `${repoconfig.name}: It seems like ${repoconfig.url} have already been cloned into ${configuration.remoteRepoFolder}. An error occured while checkout master. Error: ${resultPull.error}`

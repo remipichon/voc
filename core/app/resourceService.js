@@ -68,23 +68,12 @@ module.exports = {
             return {name: repo.name, path: repo.path}
         });
 
-        // console.log("***** debug singles\n",singles,"\n********");
+        console.log("***** debug singles\n",singles,"\n********");
 
 
         //populating instances
         singles.forEach(single => {
-            //TODO doesntwork
-            // let alreadyExisiting = instances.find(instance => {
-            //     return instance.instanceName == single.name
-            // });
-            // if (alreadyExisiting) {
-            //     alreadyExisiting.invalid = true;
-            //     console.warn(`     ${single.name}: instance already exists, please remove one. Both have been marked invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`)
-            //     utils.writeResult(single.name, {
-            //         warn: `${single.name}: instance already exists, please remove one. Both have been marked invalid and will not be processed: ${single.path} and ${alreadyExisiting.path}`
-            //     });
-            //     return;
-            // }
+
             let instance = {
                 path: single.path,
                 resourceName: single.name,
@@ -96,6 +85,7 @@ module.exports = {
                 else
                     instance.instanceName = single.name;
                 if (single.type === "stackInstance") {
+                    //TODO put those tests in resourceUtil.cleanUnusedVocResources
                     if(!single.remote) {//soulmate is not there yet for remote, check is later
                         let stackDefinition = _.find(stackDefinitions, stackDefinition => { //we don't make distinctions between remoteRepo and others as any SI can refer to either types
                             return stackDefinition.name == single.soulMateName
@@ -108,6 +98,7 @@ module.exports = {
                     instance.stackDefinitionName = single.soulMateName;
                 }
                 if (single.type === "simpleStackInstance" || single.type === "simpleStackInstanceRemote") {
+                    //TODO put those tests in resourceUtil.cleanUnusedVocResources
                     if(!single.remote) {//soulmate is not there yet for remote, check is later
                         let usedDockercompose = _.find(dockercomposes, dockercompose => {
                             return dockercompose.name == single.soulMateName
@@ -122,10 +113,16 @@ module.exports = {
                 }
                 instances.push(instance);
             }
-            if (single.type == "imageConfig") {
+            if (single.type == "imageConfig" || single.type == "imageConfigRemote") {
+                //TODO put those tests in resourceUtil.cleanUnusedVocResources
+                if(!single.remote) {//soulmate is not there yet for remote, check is later
+                    if(!_.find(dockerfiles, dc => { return dc.name == single.name })){
+                        console.warn(`File ${single.name} with path ${single.path} is looking for Dockerfile ${single.name} which couldn't not be found, skipping`);
+                        return;
+                    }
+                }
                 instance.isImage = true;
                 instances.push(instance);
-                //TODO support imageConfigRemote
             }
         });
 
@@ -291,6 +288,7 @@ module.exports = {
      */
     triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos){
 
+        //when async will be needed, it is where it should happen
         triggeredInstances.forEach(instance => {
 
             if (instance.dockercomposeName) {
@@ -305,9 +303,34 @@ module.exports = {
                     stackService.manageStack(instance, intermediateCompose);
             }
             if (instance.isImage){
-                //todo support imageConfigRemote
-                //clone remote repo (async) and generate right dockerfilePath
-                let dockerfilePath = _.find(dockerfiles, df => { return df.name == instance.resourceName}).path;
+                let searchDockerfiles;
+                if(instance.remote){
+                    let instanceConfig = utils.readFileSyncToJson(instance.path)
+                    console.log(`   ${instance.resourceName}: is in remote repo mode, now cloning ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name} to get remote dockercomposes`);
+                    let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(instanceConfig, repos, instance.resourceName);
+                    if(!allRemoteResourcePaths) return null;
+                    let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
+                    if(!vocResourcesRemote){
+                        utils.writeResult(instance.resourceName, {
+                            error: `${instance.resourceName}: Image config is in repo mode but repo is not correctly defined. Either the config doesn't have a 'repo' name referring a defined repo in repos.json or doesn't have a valid one shot'repo' config. Image will not be built`
+                        });
+                        return null;
+                    }
+                    console.log(`   remote Dockerfiles from remote repo ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name}\n    `, vocResourcesRemote.dockercomposes);
+                    searchDockerfiles = vocResourcesRemote.dockerfiles
+
+                } else {
+                    searchDockerfiles = dockerfiles
+                }
+
+                let dockerfile = _.find(searchDockerfiles, df => { return df.name == instance.resourceName});
+                if(!dockerfile){
+                    utils.writeResult(instance.resourceName, {
+                        error: `${instance.resourceName}: Dockerfile ${instance.resourceName} doesn't seem to exist ${instance.remote? "on remote repo": "on local repo"}, Image will not be built`
+                    });
+                    return;
+                }
+                let dockerfilePath = dockerfile.path;
                 imageService.manageImage(instance, dockerfilePath);
             }
 

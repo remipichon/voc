@@ -5,6 +5,7 @@ var fsService = require("./fsService");
 var resourceService = require("./resourceService");
 var gitService = require("./gitService");
 var configuration = require("./configuration");
+var utils = require("./utils");
 var fsUtil = require("./fsUtil");
 var resourceUtil = require("./resourceUtil");
 
@@ -24,9 +25,7 @@ module.exports = {
         var dockerfiles = vocResources.dockerfiles;
         let stackDefinitions = vocResources.stackDefinitions;
         let repos = vocResources.repos;
-        let imageConfigs = _.filter(instances, instance => {
-            return instance.isImage
-        });
+
         console.log("***** Here is what I could extract from the file system *****");
         console.log("   instances\n    ", instances);
         console.log("   *****                                                   *****");
@@ -36,12 +35,15 @@ module.exports = {
         console.log("   *****                                                   *****");
         console.log("   dockerfiles\n  ", dockerfiles);
         console.log("   *****                                                   *****");
-        console.log("   imageConfigs\n  ", imageConfigs);
-        console.log("   *****                                                   *****");
         console.log("   repos\n  ", repos);
         console.log("*****  That's all from the file system                   *****");
 
-        resourceUtil.cleanUnusedVocResources(instances, stackDefinitions, dockercomposes, imageConfigs, dockerfiles);
+        vocResources = resourceUtil.cleanUnusedVocResources(instances, stackDefinitions, dockercomposes, dockerfiles);
+        instances = vocResources.instances;
+        dockercomposes = vocResources.dockercomposes;
+        dockerfiles = vocResources.dockerfiles;
+        stackDefinitions = vocResources.stackDefinitions;
+        let imageConfigs = vocResources.imageConfigs;
         console.log("***** Here are all actually used stack definitions *****");
         console.log("   ", stackDefinitions);
         console.log("***** Here are all actually used docker composes *****");
@@ -52,7 +54,7 @@ module.exports = {
         console.log("   ", imageConfigs);
 
 
-        let contextPaths = fsUtil.getContextPaths(dockercomposes, imageConfigs);
+        let contextPaths = fsUtil.getContextPaths(dockercomposes, dockerfiles, imageConfigs);
         console.log("***** Here are all the contexts used by one of the valid used docker composes or one of the valid image config *****");
         console.log("   ", contextPaths);
 
@@ -87,9 +89,18 @@ module.exports = {
         });
 
 
-        console.log("****************");
-        console.log("Here comes Moby (ang Git if remote mode)");
-        console.log("****************");
-        resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos);
+        if(triggeredInstances.length != 0) {
+            console.log("****************");
+            console.log("Here comes Moby (ang Git if remote mode)");
+            console.log("****************");
+            resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos);
+        } else {
+            console.log("****************");
+            console.log("Nothing to do, hurray, I am taking a nap");
+            console.log("****************");
+            utils.writeResult("VOC", {
+                result: `There was nothing to do so I did nothing.`
+            });
+        }
     }
 };
