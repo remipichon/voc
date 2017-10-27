@@ -62,6 +62,9 @@ module.exports = {
         console.info("***** Reading git commit message to get commit actions *****");
         let commitActions = gitService.getGitCommitAction();
         if (commitActions.length != 0) {
+            console.info("***** Commit actions found *****");
+            console.log(commitActions);
+            console.info("*****  *****");
             triggeredInstances = resourceUtil.getTriggeredInstancesFromCommitActions(commitActions, imageConfigs, instances);
         } else {
             triggeredInstances = gitService.getTriggeredInstancesFromModifiedFiles(instances, stackDefinitions, contextPaths, dockercomposes);
@@ -87,10 +90,14 @@ module.exports = {
             console.log(`   - ${name} has been scheduled to be ${actions}`)
         });
 
+        let dryRun = _.filter(commitActions, action => { return action.action == gitService.commitAction.dryRun}) != null;
 
         console.log("****************");
-        console.log("Here comes Moby (ang Git if remote mode)");
+        if(dryRun)
+            console.log("Dry run, Moby will not be used but Git will be if remote mode");
+        else
+            console.log("Here comes Moby (and Git if remote mode)");
         console.log("****************");
-        resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos);
+        resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos, dryRun);
     }
 };

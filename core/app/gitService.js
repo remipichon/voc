@@ -129,7 +129,8 @@ module.exports = {
         buildDeployAll: /(\[build\-deploy\-all\])/m,
         buildResourceName: /(\[build\-([a-zA-Z0-9]+)\])/m,
         deployInstanceName: /(\[deploy\-([a-zA-Z0-9]+)\])/m,
-        removeInstanceName: /(\[remove\-([a-zA-Z0-9]+)\])/m
+        removeInstanceName: /(\[remove\-([a-zA-Z0-9]+)\])/m,
+        dryRun: /\[dry\-run\]/m
     },
 
     getGitCommitAction(){

@@ -5,14 +5,14 @@ var composeUtil = require("./composeUtil");
 
 module.exports = {
 
-    manageStack(instance, dockercomposePath) {
+    manageStack(instance, dockercomposePath, dryRun = false) {
         let stackName = instance.instanceName;
 
         if (instance.toClean) {
-            this.deployStack(stackName, "remove");
+            this.deployStack(stackName, "remove", null, dryRun);
         } else {
             if(instance.toBuild){
-                let result = composeUtil.build(dockercomposePath);
+                let result = composeUtil.build(dockercomposePath, dryRun);
                 if(result.error){
                     utils.writeResult(stackName, {
                         error: `${stackName}: An error occurred while building from ${dockercomposePath}. Stack will not be deployed. Error: ${result.error} `
@@ -32,7 +32,7 @@ module.exports = {
                 action = "remove"
             }
 
-            this.deployStack(stackName, action, dockercomposePath);
+            this.deployStack(stackName, action, dockercomposePath, dryRun);
         }
     },
 
@@ -42,7 +42,7 @@ module.exports = {
      * @param action        <String> [update|remove]
      * @param composeFile   <String> absolute path to single docker compose
      */
-    deployStack(stackName, action, composeFile) {
+    deployStack(stackName, action, composeFile, dryRun = false) {
         //cannot use docker API because stack is a client feature only
         let dnsStackName = stackName.replace('.', '_');
         var shDockerStackDeploy;
@@ -56,6 +56,7 @@ module.exports = {
             return;
         }
         console.info(`     ${stackName}: Stack ${dnsStackName} is going to be ${action} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
+        if(!dryRun)
         utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
             let state = gitlabUtil.getState(error, stderr, stdout);
             if(action === "remove")
@@ -63,6 +64,8 @@ module.exports = {
                     state.result = `Stack ${stackName} has already been removed, nothing has be done because there was nothing to do`;
             utils.writeResult(stackName, state);
         })
+        else
+            utils.writeResult(stackName, {result: `Dry run: Docker would have run '${shDockerStackDeploy}'`});
     }
 
 };
