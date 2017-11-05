@@ -43,6 +43,11 @@
         group: "{{ username }}"
         mode: 0755
 
+    - name: Install mandatory Python package
+      pip:
+        name: "{{ item }}"
+      with_items: "{{ python_packages }}"
+
   tasks:
     - block:
       - name: Generate intermediate compose file in mode '{{ mode }}'

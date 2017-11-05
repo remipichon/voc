@@ -20,7 +20,5 @@ health:
     threshold: 3
 auth:
   token:
-    realm: http://gitlab/jwt/auth
-    service: container_registry
-    issuer: gitlab-issuer
-    rootcertbundle: /certs/registry.crt
+    realm: basic-realm
+    path:

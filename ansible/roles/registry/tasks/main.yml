@@ -27,6 +27,34 @@
   tags:
     - init
 
+- name: Generate an OpenSSL private key
+  openssl_privatekey:
+    path: "{{ registry_dict.cert_path }}/registry.key"
+    type: RSA
+    size: 4096
+
+- name: Generate an OpenSSL Certificate Signing Request
+  openssl_csr:
+    path: "{{ registry_dict.cert_path }}/registry.csr"
+    privatekey_path: "{{ registry_dict.cert_path }}/registry.key"
+    common_name: registry
+
+- name: Generate a Self Signed OpenSSL certificate
+  openssl_certificate:
+    path: "{{ registry_dict.cert_path }}/registry.crt"
+    privatekey_path: "{{ registry_dict.cert_path }}/registry.key"
+    csr_path: "{{ registry_dict.cert_path }}/registry.csr"
+    provider: selfsigned
+
+- name: Add a user to the password file and ensure permissions are set
+  htpasswd:
+    path: "{{ registry_dict.data_path }}/htpasswd"
+    name: gitlab
+    password: "thispasswdneedtobechanged"
+    owner: root
+    group: root
+    mode: 0640
+
 - name: Ensure registry configuration file is updated
   template:
     backup: yes

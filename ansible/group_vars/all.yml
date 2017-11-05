@@ -17,6 +17,10 @@ swarm_master: keizersgrasht
 
 docker_compose_version: "1.15.0"
 
+python_packages:
+  - pyOpenSSL
+  - passlib
+
 ########################
 # Gitlab configuration #
 ########################
