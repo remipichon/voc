@@ -59,7 +59,7 @@ docker-compose -f docker-compose.intermediate.yml build
 docker stack deploy --compose-file docker-compose.intermediate.yml voc
 ````
 
-Visit localhost:81 or your server's ip/hostname to create a password for the 'root' user. 
+Visit localhost:9020 or your server's ip/hostname to create a password for the 'root' user. 
 
 In case of forgotten password, please refer to https://docs.gitlab.com/ee/security/reset_root_password.html
 
