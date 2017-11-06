@@ -132,12 +132,9 @@ module.exports = {
 
     getTriggeredInstancesFromCommitActions: function (commitActions, imageConfigs, instances) {
         let triggeredInstances = [];
-        console.info("***** Commit actions found *****");
-        console.log(commitActions);
-        console.info("*****  *****");
 
         if (_.where(commitActions, {action: "doAll"}).length != 0) {
-            console.log("build all imageconfig and build and deploy all ss and ssi")
+            // console.log("build all imageconfig and build and deploy all ss and ssi")
             imageConfigs.forEach(ic => {
                 ic.toBuild = true
             });
@@ -152,14 +149,14 @@ module.exports = {
             triggeredInstances = triggeredInstances.concat(s_ssi)
         } else {
             if (_.where(commitActions, {action: "buildAll"}).length != 0) {
-                console.log("build all imageconfig");
+                // console.log("build all imageconfig");
                 imageConfigs.forEach(ic => {
                     ic.toBuild = true
                 });
                 triggeredInstances = triggeredInstances.concat(imageConfigs);
             } else {
                 if (_.where(commitActions, {action: "deployAll"}).length != 0) {
-                    console.log("build and deploy all ss and ssi");
+                    // console.log("build and deploy all ss and ssi");
                     let s_ssi = instances.filter(i => {
                         return i.stackDefinitionName || i.dockercomposeName
                     });
@@ -169,7 +166,7 @@ module.exports = {
                     triggeredInstances = triggeredInstances.concat(s_ssi)
                 } else {
                     if (_.where(commitActions, {action: "removeAll"}).length != 0) {
-                        console.log("remove all ss and ssi");
+                        // console.log("remove all ss and ssi");
                         let s_ssi = instances.filter(i => {
                             return i.stackDefinitionName || i.dockercomposeName
                         });
@@ -180,9 +177,9 @@ module.exports = {
                     } else {
                         let actions = _.where(commitActions, {action: "buildResourceName"});
                         actions.forEach(action => {
-                            console.log("build image", action.resourceName);
+                            // console.log("build image", action.resourceName);
                             let res = instances.filter(i => {
-                                return i.resourceName == action.resourceName && i.stackDefinitionName && !i.dockercomposeName
+                                return i.resourceName == action.resourceName && (i.stackDefinitionName && !i.dockercomposeName) || i.isImage
                             });
                             res.forEach(i => {
                                 i.toBuild = true
@@ -191,7 +188,7 @@ module.exports = {
                         });
                         actions = _.where(commitActions, {action: "deployInstanceName"});
                         actions.forEach(action => {
-                            console.log("build and deploy", action.resourceName);
+                            // console.log("build and deploy", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.instanceName == action.resourceName
                             });
@@ -202,7 +199,7 @@ module.exports = {
                         });
                         actions = _.where(commitActions, {action: "removeInstanceName"});
                         actions.forEach(action => {
-                            console.log("remove", action.resourceName);
+                            // console.log("remove", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.instanceName == action.resourceName
                             });

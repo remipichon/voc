@@ -285,8 +285,9 @@ module.exports = {
      * @param stackDefinitions          List<StackDefinition>
      * @param dockercomposes            List<DockerCompose>
      * @param repos                     List<Repo>
+     * @param dryRyn                    Boolean     whether to invoke Docker or not
      */
-    triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos){
+    triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos, dryRun){
 
         //when async will be needed, it is where it should happen
         triggeredInstances.forEach(instance => {
@@ -294,13 +295,13 @@ module.exports = {
             if (instance.dockercomposeName) {
                 let intermediateCompose = this.generateIntermediateComposeForSSI(instance, dockercomposes, repos);
                 if(intermediateCompose)
-                    stackService.manageStack(instance, intermediateCompose);
+                    stackService.manageStack(instance, intermediateCompose, dryRun);
             }
             if (instance.stackDefinitionName) {
                 //clone repo and generate right dockerfile paths for stackDefintion
                 let intermediateCompose = this.generateIntermediateComposeForSI(instance, stackDefinitions, dockercomposes, repos);
                 if(intermediateCompose)
-                    stackService.manageStack(instance, intermediateCompose);
+                    stackService.manageStack(instance, intermediateCompose, dryRun);
             }
             if (instance.isImage){
                 let searchDockerfiles;
@@ -331,7 +332,7 @@ module.exports = {
                     return;
                 }
                 let dockerfilePath = dockerfile.path;
-                imageService.manageImage(instance, dockerfilePath);
+                imageService.manageImage(instance, dockerfilePath, dryRun);
             }
 
         });
