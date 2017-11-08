@@ -1,5 +1,6 @@
 var _ = require("underscore");
 var fs = require('fs');
+var path_ = require('path');
 var utils = require("../utils");
 var main = require("../main");
 var configuration = require("../configuration");
@@ -24,17 +25,26 @@ Object.defineProperty(global, '__test_case_file_name', {
     }
 });
 
+
+
 Object.defineProperty(global, '__test_case_line', {
     get: function() {
         return __stack[2].getLineNumber();
     }
 });
 
-Object.defineProperty(global, '__test_case_name', {
+Object.defineProperty(global, '__test_case_name_2', {
     get: function() {
         return __stack[2].getFunctionName();
     }
 });
+
+Object.defineProperty(global, '__test_case_name_1', {
+    get: function() {
+        return __stack[1].getFunctionName();
+    }
+});
+
 
 
 module.exports = {
@@ -55,6 +65,14 @@ module.exports = {
             } else
                 throw new Error(error);
         }
+        try {
+            fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
+        } catch(error){
+            if(error.code === "EEXIST"){
+                console.log(`dir ${configuration.repoFolder + configuration.artifactDir} already exists`);
+            } else
+                throw new Error(error);
+        }
         utils.execCmdSync("git config --global user.email 'test@example.com'; git config --global user.name 'Test User'", {cwd : configuration.repoFolder});
         utils.execCmdSync("git init", false, {cwd : configuration.repoFolder});
     },
@@ -64,11 +82,12 @@ module.exports = {
      * @param fileNames Array of file names or list for arguments as file names
      */
     addFile:function (...fileNames) {
-        fileNames.forEach(fileName => {
-            if(!fs.existsSync(`${this.testResourceLocation}/${fileName}`)){
-                throw new Error(`Test configuration error, file ${this.testResourceLocation}/${fileName} doesn't exist`);
+        fileNames.forEach(path => {
+            if(!fs.existsSync(`${this.testResourceLocation}/${path}`)){
+                throw new Error(`Test configuration error, file ${this.testResourceLocation}/${path} doesn't exist`);
             }
-            fs.copyFileSync(`${this.testResourceLocation}/${fileName}`, `${configuration.repoFolder}/${fileName}`);
+            let fileName = path_.basename(path);
+            fs.copyFileSync(`${this.testResourceLocation}/${path}`, `${configuration.repoFolder}/${fileName}`);
             utils.execCmdSync(`git add ${fileName}`, false, {cwd : configuration.repoFolder});
         })
     },
@@ -98,7 +117,7 @@ module.exports = {
      * @returns <Boolean> true is all asserts succeed, false if one failure
      */
     assert: function (...phrases) {
-        let caseName = __test_case_name;
+        let caseName = __test_case_name_2;
         let caseFile = __test_case_file_name;
         let caseLine = __test_case_line;
         let assertResult = {};
@@ -109,33 +128,29 @@ module.exports = {
         let success = true;
         _.forEach(assertResult, (result, phrase) => {
            if(result === true){
-               console.info(`SUCCESS: ${caseName}: assert '${phrase}'`);
+               console.info(`SUCCESS while asserting '${phrase}'`);
            } else {
-               console.error(`FAILURE: ${caseName}: assert '${phrase}' \n\t\t${result}. File ${caseFile}:${caseLine}`)
+               console.error(`FAILURE while asserting '${phrase}' \n\t\t${result}. File ${caseFile}:${caseLine}`)
                success = false;
            }
         });
         return success;
     },
 
-    /**
-     * @summary compute the searchString against the message to match or not
-     * @description support [..] and do a indexOf of each part
-     * @param message
-     * @param searchString
-     * @returns {boolean} true if searchString has been found in message
-     */
-    searchForString: function (message, searchString) {
 
-        let allFound;
-        searchString.split("[..]").forEach(string => {
-            if(allFound) return;
-            if(message.indexOf(string) === -1) {
-                allFound = `${string} not found`
+    _assertWords: function (message, phrase) {
+        let words = phrase.split("[..]");
+
+        let allFound = "";
+        words.forEach(word => { //word is a concept, it can actually contains spaces
+            word = word.trim();
+            if(message.indexOf(word) === -1) {
+                allFound += ` a word (part of the test phrase) '${word}' was not found `
             }
+
         });
 
-        return allFound || true
+        return (allFound === "" )? true : allFound;
     },
 
     /**
@@ -143,37 +158,72 @@ module.exports = {
      * @param typeOfResult
      * @param testResult
      * @param targetResource
-     * @param searchString
+     * @param phrase
      * @returns {*}
      * @private
      */
-    _resolveAssertPhrase: function (typeOfResult, testResult, targetResource, searchString) {
-        if (typeOfResult == "all") {  //search string has to be in all results/errors for resource
-            let result = true;
-            _.forEach(testResult[targetResource], (message, type) => {
-                if (result !== true) return;
-                if (message.indexOf(searchString) === -1) {
-                    result = `search string '${searchString}' was not found for _all results/errors of '${targetResource}'`
-                }
-            });
-            return result;
-        } else if(typeOfResult == "once"){
-            let result = false;
-            _.forEach(testResult[targetResource], (message, type) => {
-                if (this.searchForString(message, searchString)) {
-                    if(result){
-                        result = `search string '${searchString}' was found more than _once in results/errors of '${targetResource}'`
-                    }
-                    result = true;
-                }
-            });
-            if(!result) result = `search string '${searchString}' was not found at all (_once  was expected) in results/errors of '${targetResource}'`
+    _assertPhrase: function (typeOfResult, testResult, targetResource, phrase) {
 
-            return result;
+        //TODO revoir tout ce foutre
+
+
+        if (typeOfResult == "all") {
+            //words have to be in all results for resource
+            let assertResult = null;
+            _.forEach(testResult[targetResource], (message, type) => {
+                if(assertResult !== null) return; //break loop
+                if(type === "error") {
+                    assertResult =  `${targetResource} has an 'error'. Only 'result' were expected `;
+                    return;//continue loop
+                }
+
+                let assertWordResult = this._assertWords(message.result, phrase);
+
+                //all
+                if (assertWordResult !== true) {
+                    assertResult = `Words from '${phrase}' were not found for _all results of '${targetResource}'`
+                }
+            });
+            return (assertResult ===  null)? true: assertResult;
+
+        } else if(typeOfResult == "once"){
+            //words have to be exactly once amongst all results for resource
+
+            let assertResult = null;
+            // console.log("phrase",phrase)
+            _.forEach(testResult[targetResource], (message, type) => {
+                if(assertResult !== null) return; //break loop
+                if(type === "error") {
+                    assertResult =  `${targetResource} has an 'error'. Only 'result' were expected `;
+                    return;//continue loop
+                }
+
+                let assertWordResult = this._assertWords(message.result, phrase);
+
+                //no more than once
+                if(assertWordResult === true){
+                    if(assertResult === null){
+                        assertResult = true;
+                        return;
+                    } else {
+                        assertResult = `Words from string '${phrase}' were found more than _once in results of '${targetResource}'`
+                        return;
+                    }
+                }
+
+            });
+
+            //at least once
+            if(assertResult == null) {
+                assertResult = `Not all words from '${phrase}' were found (_once  was expected) in results of '${targetResource}'`
+            }
+
+            return assertResult;
+
         }
         //TODO the others
         else {
-            return `type of result ${typeOfResult} is not one of [_all]`
+            return `type of result ${typeOfResult} is not one of [_all, _once]`
         }
     },
 
@@ -202,7 +252,7 @@ module.exports = {
 
         //using search for assert, throw error if assert not found
         if(testResult[targetResource]){
-            return this._resolveAssertPhrase(typeOfResult, testResult, targetResource, searchString);
+            return this._assertPhrase(typeOfResult, testResult, targetResource, searchString);
         } else {
             return `target resource ${targetResource} not part of result file`
         }

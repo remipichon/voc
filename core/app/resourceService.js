@@ -190,7 +190,7 @@ module.exports = {
             return null;
         }
         utils.writeResult(instance.instanceName, {
-            result: `${instance.instanceName}: Successfully config intermediate compose file ${intermediateCompose}`
+            result: `${instance.instanceName}: Successfully config intermediate compose file ${intermediateCompose} from ${dc.path}`
         });
         return intermediateCompose;
     },
@@ -272,7 +272,7 @@ module.exports = {
             return null;
         }
         utils.writeResult(instance.instanceName, {
-            result: `${instance.instanceName}: Successfully built ${intermediateCompose}`
+            result: `${instance.instanceName}: Successfully config intermediate compose file ${intermediateCompose} from ${composeFiles.replace("-f"," ")}`
         });
         return intermediateCompose;
     },

@@ -112,9 +112,9 @@ module.exports = {
             }
         });
 
-        dockercomposes = _.filter(dockercomposes, dockercompose => {
-            return dockercompose.used;
-        });
+        // dockercomposes = _.filter(dockercomposes, dockercompose => {
+        //     return dockercompose.used;
+        // });
 
         //remove imageConfigs without a Dockerfile
         let imageConfigs = _.filter(instances, imageConfig => {

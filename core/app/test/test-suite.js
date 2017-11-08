@@ -1,5 +1,25 @@
 var testUtil = require("./testUtil");
 
+/*
+
+testUtil.prepare();
+
+testUtil.addFile("...", "...");
+
+testUtil.commit("[dry-run] [do-all]");
+
+testUtil.run();
+
+if (testUtil.assert(
+        "[..] __for ??? __???"
+    )) {
+    testUtil.cleanUp();
+} else {
+    throw new Error(__test_case_name_1+ " failed");
+}
+
+
+ */
 
 let testSuite = {
 
@@ -8,16 +28,16 @@ let testSuite = {
 
         testUtil.prepare();
 
-        testUtil.addFile("image.testdryrun.json", "Dockerfile.testdryrun");
+        testUtil.addFile("images/image.testdryrun.json", "images/Dockerfile.testdryrun");
 
         testUtil.commit("[dry-run] [do-all]");
 
         testUtil.run();
 
-        if (testUtil.assert("Dry run __for testdryrun __all"))
+        if (testUtil.assert("Dry run __for testdryrun __all")) {
             testUtil.cleanUp();
-        else {
-            throw new Error("commit_action__dry_run_do_all__without_context__nominal_case failed");
+        } else {
+            throw new Error(__test_case_name_1+ " failed");
         }
     },
 
@@ -25,7 +45,7 @@ let testSuite = {
 
         testUtil.prepare();
 
-        testUtil.addFile("image.nominalcase.json", "Dockerfile.nominalcase");
+        testUtil.addFile("images/image.nominalcase.json", "images/Dockerfile.nominalcase");
 
         testUtil.commit("[dry-run] [do-all]");
 
@@ -37,35 +57,60 @@ let testSuite = {
             )) {
             testUtil.cleanUp();
         } else {
-            throw new Error("commit_action__dry_run_do_all__without_context__nominal_case failed");
+            throw new Error(__test_case_name_1+ " failed");
         }
     },
 
     simple_stack_instance_stack_definition_docker_composes__dry_run_do_all__non_remote_without_context__nominal_case: function () {
 
-        // which files ?
+        testUtil.prepare();
 
-        // Assert docker-compose config  $sd.composes sidryrun _once
+        testUtil.addFile(
+            "instances/simple-stack-instance.nominalcase.mynominalcase.json",
+            "dockercomposes/docker-compose.nominalcase.yml"
+        );
 
-        // Assert docker-compose build ${docker-composeintermediate} sidryrun _once
+        testUtil.commit("[dry-run] [do-all]");
 
-        // Assert docker stack deploy ${docker-composeintermediate} ${stackname} sidryrun _once
+        testUtil.run();
 
+        if (testUtil.assert(
+                "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
+                "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
+            )) {
+            testUtil.cleanUp();
+        } else {
+            throw new Error(__test_case_name_1+ " failed");
+        }
     },
 
     stack_instance_docker_compose__dry_run_do_all__non_remote_without_context__nominal_case: function () {
 
-        // which files ?
+        testUtil.prepare();
 
-        // Assert docker-compose build ${docker-composeintermediate} ssidryrun _once
+        testUtil.addFile(
+            "instances/stack-instance.nominalcase.mynominalcase.json",
+            "stackdefinitions/stack-definition.nominalcase.json",
+            "dockercomposes/docker-compose.nominalcase.yml");
 
-        // Assert docker stack deploy ${docker-composeintermediate} ${stackname} ssidryrun _once
+        testUtil.commit("[dry-run] [do-all]");
+
+        testUtil.run();
+
+        if (testUtil.assert(
+                "Successfully config [..] docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
+                "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
+            )) {
+            testUtil.cleanUp();
+        } else {
+            throw new Error(__test_case_name_1+ " failed");
+        }
     },
 
 
 };
-
-console.log("script args", process.argv);
 
 let testcases = [];
 if (process.argv.length == 2) {

@@ -66,11 +66,12 @@ above command already setup eveything for remote debug to work. Use your favorit
 ### Test Runner app
 
 ````
-docker run -d  -v $(pwd)/voc/core/app:/app nodedocker cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node test-suite.js
+docker run -d -v $(pwd)/voc/core/app:/app nodedocker cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node test-suite.js
 OR
-docker rm -f test-runner; docker run -d  --name test-runner -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null
+docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null
 docker exec -ti test-runner bash
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node test-suite.js
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node --inspect-brk=0.0.0.0 test-suite.js
 docker rm -f test-runner
 ````
 

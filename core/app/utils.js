@@ -26,7 +26,7 @@ module.exports = {
             }
             resultJson[key].push(value);
         } else
-            resultJson[key] = value;
+            resultJson[key] = [value];
         if (!fs.existsSync(configuration.repoFolder + configuration.artifactDir)) {
             fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
         }
