@@ -34,8 +34,10 @@ module.exports = {
         fs.writeFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile, JSON.stringify(resultJson));
     },
 
-    execCmd: function (cmd, callback, printStdout = false) {
-        exec(cmd, function (error, stdout, stderr) {
+    execCmd: function (cmd, options, callback, printStdout = false) {
+        if(typeof printStdout == "undefined" && typeof callback != "function" && typeof options == "function") callback = options;
+        if(!options) options = {}
+        exec(cmd, options, function (error, stdout, stderr) {
             // command output is in stdout
             if (error) console.error("error", error);
             if(printStdout)
@@ -45,10 +47,11 @@ module.exports = {
         });
     },
 
-    execCmdSync: function(cmd, delegateError = false){
+    execCmdSync: function(cmd, delegateError = false, options = {}){
         let stdout;
+        options["encoding"] = "UTF-8";
         try{
-            stdout = execSync(cmd, { "encoding": "UTF-8" });
+            stdout = execSync(cmd, options);
         } catch (err){
             console.error(`Error executing command ${cmd}: ${err}`);
             if(!delegateError)

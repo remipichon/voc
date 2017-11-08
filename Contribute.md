@@ -63,6 +63,16 @@ above command already setup eveything for remote debug to work. Use your favorit
 * made to work with NodeJs V8
 * tested on Webstorm (Chromium Remote conf) and Chromium based Chrome (plugin)
 
+### Test Runner app
+
+````
+docker run -d  -v $(pwd)/voc/core/app:/app nodedocker cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node test-suite.js
+OR
+docker rm -f test-runner; docker run -d  --name test-runner -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null
+docker exec -ti test-runner bash
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node test-suite.js
+docker rm -f test-runner
+````
 
 ## Email Mediation app
 * add volumes

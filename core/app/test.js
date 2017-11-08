@@ -123,6 +123,12 @@ function testCmdSync(){
     console.log("end")
 }
 
+function multipleParam(...trucs){
+    console.log(trucs)
+}
+
+multipleParam("1","haha");
+
 
 // testCmdSync();
 
@@ -137,7 +143,7 @@ function testCmdSync(){
 // var tr = testWalk()
 // console.log("apres apres",tr);
 
-var tr = testWalkSync()
+// var tr = testWalkSync()
 
 // testIsResourceFile();
 // testIsResourceFile();

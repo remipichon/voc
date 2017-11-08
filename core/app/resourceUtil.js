@@ -111,13 +111,14 @@ module.exports = {
                 });
             }
         });
+
         dockercomposes = _.filter(dockercomposes, dockercompose => {
-            return dockercompose.used
+            return dockercompose.used;
         });
 
         //remove imageConfigs without a Dockerfile
         let imageConfigs = _.filter(instances, imageConfig => {
-           return imageConfig.isImage && (imageConfig.remote || _.find(dockercomposes, dc => { dc.name == imageConfig.resourceName}))
+            return imageConfig.isImage && (imageConfig.remote || _.find(dockerfiles, df => { return df.name == imageConfig.resourceName}))
         });
 
         return {

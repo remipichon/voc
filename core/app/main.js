@@ -14,10 +14,12 @@ module.exports = {
 
 
 
-    main: async function () {
+    // main: async function () {
+    main: function () { //for tests purposes, remove async, TODO find a clever way to combine tests and async
 
         console.info(`***** Reading directory to find VOC resources files: ${configuration.repoFolder} *****`);
-        let allResourcePaths = await fsService.walkResourceFilePromise(configuration.repoFolder);
+        // let allResourcePaths = await fsService.walkResourceFilePromise(configuration.repoFolder);
+        let allResourcePaths =  fsUtil.walkResourceFileSync(configuration.repoFolder); //for tests purposes, remove async, TODO find a clever way to combine tests and async
         console.log("DEBUG allResourcePaths",allResourcePaths);
         let vocResources = resourceService.getVocResources(allResourcePaths);
         let instances = vocResources.instances;
