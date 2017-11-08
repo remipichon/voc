@@ -81,9 +81,15 @@ module.exports = {
      * @summary run the full app, currently only the NodeJs Runner App is supported
      */
     run: function () {
+        let consoleLog = console.log
+        let consoleInfo = console.info
+        console.log = function(){}
+        console.info = function(){}
         console.info("========================> Now running app");
         main.main();
         console.info("<======================== Running app is done");
+        console.log = consoleLog
+        console.info = consoleInfo
     },
 
     /**
@@ -106,11 +112,41 @@ module.exports = {
                console.info(`SUCCESS: ${caseName}: assert '${phrase}'`);
            } else {
                console.error(`FAILURE: ${caseName}: assert '${phrase}' \n\t\t${result}. File ${caseFile}:${caseLine}`)
+               success = false;
            }
         });
         return success;
     },
 
+    /**
+     * @summary compute the searchString against the message to match or not
+     * @description support [..] and do a indexOf of each part
+     * @param message
+     * @param searchString
+     * @returns {boolean} true if searchString has been found in message
+     */
+    searchForString: function (message, searchString) {
+
+        let allFound;
+        searchString.split("[..]").forEach(string => {
+            if(allFound) return;
+            if(message.indexOf(string) === -1) {
+                allFound = `${string} not found`
+            }
+        });
+
+        return allFound || true
+    },
+
+    /**
+     * @summary returns true if assert succeed, a string trying to explain error if failed
+     * @param typeOfResult
+     * @param testResult
+     * @param targetResource
+     * @param searchString
+     * @returns {*}
+     * @private
+     */
     _resolveAssertPhrase: function (typeOfResult, testResult, targetResource, searchString) {
         if (typeOfResult == "all") {  //search string has to be in all results/errors for resource
             let result = true;
@@ -120,6 +156,19 @@ module.exports = {
                     result = `search string '${searchString}' was not found for _all results/errors of '${targetResource}'`
                 }
             });
+            return result;
+        } else if(typeOfResult == "once"){
+            let result = false;
+            _.forEach(testResult[targetResource], (message, type) => {
+                if (this.searchForString(message, searchString)) {
+                    if(result){
+                        result = `search string '${searchString}' was found more than _once in results/errors of '${targetResource}'`
+                    }
+                    result = true;
+                }
+            });
+            if(!result) result = `search string '${searchString}' was not found at all (_once  was expected) in results/errors of '${targetResource}'`
+
             return result;
         }
         //TODO the others
@@ -135,7 +184,7 @@ module.exports = {
      */
     assertPhrase: function(phrase){
         //<string to search in result> _for <target resource> _<which of _all, _any_result, _any_error, _any, _once>
-        const phraseRegExp = /^([A-Za-z0-9 ]*) _for ([A-Za-z0-9 ]*) _([a-z]*)/m
+        const phraseRegExp = /^(.*) __for (.*) __([a-z]*)/m
 
         var match = phraseRegExp.exec(phrase);
         let searchString, targetResource, typeOfResult;
@@ -149,7 +198,7 @@ module.exports = {
         // console.log("DEBUG Asserting","searchString",searchString, "targetResource", targetResource, "typeOfResult",typeOfResult);
 
         //read file where is it
-        let testResult = utils.readFileSyncToJson(configuration.repoFolder + configuration.artifactDir + configuration.resultFile)
+        let testResult = utils.readFileSyncToJson(configuration.repoFolder + configuration.artifactDir + configuration.resultFile);
 
         //using search for assert, throw error if assert not found
         if(testResult[targetResource]){
