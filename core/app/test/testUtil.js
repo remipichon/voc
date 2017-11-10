@@ -125,12 +125,18 @@ module.exports = {
             assertResult[phrase] = this.assertPhrase(phrase);
         });
 
+        let testResult = {
+            success: 0,
+            failure: 0
+        };
         let success = true;
         _.forEach(assertResult, (result, phrase) => {
            if(result === true){
                console.info(`SUCCESS while asserting '${phrase}'`);
+               testResult.success += 1;
            } else {
                console.error(`FAILURE while asserting '${phrase}' \n\t\t${result}. File ${caseFile}:${caseLine}`)
+               testResult.failure += 1;
                success = false;
            }
         });

@@ -37,7 +37,7 @@ let testSuite = {
         if (testUtil.assert("Dry run __for testdryrun __all")) {
             testUtil.cleanUp();
         } else {
-            throw new Error(__test_case_name_1+ " failed");
+            throw new TestCaseError(__test_case_name_1);
         }
     },
 
@@ -57,7 +57,7 @@ let testSuite = {
             )) {
             testUtil.cleanUp();
         } else {
-            throw new Error(__test_case_name_1+ " failed");
+            throw new TestCaseError(__test_case_name_1);
         }
     },
 
@@ -75,13 +75,13 @@ let testSuite = {
         testUtil.run();
 
         if (testUtil.assert(
-                "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
+                "Successfully config_ [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
             )) {
             testUtil.cleanUp();
         } else {
-            throw new Error(__test_case_name_1+ " failed");
+            throw new TestCaseError(__test_case_name_1);
         }
     },
 
@@ -105,7 +105,7 @@ let testSuite = {
             )) {
             testUtil.cleanUp();
         } else {
-            throw new Error(__test_case_name_1+ " failed");
+            throw new TestCaseError(__test_case_name_1);
         }
     },
 
@@ -124,10 +124,23 @@ if (process.argv.length == 2) {
     }
 }
 
+class TestCaseError extends Error {
+
+}
+
 console.log("Starting test suite from test-suite.js running test cases:",testcases);
-testcases.forEach(testCase => {
-    console.info(`=================================> starting test ${testCase}`);
-    testSuite[testCase]();
-    console.info(`<================================= test done `);
-});
+let anError;
+try {
+    testcases.forEach(testCase => {
+        console.info(`=================================> starting test ${testCase}`);
+        testSuite[testCase]();
+        console.info(`<================================= test done `);
+    });
+} catch (error){
+    if(error instanceof TestCaseError) {
+        console.error(`!!! Test case ${error} FAILED`);
+    } else {
+        throw  error;
+    }
+}
 
