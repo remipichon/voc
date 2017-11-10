@@ -127,7 +127,10 @@ function multipleParam(...trucs){
     console.log(trucs)
 }
 
-multipleParam("1","haha");
+// multipleParam("1","haha");
+
+
+console.log(utils.execCmdSync("ls",false, {cwd: "node_modules"}));
 
 
 // testCmdSync();

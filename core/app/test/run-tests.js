@@ -1,4 +1,5 @@
 var nominalCaseSuite = require("./test-suite-nominal-case");
+var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
 var TestCaseError = require("./TestCaseError");
 
 /*
@@ -24,20 +25,23 @@ if (testUtil.assert(
 
  */
 
-const testSuites = [nominalCaseSuite];
+const testSuites = [
+    nominalCaseSuite,
+    testSuiteTriggerViaConfig
+];
 
 
 let testcases = [];
 if (process.argv.length == 2) {
-    testSuites.forEach( suite => testcases = testcases.concat(Object.keys(nominalCaseSuite)));
+    testSuites.forEach( suite => testcases = testcases.concat(Object.keys(suite)));
 } else {
     if (process.argv[2] == "all") {
-        testSuites.forEach( suite => testcases = testcases.concat(Object.keys(nominalCaseSuite)));
+        testSuites.forEach( suite => testcases = testcases.concat(Object.keys(suite)));
     } else {
         if(!testSuites.find(suite => {
             return suite[process.argv[2]];
         }))
-            console.error("Test configuration error. Test is not part of test suite:",process.argv[2])
+            console.error("Test configuration error. Test is not part of any test suite:",process.argv[2])
         else
             testcases.push(process.argv[2])
     }
@@ -49,7 +53,8 @@ try {
     testcases.forEach(testCase => {
         console.info(`=================================> starting test ${testCase}`);
         testSuites.forEach(suite => {
-            suite[testCase]();
+            if(suite[testCase])
+                suite[testCase]();
         });
         console.info(`<================================= test done `);
     });

@@ -25,8 +25,6 @@ Object.defineProperty(global, '__test_case_file_name', {
     }
 });
 
-
-
 Object.defineProperty(global, '__test_case_line', {
     get: function() {
         return __stack[2].getLineNumber();
@@ -44,8 +42,6 @@ Object.defineProperty(global, '__test_case_name_1', {
         return __stack[1].getFunctionName();
     }
 });
-
-
 
 module.exports = {
 
@@ -73,8 +69,12 @@ module.exports = {
             } else
                 throw new Error(error);
         }
-        utils.execCmdSync("git config --global user.email 'test@example.com'; git config --global user.name 'Test User'", {cwd : configuration.repoFolder});
         utils.execCmdSync("git init", false, {cwd : configuration.repoFolder});
+        utils.execCmdSync("git config --global user.email 'test@example.com'; git config --global user.name 'Test User'", false, {cwd : configuration.repoFolder});
+
+        utils.execCmdSync("touch dummy_file", false, {cwd : configuration.repoFolder});
+        utils.execCmdSync("git add dummy_file;", false, {cwd : configuration.repoFolder});
+        utils.execCmdSync("git commit -m \"add dummy_file\"", false, {cwd : configuration.repoFolder});
     },
 
     /**
@@ -170,9 +170,6 @@ module.exports = {
      */
     _assertPhrase: function (typeOfResult, testResult, targetResource, phrase) {
 
-        //TODO revoir tout ce foutre
-
-
         if (typeOfResult == "all") {
             //words have to be in all results for resource
             let assertResult = null;
@@ -227,7 +224,6 @@ module.exports = {
             return assertResult;
 
         }
-        //TODO the others
         else {
             return `type of result ${typeOfResult} is not one of [_all, _once]`
         }
