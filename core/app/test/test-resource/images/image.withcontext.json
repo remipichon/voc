@@ -1,0 +1,5 @@
+{
+  "tag": "withcontext",
+  "push": "registrytopush:5000/withcontext",
+  "context": "context"
+}

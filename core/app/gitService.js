@@ -8,11 +8,11 @@ var fsUtil = require("./fsUtil");
 
 module.exports = {
 
-    getTriggeredInstancesFromModifiedFiles: function (instances, stackDefinitions, contextPaths, dockercomposes) {
+    getTriggeredInstancesFromModifiedFiles: function (instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs) {
         console.info("***** Reading git commit payload to find which files has been modified *****");
         let files = this.getGitDiffModifiedFile();
         console.log("***** All updated files *****\n    ", files);
-        let triggeredInstances = this.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes);
+        let triggeredInstances = this.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs);
 
         triggeredInstances.forEach(instance => {
             let actions = "";

@@ -8,7 +8,7 @@ module.exports = {
 
         testUtil.prepare();
 
-        testUtil.addFile("images/image.testdryrun.json", "images/Dockerfile.testdryrun");
+        testUtil.copyGitAddFile("images/image.testdryrun.json", "images/Dockerfile.testdryrun");
 
         testUtil.commit("[dry-run] [do-all]");
 
@@ -25,7 +25,7 @@ module.exports = {
 
         testUtil.prepare();
 
-        testUtil.addFile("images/image.nominalcase.json", "images/Dockerfile.nominalcase");
+        testUtil.copyGitAddFile("images/image.nominalcase.json", "images/Dockerfile.nominalcase");
 
         testUtil.commit("[dry-run] [do-all]");
 
@@ -45,7 +45,7 @@ module.exports = {
 
         testUtil.prepare();
 
-        testUtil.addFile(
+        testUtil.copyGitAddFile(
             "instances/simple-stack-instance.nominalcase.mynominalcase.json",
             "dockercomposes/docker-compose.nominalcase.yml"
         );
@@ -69,7 +69,7 @@ module.exports = {
 
         testUtil.prepare();
 
-        testUtil.addFile(
+        testUtil.copyGitAddFile(
             "instances/stack-instance.nominalcase.mynominalcase.json",
             "stackdefinitions/stack-definition.nominalcase.json",
             "dockercomposes/docker-compose.nominalcase.yml");

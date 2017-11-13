@@ -70,7 +70,7 @@ module.exports = {
             console.info("*****  *****");
             triggeredInstances = resourceUtil.getTriggeredInstancesFromCommitActions(commitActions, imageConfigs, instances);
         } else {
-            triggeredInstances = gitService.getTriggeredInstancesFromModifiedFiles(instances, stackDefinitions, contextPaths, dockercomposes);
+            triggeredInstances = gitService.getTriggeredInstancesFromModifiedFiles(instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs);
         }
 
         triggeredInstances = _.filter(triggeredInstances, instance => { return !instance.toDiscard});

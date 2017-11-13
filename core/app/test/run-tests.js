@@ -1,5 +1,6 @@
 var nominalCaseSuite = require("./test-suite-nominal-case");
 var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
+var testSuiteTriggerViaContext = require("./test-suite-trigger-via-context");
 var TestCaseError = require("./TestCaseError");
 
 /*
@@ -9,7 +10,7 @@ var TestCaseError = require("./TestCaseError");
 
 testUtil.prepare();
 
-testUtil.addFile("...", "...");
+testUtil.copyGitAddFile("...", "...");
 
 testUtil.commit("[dry-run] [do-all]");
 
@@ -47,7 +48,7 @@ if (process.argv.length == 2) {
     }
 }
 
-console.log("Starting test suite from test-suite.js running test cases:",testcases);
+console.log("Running test cases:",testcases);
 let anError;
 try {
     testcases.forEach(testCase => {

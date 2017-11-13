@@ -81,18 +81,59 @@ module.exports = {
      *
      * @param fileNames Array of file names or list for arguments as file names
      */
-    addFile:function (...fileNames) {
+    copyGitAddFile:function (...fileNames) {
+        this.copyFile(...fileNames);
         fileNames.forEach(path => {
-            if(!fs.existsSync(`${this.testResourceLocation}/${path}`)){
-                throw new Error(`Test configuration error, file ${this.testResourceLocation}/${path} doesn't exist`);
+            let fileName;
+            if(typeof path == 'object'){
+                fileName = `${path.destination}/${path_.basename(path.source)}`;
+            } else {
+                fileName = path_.basename(path);
             }
-            let fileName = path_.basename(path);
-            fs.copyFileSync(`${this.testResourceLocation}/${path}`, `${configuration.repoFolder}/${fileName}`);
             utils.execCmdSync(`git add ${fileName}`, false, {cwd : configuration.repoFolder});
         })
     },
 
+    /**
+     *
+     * @param fileNames Array of file names or list for arguments as file names
+     */
+    copyFile:function (...fileNames) {
+        fileNames.forEach(path => {
+            let sourcePath, destPath;
+
+            if(typeof path === "object"){
+                let fileName = path_.basename(path.source)
+                sourcePath = `${this.testResourceLocation}/${path.source}`;
+                destPath = `${configuration.repoFolder}/${path.destination}/${fileName}`;
+
+                try {
+                    fs.mkdirSync(`${configuration.repoFolder}/${path.destination}`);
+                } catch(error){
+                    if(error.code === "EEXIST"){
+                        console.log(`dir ${destPath} already exists`);
+                    } else
+                        throw new Error(error);
+                }
+
+            } else {
+                let fileName = path_.basename(path);
+                sourcePath = `${this.testResourceLocation}/${path}`;
+                destPath = `${configuration.repoFolder}/${fileName}`;
+            }
+
+            if(!fs.existsSync(sourcePath)){
+                throw new Error(`Test configuration error, file ${sourcePath} doesn't exist`);
+            }
+            fs.copyFileSync(sourcePath, destPath);
+
+        })
+    },
+
     commit: function(commitMessage){
+        //editing and adding dummy_file in case there was no previously git add files
+        utils.execCmdSync("echo banane >> dummy_file", false, {cwd : configuration.repoFolder});
+        utils.execCmdSync("git add dummy_file", false, {cwd : configuration.repoFolder});
         utils.execCmdSync(`git commit -m '${commitMessage}'`, false, {cwd : configuration.repoFolder});
     },
 
