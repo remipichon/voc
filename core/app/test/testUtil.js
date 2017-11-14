@@ -1,5 +1,6 @@
 var _ = require("underscore");
 var fs = require('fs');
+var fse = require('fs-extra');
 var path_ = require('path');
 var utils = require("../utils");
 var main = require("../main");
@@ -79,7 +80,9 @@ module.exports = {
 
     /**
      *
-     * @param fileNames Array of file names or list for arguments as file names
+     * @param fileNames List<String|<source,destination>>
+     *     if <source,destination>, source is where the file is (full path to the file), destination is the folder in which the file will be copied with same name
+     *
      */
     copyGitAddFile:function (...fileNames) {
         this.copyFile(...fileNames);
@@ -140,11 +143,15 @@ module.exports = {
     /**
      * @summary run the full app, currently only the NodeJs Runner App is supported
      */
-    run: function () {
+    run: function (enableLog = (process.env.LOG_LEVEL == "all")) {
         let consoleLog = console.log
         let consoleInfo = console.info
-        console.log = function(){}
-        console.info = function(){}
+        if(!enableLog) {
+            console.log = function () {
+            }
+            console.info = function () {
+            }
+        }
         console.info("========================> Now running app");
         main.main();
         console.info("<======================== Running app is done");

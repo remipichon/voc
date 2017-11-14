@@ -70,10 +70,18 @@ docker run -d -v $(pwd)/voc/core/app:/app nodedocker cd /app/test; CI_PROJECT_DI
 OR
 docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null
 docker exec -ti test-runner bash
-cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js
-cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node --inspect-brk=0.0.0.0 run-tests.js
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true LOG_LEVEL= node run-tests.js
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ LOG_LEVEL=all node --inspect-brk=0.0.0.0 run-tests.js One_Test
 docker rm -f test-runner
 ````
+
+* LOG_LEVEL
+  * ALL: enable VOC log
+  * else: VOC doesn't log anything, only test framework logs
+* CONTINUE_IF_ERROR
+  * true: will not stop at first failing test
+  * else: will stop after first failing test to let you debug test workspace and test result
+  
 
 ## Email Mediation app
 * add volumes

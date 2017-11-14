@@ -236,7 +236,7 @@ module.exports = {
             });
             //all stackInstance whose stackDefinition contains dockercompose
             let relatedStackDefinitions = stackDefinitions.filter(stackDefinition => {
-                _.contains(stackDefinition.dockercomposes, resource.name);
+                return _.contains(stackDefinition.dockercomposes, resource.name);
             });
             _.filter(instances, instance => {
                 return _.contains(relatedStackDefinitions, instance.stackDefinitionName);
