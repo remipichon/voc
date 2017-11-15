@@ -66,11 +66,16 @@ above command already setup eveything for remote debug to work. Use your favorit
 ### Test Runner app
 
 ````
-docker run -d -v $(pwd)/voc/core/app:/app nodedocker cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js
-OR
-docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null
+# build test image
+cd core/app/test; docker build -f Dockerfile.runnerapptest -t runnerapptest .
+# run tests with code from your fs (NOT WORKING NOW, needs to create a proper entrypoint)
+docker run -v $(pwd)/voc/core/app:/app runnerapptest cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js
+# run test image with debug port open and code from your fs
+docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/voc/core/app:/app runnerapptest 
 docker exec -ti test-runner bash
+# run tests
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true LOG_LEVEL= node run-tests.js
+# run one test with full log and debug on
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ LOG_LEVEL=all node --inspect-brk=0.0.0.0 run-tests.js One_Test
 docker rm -f test-runner
 ````
