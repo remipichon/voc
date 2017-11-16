@@ -40,7 +40,7 @@ module.exports = {
         console.log("   repos\n  ", repos);
         console.log("*****  That's all from the file system                   *****");
 
-        vocResources = resourceUtil.cleanUnusedVocResources(instances, stackDefinitions, dockercomposes, dockerfiles);
+        vocResources = resourceUtil.cleanUnusedVocResources(instances, stackDefinitions, dockercomposes, dockerfiles, repos);
         instances = vocResources.instances;
         dockercomposes = vocResources.dockercomposes;
         dockerfiles = vocResources.dockerfiles;

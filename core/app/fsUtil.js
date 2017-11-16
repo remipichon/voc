@@ -99,7 +99,7 @@ module.exports = {
             }
         } else
             utils.writeResult(repoconfig.name, {
-                result: `${repoconfig.name}: Successfully cloned remote repo ${repoconfig.url}`
+                result: `${repoconfig.name}: Successfully cloned remote repo ${repoconfig.url} into ${configuration.remoteRepoFolder}/${repoconfig.name}`
             });
         return this.walkResourceFileSync(`${configuration.remoteRepoFolder}/${repoconfig.name}`);
     },

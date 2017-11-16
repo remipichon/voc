@@ -39,7 +39,11 @@ module.exports = {
         if(!options) options = {}
         exec(cmd, options, function (error, stdout, stderr) {
             // command output is in stdout
-            if (error) console.error("error", error);
+            if (error) {
+                console.error(`Error executing command '${cmd}': ${error.message}`);
+                console.error(`${error.stderr}`);
+                console.error(`${error.stdout}`);
+            }
             if(printStdout)
                 console.log(`cmd ${cmd} stdout is\n${stdout}`);
             if (stderr) console.error("stderr", stderr);
@@ -53,7 +57,9 @@ module.exports = {
         try{
             stdout = execSync(cmd, options);
         } catch (err){
-            console.error(`Error executing command ${cmd}: ${err}`);
+            console.error(`Error executing command '${cmd}': ${err.message}`);
+            console.error(`${err.stderr}`);
+            console.error(`${err.stdout}`);
             if(!delegateError)
                 throw new Error(err);
             else

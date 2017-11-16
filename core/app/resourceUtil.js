@@ -59,7 +59,7 @@ module.exports = {
      */
 
 
-    cleanUnusedVocResources: function (instances, stackDefinitions, dockercomposes, dockerfiles) {
+    cleanUnusedVocResources: function (instances, stackDefinitions, dockercomposes, dockerfiles, repos) {
         // //TODO remove stack definitions not used by any instances (no diff between remote and local)
         // let usedStackDefinitionNames = _.filter(instances  get all stackDef whose name is found in instances
         // stackDefinitions = _.filter(stackDefinitions, stackDefinition => {
@@ -118,7 +118,10 @@ module.exports = {
 
         //remove imageConfigs without a Dockerfile
         let imageConfigs = _.filter(instances, imageConfig => {
-            return imageConfig.isImage && (imageConfig.remote || _.find(dockerfiles, df => { return df.name == imageConfig.resourceName}))
+            return imageConfig.isImage &&
+                (imageConfig.remote &&
+                    ((imageConfig.repo && _.find(repos, repo => { return repo.name === imageConfig.repo }) ) || true )
+                    || _.find(dockerfiles, df => { return df.name == imageConfig.resourceName}))
         });
 
         return {
