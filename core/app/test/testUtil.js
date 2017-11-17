@@ -48,38 +48,51 @@ module.exports = {
 
     //relative to the test-suite js file
     testResourceLocation: process.env.TEST_RESOURCES,
+    gitLocalForRemoteRepo: "/root/local-for-remote-repo",
+    gitServerRemoteRepo: "/root/git-server/remote-repo",
 
     /**
      * @summary git init repo
      */
     prepare: function () {
-        this.cleanUp();
-        try {
-            fs.mkdirSync(configuration.repoFolder);
-        } catch(error){
-            if(error.code === "EEXIST"){
-                console.log(`dir ${configuration.repoFolder} already exists`);
-            } else
-                throw new Error(error);
-        }
-        try {
-            fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
-        } catch(error){
-            if(error.code === "EEXIST"){
-                console.log(`dir ${configuration.repoFolder + configuration.artifactDir} already exists`);
-            } else
-                throw new Error(error);
-        }
+        utils.execCmdSync(`rm -rf ${configuration.repoFolder}`);
+        utils.execCmdSync(`rm -rf ${configuration.repoFolder + configuration.artifactDir}`);
+        fs.mkdirSync(configuration.repoFolder);
+        fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
+
         utils.execCmdSync("git init", false, {cwd : configuration.repoFolder});
         utils.execCmdSync("git config --global user.email 'test@example.com'; git config --global user.name 'Test User'", false, {cwd : configuration.repoFolder});
 
+        //one commit to make sure repo is working
         utils.execCmdSync("touch dummy_file", false, {cwd : configuration.repoFolder});
         utils.execCmdSync("git add dummy_file;", false, {cwd : configuration.repoFolder});
         utils.execCmdSync("git commit -m \"add dummy_file\"", false, {cwd : configuration.repoFolder});
     },
 
     /**
-     *
+     * @summary git init remote repo
+     */
+    prepareRemoteRepo: function () {
+        utils.execCmdSync(`rm -rf ${this.gitServerRemoteRepo}`);
+        utils.execCmdSync(`rm -rf ${this.gitLocalForRemoteRepo}`);
+        utils.execCmdSync(`rm -rf ${configuration.remoteRepoFolder}`);
+        fs.mkdirSync(this.gitServerRemoteRepo);
+        fs.mkdirSync(this.gitLocalForRemoteRepo);
+
+        utils.execCmdSync("git init --bare", false, {cwd : this.gitServerRemoteRepo});
+
+        utils.execCmdSync("git init", false, {cwd : this.gitLocalForRemoteRepo});
+        utils.execCmdSync(`git remote add origin ssh://root@127.0.0.1${this.gitServerRemoteRepo}`, false, {cwd : this.gitLocalForRemoteRepo});
+        utils.execCmdSync("git config --global user.email 'test@example.com'; git config --global user.name 'Test User'", false, {cwd : this.gitLocalForRemoteRepo});
+
+        //one commit to make sure repo is working
+        utils.execCmdSync("touch dummy_file", false, {cwd : this.gitLocalForRemoteRepo});
+        utils.execCmdSync("git add dummy_file;", false, {cwd : this.gitLocalForRemoteRepo});
+        utils.execCmdSync("git commit -m \"add dummy_file\"", false, {cwd : this.gitLocalForRemoteRepo});
+    },
+
+    /**
+     * @summary copy and commit file to test repo defined by configuration.repoFolder 
      * @param fileNames List<String|<source,destination>>
      *     if <source,destination>, source is where the file is (full path to the file), destination is the folder in which the file will be copied with same name
      *
@@ -98,20 +111,53 @@ module.exports = {
     },
 
     /**
+     * @summary copy and commit file to mocked remote repo defined by this.gitLocalForRemoteRepo
+     * @param fileNames List<String|<source,destination>>
+     *     if <source,destination>, source is where the file is (full path to the file), destination is the folder in which the file will be copied with same name
      *
-     * @param fileNames Array of file names or list for arguments as file names
+     */
+    copyGitAddFileRemoteRepo:function (...fileNames) {
+        this._copyFile(this.gitLocalForRemoteRepo,...fileNames);
+        fileNames.forEach(path => {
+            let fileName;
+            if(typeof path == 'object'){
+                fileName = `${path.destination}/${path_.basename(path.source)}`;
+            } else {
+                fileName = path_.basename(path);
+            }
+            utils.execCmdSync(`git add ${fileName}`, false, {cwd : this.gitLocalForRemoteRepo});
+        });
+        utils.execCmdSync(`git commit -m 'adding files on remote repo'`, false, {cwd : this.gitLocalForRemoteRepo});
+        utils.execCmdSync(`git push origin master`, false, {cwd : this.gitLocalForRemoteRepo});
+    },
+
+    /**
+     * @summary copy file to configuration.repoFolder
+     * @param fileNames List<String|<source,destination>>
+     *     if <source,destination>, source is where the file is (full path to the file), destination is the folder in which the file will be copied with same name
+     *
      */
     copyFile:function (...fileNames) {
+        this._copyFile(configuration.repoFolder, ...fileNames)
+    },
+
+    /**
+     * @summary private method as helper for copyFile and copyGitAddFileRemoteRepo
+     * @param repoFolder
+     * @param fileNames
+     * @private
+     */
+    _copyFile:function (repoFolder, ...fileNames) {
         fileNames.forEach(path => {
             let sourcePath, destPath;
 
             if(typeof path === "object"){
-                let fileName = path_.basename(path.source)
+                let fileName = path_.basename(path.source);
                 sourcePath = `${this.testResourceLocation}/${path.source}`;
-                destPath = `${configuration.repoFolder}/${path.destination}/${fileName}`;
+                destPath = `${repoFolder}/${path.destination}/${fileName}`;
 
                 try {
-                    fs.mkdirSync(`${configuration.repoFolder}/${path.destination}`);
+                    fs.mkdirSync(`${repoFolder}/${path.destination}`);
                 } catch(error){
                     if(error.code === "EEXIST"){
                         console.log(`dir ${destPath} already exists`);
@@ -122,7 +168,7 @@ module.exports = {
             } else {
                 let fileName = path_.basename(path);
                 sourcePath = `${this.testResourceLocation}/${path}`;
-                destPath = `${configuration.repoFolder}/${fileName}`;
+                destPath = `${repoFolder}/${fileName}`;
             }
 
             if(!fs.existsSync(sourcePath)){
@@ -144,19 +190,20 @@ module.exports = {
      * @summary run the full app, currently only the NodeJs Runner App is supported
      */
     run: function (enableLog = (process.env.LOG_LEVEL == "all")) {
-        let consoleLog = console.log
-        let consoleInfo = console.info
+        let consoleLog = console.log;
+        let consoleInfo = console.info;
         if(!enableLog) {
+            console.info(`========================> Now running app without app log`);
             console.log = function () {
-            }
+            };
             console.info = function () {
-            }
+            };
         }
-        console.info("========================> Now running app");
+        console.info(`========================> Now running app`);
         main.main();
+        console.log = consoleLog;
+        console.info = consoleInfo;
         console.info("<======================== Running app is done");
-        console.log = consoleLog
-        console.info = consoleInfo
     },
 
     /**
@@ -190,8 +237,7 @@ module.exports = {
         });
         return success;
     },
-
-
+    
     _assertWords: function (message, phrase) {
         let words = phrase.split("[..]");
 
@@ -248,7 +294,6 @@ module.exports = {
                     assertResult =  `${targetResource} has an 'error'. Only 'result' were expected `;
                     return;//continue loop
                 }
-
                 let assertWordResult = this._assertWords(message.result, phrase);
 
                 //no more than once
@@ -307,14 +352,6 @@ module.exports = {
             return `target resource ${targetResource} not part of result file`
         }
     },
-
-
-    /**
-     * @summary remove git repo folder
-     */
-    cleanUp: function(){
-        utils.execCmdSync(`rm -rf ${configuration.repoFolder}`);
-    }
-
+    
 };
 

@@ -1,6 +1,7 @@
 var nominalCaseSuite = require("./test-suite-nominal-case");
 var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
 var testSuiteTriggerViaContext = require("./test-suite-trigger-via-context");
+var nominalCaseSuiteRemote = require("./test-suite-nominal-case-remote");
 var TestCaseError = require("./TestCaseError");
 var configuration = require("../configuration");
 var _ = require("underscore");
@@ -21,7 +22,7 @@ testUtil.run();
 if (testUtil.assert(
         "[..] __for ??? __???"
     )) {
-    testUtil.cleanUp();
+
 } else {
     throw new Error(__test_case_name_1+ " failed");
 }
@@ -31,7 +32,8 @@ if (testUtil.assert(
 const testSuites = [
     nominalCaseSuite,
     testSuiteTriggerViaConfig,
-    testSuiteTriggerViaContext
+    testSuiteTriggerViaContext,
+    nominalCaseSuiteRemote
 ];
 
 

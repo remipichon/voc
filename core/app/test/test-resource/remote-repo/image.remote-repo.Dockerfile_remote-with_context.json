@@ -1,0 +1,5 @@
+{
+  "tag": "alpinette",
+  "repo": "remote-repo",
+  "context": "context-on-remote"
+}

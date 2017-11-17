@@ -19,7 +19,7 @@ module.exports = {
                 "docker build [..] Dockerfile.withcontext [..] withcontext __for withcontext __once",
                 "docker push registrytopush:5000/withcontext __for registrytopush:5000/withcontext __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }
@@ -45,7 +45,7 @@ module.exports = {
                 "docker-compose [..] build [..] docker-compose.intermediate.mywithcontext.yml __for mywithcontext __once",
                 "docker stack deploy [..] docker-compose.intermediate.mywithcontext.yml mywithcontext __for mywithcontext __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }
@@ -71,7 +71,7 @@ module.exports = {
                 "docker-compose [..] build [..] docker-compose.intermediate.mywithcontext.yml __for mywithcontext __once",
                 "docker stack deploy [..] docker-compose.intermediate.mywithcontext.yml mywithcontext __for mywithcontext __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }

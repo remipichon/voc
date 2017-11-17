@@ -15,7 +15,7 @@ module.exports = {
         testUtil.run();
 
         if (testUtil.assert("Dry run __for testdryrun __all")) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }
@@ -35,7 +35,7 @@ module.exports = {
                 "docker build [..] Dockerfile.nominalcase [..] nominalcase __for nominalcase __once",
                 "docker push registrytopush:5000/nominalcase __for registrytopush:5000/nominalcase __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }
@@ -59,7 +59,7 @@ module.exports = {
                 "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }
@@ -83,7 +83,7 @@ module.exports = {
                 "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }

@@ -17,7 +17,7 @@ module.exports = {
                 "docker build [..] Dockerfile.nominalcase [..] nominalcase __for nominalcase __once",
                 "docker push registrytopush:5000/nominalcase __for registrytopush:5000/nominalcase __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }
@@ -40,7 +40,7 @@ module.exports = {
                 "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }
@@ -63,7 +63,7 @@ module.exports = {
                 "Successfully config [..] docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
             )) {
-            testUtil.cleanUp();
+
         } else {
             throw new TestCaseError(__test_case_name_1);
         }

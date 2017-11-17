@@ -8,21 +8,16 @@ RUN chmod 600 /root/.ssh/authorized_keys
 
 # install Git server
 RUN apt-get install git-core
-RUN mkdir -p /root/git/remote-repo
-RUN cd /root/git/remote-repo; git init --bare
+#RUN mkdir -p /root/git-server/remote-repo
+#RUN cd /root/git-server/remote-repo; git init --bare
 
-# prepare Git repo
-RUN mkdir -p /root/remote-repo;
-RUN cd /root/remote-repo; git init; git remote add origin ssh://root@127.0.0.1/root/git/remote-repo
-RUN git config --global user.email "you@example.com"; git config --global user.name "Your Name"
+# prepare Git repo (TODO do that with test framwork to proper clean)
+#RUN mkdir -p /root/remote-repo;
+#RUN cd /root/remote-repo; git init; git remote add origin ssh://root@127.0.0.1/root/git-server/remote-repo
+#RUN cd /root/remote-repo; git config --global user.email "you@example.com"; git config --global user.name "Your Name"
 COPY ssh_config /root/.ssh/config
 
-#RUN update-rc.d ssh defaults
-#RUN systemctl enable ssh
-#RUN systemctl enable ssh.service
-
 CMD service ssh start && tail -f /dev/null
-
 
 # cd /root/remote-repo
 # touch dummy;git add .; git commit -m "initial commit"
