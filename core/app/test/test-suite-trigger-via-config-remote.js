@@ -3,10 +3,9 @@ var TestCaseError = require("./TestCaseError");
 
 module.exports = {
 
-    //   x  |SI|SSI dry_run_do_all__remote_without_context__nominal_case
+    //   x  |SI|SSI dry_run_do_all__remote_without_context__trigger_via_config
 
-
-    image__dry_run_do_all__remote_without_context__nominal_case: function () {
+    image__dry_run_do_all__remote_without_context__trigger_via_config: function () {
 
         testUtil.prepare();
         testUtil.prepareRemoteRepo();
@@ -15,7 +14,7 @@ module.exports = {
 
         testUtil.copyGitAddFileRemoteRepo("images/Dockerfile.remote");
 
-        testUtil.commit("[dry-run] [do-all]");
+        testUtil.commit(" trigger via config and Docker related files ");
 
         testUtil.run();
 

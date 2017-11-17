@@ -45,7 +45,7 @@ module.exports = {
                 console.error(`${error.stdout}`);
             }
             if(printStdout)
-                console.log(`cmd ${cmd} stdout is\n${stdout}`);
+                console.info(`cmd ${cmd} stdout is\n${stdout}`);
             if (stderr) console.error("stderr", stderr);
             if (callback) callback(error, stdout, stderr)
         });

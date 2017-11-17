@@ -1,7 +1,9 @@
 var nominalCaseSuite = require("./test-suite-nominal-case");
-var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
-var testSuiteTriggerViaContext = require("./test-suite-trigger-via-context");
 var nominalCaseSuiteRemote = require("./test-suite-nominal-case-remote");
+var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
+var testSuiteTriggerViaConfigRemote = require("./test-suite-trigger-via-config-remote");
+var testSuiteTriggerViaContext = require("./test-suite-trigger-via-context");
+var testSuiteTriggerViaContextRemote = require("./test-suite-trigger-via-context-remote");
 var TestCaseError = require("./TestCaseError");
 var configuration = require("../configuration");
 var _ = require("underscore");
@@ -33,7 +35,9 @@ const testSuites = [
     // nominalCaseSuite,
     // testSuiteTriggerViaConfig,
     // testSuiteTriggerViaContext,
-    nominalCaseSuiteRemote
+    nominalCaseSuiteRemote,
+    testSuiteTriggerViaConfigRemote,
+    testSuiteTriggerViaContextRemote,
 ];
 
 
@@ -98,6 +102,8 @@ if(process.env.CONTINUE_IF_ERROR == "true"){
             });
             console.info(`<================================= test done `);
         });
+        console.log(`\t\t\t Hurray, all ${testcases.length} tests were successful !!!`);
+        process.exit(0);
     } catch (error) {
         if (error instanceof TestCaseError) {
             console.error(`!!! Test case ${error.message} FAILED`);
