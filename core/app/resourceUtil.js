@@ -260,8 +260,7 @@ module.exports = {
             });
             si.changed = true;
             si.toClean = clean;
-        } else if (resource.type == "imageConfig"){
-            //nothing to do to support remote image config
+        } else if (resource.type == "imageConfig" || resource.type == "imageConfigRemote"){
             let imageConfig = _.find(instances, instance => {
                 return instance.resourceName === resource.name;
             });
