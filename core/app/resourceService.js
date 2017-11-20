@@ -217,7 +217,7 @@ module.exports = {
                     let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
                     if(!vocResourcesRemote){
                         utils.writeResult(instance.instanceName, {
-                            error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} is in repo mode but repo is not correctly defined. Either the stack definition doesn't have a 'repo' name referring a defined repo in repos.json or doesn't have a valid one shot'repo' config. Stack will not be deployed`
+                            error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} is in repo mode but repo is not correctly defined. Either the stack definition doesn't have a 'repo' name referring to a defined repo in repos.json or doesn't have a valid one shot'repo' config. Stack will not be deployed`
                         });
                         return null;
                     }

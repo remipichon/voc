@@ -10,7 +10,7 @@ module.exports = {
         testUtil.prepare();
         testUtil.prepareRemoteRepo();
 
-        testUtil.copyGitAddFile("remote-repo/image.remote-repo.remote.json", "remote-repo/repo.remote-repo.json");
+        testUtil.copyGitAddFile("images/image.remote-repo.remote.json", "remote-repo/repo.remote-repo.json");
 
         testUtil.copyGitAddFileRemoteRepo("images/Dockerfile.remote");
 

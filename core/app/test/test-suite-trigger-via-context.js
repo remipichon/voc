@@ -25,7 +25,7 @@ module.exports = {
         }
     },
 
-    simple_stack_instance_stack_definition_docker_composes__dry_run_do_all__non_remote_with_context__trigger_via_context: function () {
+    simple_stack_instance_docker_composes__dry_run_do_all__non_remote_with_context__trigger_via_context: function () {
 
         testUtil.prepare();
 
@@ -51,7 +51,7 @@ module.exports = {
         }
     },
 
-    stack_instance_docker_compose__dry_run_do_all__non_remote_with_context__trigger_via_context: function () {
+    stack_instance_stack_definition_docker_compose__dry_run_do_all__non_remote_with_context__trigger_via_context: function () {
 
         testUtil.prepare();
 

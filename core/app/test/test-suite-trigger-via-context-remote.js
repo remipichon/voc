@@ -10,7 +10,7 @@ module.exports = {
         testUtil.prepare();
         testUtil.prepareRemoteRepo();
 
-        testUtil.copyFile("remote-repo/image.remote-repo.remote-with_context.json", "remote-repo/repo.remote-repo.json");
+        testUtil.copyFile("images/image.remote-repo.remote-with_context.json", "remote-repo/repo.remote-repo.json");
 
         testUtil.copyGitAddFileRemoteRepo("images/Dockerfile.remote-with_context");
         testUtil.copyGitAddFileRemoteRepo({source:"context/dummy_context_file", destination: "context"});

@@ -32,9 +32,9 @@ if (testUtil.assert(
  */
 
 const testSuites = [
-    // nominalCaseSuite,
-    // testSuiteTriggerViaConfig,
-    // testSuiteTriggerViaContext,
+    nominalCaseSuite,
+    testSuiteTriggerViaConfig,
+    testSuiteTriggerViaContext,
     nominalCaseSuiteRemote,
     testSuiteTriggerViaConfigRemote,
     testSuiteTriggerViaContextRemote,

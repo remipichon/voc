@@ -67,8 +67,10 @@ module.exports = {
                 let repo = _.find(repos, repo => {
                     return repo.name === config.repo
                 });
-                repoconfig = utils.readFileSyncToJson(repo.path);
-                repoconfig.name = config.repo;
+                if(repo) {
+                    repoconfig = utils.readFileSyncToJson(repo.path);
+                    repoconfig.name = config.repo;
+                }
             } else if (typeof config.repo == "object") {
                 repoconfig = config.repo
             }

@@ -41,7 +41,7 @@ module.exports = {
         }
     },
 
-    simple_stack_instance_stack_definition_docker_composes__dry_run_do_all__non_remote_without_context__nominal_case: function () {
+    simple_stack_instance_docker_composes__dry_run_do_all__non_remote_without_context__nominal_case: function () {
 
         testUtil.prepare();
 
@@ -65,7 +65,7 @@ module.exports = {
         }
     },
 
-    stack_instance_docker_compose__dry_run_do_all__non_remote_without_context__nominal_case: function () {
+    stack_instance_stack_definition_docker_compose__dry_run_do_all__non_remote_without_context__nominal_case: function () {
 
         testUtil.prepare();
 
