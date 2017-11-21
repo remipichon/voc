@@ -4,7 +4,7 @@ var TestCaseError = require("./TestCaseError");
 module.exports = {
 
     //making sure dry and do all are working
-    commit_action__dry_run_do_all__without_context__nominal_case: function () {
+    commit_action__non_remote_without_context__trigger_via_do_all: function () {
 
         testUtil.prepare();
 
@@ -21,7 +21,7 @@ module.exports = {
         }
     },
 
-    image__dry_run_do_all__non_remote_without_context__nominal_case: function () {
+    image__non_remote_without_context__trigger_via_do_all: function () {
 
         testUtil.prepare();
 
@@ -41,7 +41,7 @@ module.exports = {
         }
     },
 
-    simple_stack_instance_docker_composes__dry_run_do_all__non_remote_without_context__nominal_case: function () {
+    simple_stack_instance_docker_composes__non_remote_without_context__trigger_via_do_all: function () {
 
         testUtil.prepare();
 
@@ -65,7 +65,7 @@ module.exports = {
         }
     },
 
-    stack_instance_stack_definition_docker_compose__dry_run_do_all__non_remote_without_context__nominal_case: function () {
+    stack_instance_stack_definition_docker_compose__non_remote_without_context__trigger_via_do_all: function () {
 
         testUtil.prepare();
 

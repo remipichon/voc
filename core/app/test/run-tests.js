@@ -4,6 +4,7 @@ var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
 var testSuiteTriggerViaConfigRemote = require("./test-suite-trigger-via-config-remote");
 var testSuiteTriggerViaContext = require("./test-suite-trigger-via-context");
 var testSuiteTriggerViaContextRemote = require("./test-suite-trigger-via-context-remote");
+var commitActions = require("./commit-actions");
 var TestCaseError = require("./TestCaseError");
 var configuration = require("../configuration");
 var _ = require("underscore");
@@ -13,6 +14,14 @@ var _ = require("underscore");
 * create a new module with methods than contains follow code
 * import module and add it to const testSuites
 
+name convention:
+<resource type>__<[non_]remote>_<[with|without]_context>__<trigger type>
+
+* resource type: resource under test (image, SI, SSI, commit action)
+* [non_]remote: repo remote only only
+* [with|without]_context: whether image config has context or docker compose has build with context
+* trigger type: commit action or commit config/Docker related files or commit context
+
 testUtil.prepare();
 
 testUtil.copyGitAddFile("...", "...");
@@ -21,13 +30,10 @@ testUtil.commit("[dry-run] [do-all]");
 
 testUtil.run();
 
-if (testUtil.assert(
+if (!testUtil.assert(
         "[..] __for ??? __???"
-    )) {
+    )) throw new Error(__test_case_name_1+ " failed");
 
-} else {
-    throw new Error(__test_case_name_1+ " failed");
-}
 
  */
 
@@ -38,6 +44,7 @@ const testSuites = [
     nominalCaseSuiteRemote,
     testSuiteTriggerViaConfigRemote,
     testSuiteTriggerViaContextRemote,
+    // commitActions
 ];
 
 

@@ -3,7 +3,7 @@ var TestCaseError = require("./TestCaseError");
 
 module.exports = {
 
-    image__dry_run_do_all__non_remote_without_context__trigger_via_config: function () {
+    image__non_remote_without_context__trigger_via_config: function () {
 
         testUtil.prepare();
 
@@ -23,7 +23,7 @@ module.exports = {
         }
     },
 
-    simple_stack_instance_docker_composes__dry_run_do_all__non_remote_without_context__trigger_via_config: function () {
+    simple_stack_instance_docker_composes__non_remote_without_context__trigger_via_config: function () {
 
         testUtil.prepare();
 
@@ -46,7 +46,7 @@ module.exports = {
         }
     },
 
-    stack_instance_stack_definition_docker_compose__dry_run_do_all__non_remote_without_context__trigger_via_config: function () {
+    stack_instance_stack_definition_docker_compose__non_remote_without_context__trigger_via_config: function () {
 
         testUtil.prepare();
 
