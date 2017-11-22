@@ -70,7 +70,7 @@ module.exports = {
         testUtil.prepare();
 
         testUtil.copyGitAddFile(
-            "instances/stack-instance.nominalcase.mynominalcase.json",
+            "instances/stack-instance.nominalcase.mysinominalcase.json",
             "stackdefinitions/stack-definition.nominalcase.json",
             "dockercomposes/docker-compose.nominalcase.yml");
 
@@ -79,9 +79,9 @@ module.exports = {
         testUtil.run();
 
         if (testUtil.assert(
-                "Successfully config [..] docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
-                "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
-                "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
+                "Successfully config [..] docker-compose.nominalcase.yml [..] docker-compose.intermediate.mysinominalcase.yml __for mysinominalcase __once",
+                "docker-compose [..] build [..] docker-compose.intermediate.mysinominalcase.yml __for mysinominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.mysinominalcase.yml mysinominalcase __for mysinominalcase __once",
             )) {
 
         } else {
