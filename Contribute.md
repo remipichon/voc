@@ -87,6 +87,13 @@ docker rm -f test-runner
   * true: will not stop at first failing test
   * else: will stop after first failing test to let you debug test workspace and test result
   
+#### with code coverage
+https://www.npmjs.com/package/istanbul
+``````
+cd /app; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true LOG_LEVEL= istanbul cover test/run-tests.js
+``````
+  
+  
 
 ## Email Mediation app
 * add volumes
