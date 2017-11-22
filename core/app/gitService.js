@@ -129,7 +129,7 @@ module.exports = {
     commitAction: {
         buildAll: /(\[build\-all\])/m,
         deployAll: /(\[deploy\-all\])/m,
-        doAll: /(\[do\-all\])/m,
+        doAll: /(\[do\-all\])/m,    //same as buildDeployAll
         removeAll: /(\[remove\-all\])/m,
         buildDeployAll: /(\[build\-deploy\-all\])/m,
         buildResourceName: /(\[build\-([a-zA-Z0-9]+)\])/m,

@@ -4,9 +4,11 @@ var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
 var testSuiteTriggerViaConfigRemote = require("./test-suite-trigger-via-config-remote");
 var testSuiteTriggerViaContext = require("./test-suite-trigger-via-context");
 var testSuiteTriggerViaContextRemote = require("./test-suite-trigger-via-context-remote");
-var commitActions = require("./commit-actions");
+var commitActionsForResource = require("./commit-actions-for-resource");
+var commitActionsForAll = require("./commit-actions-for-all");
 var TestCaseError = require("./TestCaseError");
 var configuration = require("../configuration");
+var utils = require("../utils");
 var _ = require("underscore");
 
 /*
@@ -32,7 +34,7 @@ testUtil.run();
 
 if (!testUtil.assert(
         "[..] __for ??? __???"
-    )) throw new Error(__test_case_name_1+ " failed");
+    )) throw new TestCaseError(__test_case_name_1);
 
 
  */
@@ -44,16 +46,17 @@ const testSuites = [
     nominalCaseSuiteRemote,
     testSuiteTriggerViaConfigRemote,
     testSuiteTriggerViaContextRemote,
-    // commitActions
+    commitActionsForResource,
+    commitActionsForAll
 ];
 
 
 let testcases = [];
 if (process.argv.length == 2) {
-    testSuites.forEach( suite => testcases = testcases.concat(Object.keys(suite)));
+    testSuites.forEach( suite => testcases = testcases.concat(_.filter(Object.keys(suite), testCase => { return !testCase.startsWith("_")})));
 } else {
     if (process.argv[2] == "all") {
-        testSuites.forEach( suite => testcases = testcases.concat(Object.keys(suite)));
+        testSuites.forEach( suite => testcases = testcases.concat(_.filter(Object.keys(suite), testCase => { return !testCase.startsWith("_")})));
     } else {
         for (var i = 2; i < process.argv.length ; i++) {
             if(!testSuites.find(suite => {
@@ -81,7 +84,10 @@ if(process.env.CONTINUE_IF_ERROR == "true"){
             } catch (error) {
                 if (error instanceof TestCaseError) {
                     failingTests.push(error.message);
-                    console.error(`!!! Test case ${error.message} FAILED`);
+                    console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
+                    console.error(`Test case ${error.message} FAILED with result.json:`);
+                    console.error(utils.readFileSyncToJson(configuration.repoFolder + configuration.artifactDir + configuration.resultFile));
+                    console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
                 } else {
                     throw  error;
                 }
@@ -91,7 +97,7 @@ if(process.env.CONTINUE_IF_ERROR == "true"){
     });
     if(failingTests.length !== 0){
         console.warn(`\t\t\t Dammit, ${failingTests.length} out of ${testcases.length} tests failed...`);
-        console.warn(`\t${_.reduce(failingTests, (memo, test) => { return memo + "\n\t" + test})}`)
+        console.warn(`\t${_.reduce(failingTests, (memo, test) => { return memo + "\n\t" + test})}`);
         console.warn(`!!! You can re-run the failing tests with:`);
         console.warn(`CI_PROJECT_DIR=${process.env.CI_PROJECT_DIR} TEST_RESOURCES=${process.env.TEST_RESOURCES} HOME=${process.env.HOME} LOG_LEVEL=all node run-tests.js ${_.reduce(failingTests, (memo, test) => { return memo + " " + test})}`)
         process.exit(1);

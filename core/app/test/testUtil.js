@@ -212,7 +212,7 @@ module.exports = {
      * @param phrases
      */
     assertExhaustive: function (...phrases) {
-        if(!this.assert.call(phrases)) return false;
+        if(!this.assert(...phrases)) return false;
 
         //count phrase
         let testResult = utils.readFileSyncToJson(configuration.repoFolder + configuration.artifactDir + configuration.resultFile);

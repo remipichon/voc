@@ -137,7 +137,7 @@ module.exports = {
     getTriggeredInstancesFromCommitActions: function (commitActions, imageConfigs, instances) {
         let triggeredInstances = [];
 
-        if (_.where(commitActions, {action: "doAll"}).length != 0) {
+        if (_.where(commitActions, {action: "doAll"}).length != 0 || _.where(commitActions, {action: "buildDeployAll"}).length != 0) {
             // console.log("build all imageconfig and build and deploy all ss and ssi")
             imageConfigs.forEach(ic => {
                 ic.toBuild = true
@@ -158,6 +158,13 @@ module.exports = {
                     ic.toBuild = true
                 });
                 triggeredInstances = triggeredInstances.concat(imageConfigs);
+                let s_ssi = instances.filter(i => {
+                    return i.stackDefinitionName || i.dockercomposeName
+                });
+                s_ssi.forEach(i => {
+                    i.toBuild = true;
+                });
+                triggeredInstances = triggeredInstances.concat(s_ssi)
             } else {
                 if (_.where(commitActions, {action: "deployAll"}).length != 0) {
                     // console.log("build and deploy all ss and ssi");
@@ -183,7 +190,7 @@ module.exports = {
                         actions.forEach(action => {
                             // console.log("build image", action.resourceName);
                             let res = instances.filter(i => {
-                                return i.resourceName == action.resourceName && (i.stackDefinitionName && !i.dockercomposeName) || i.isImage
+                                return i.resourceName == action.resourceName;
                             });
                             res.forEach(i => {
                                 i.toBuild = true
