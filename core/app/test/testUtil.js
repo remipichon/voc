@@ -206,6 +206,28 @@ module.exports = {
         console.info("<======================== Running app is done");
     },
 
+
+    /**
+     * @summary same as assert(...phrases) but will also ensure that there is no other result than the one being asserted (regardless of resources)
+     * @param phrases
+     */
+    assertExhaustive: function (...phrases) {
+        if(!this.assert.call(phrases)) return false;
+
+        //count phrase
+        let testResult = utils.readFileSyncToJson(configuration.repoFolder + configuration.artifactDir + configuration.resultFile);
+        let count = 0;
+        _.each(testResult,(results, resources) => {
+            count += results.length;
+        });
+
+        if(count !== phrases.length){
+            console.error(`FAILURE while asserting exhaustive. ${phrases.length} phrases were submitted while ${count} results were found amongst resources.`);
+            return false;
+        }
+        return true
+    },
+
     /**
      * @summary assert list of phrases are valid, compute result
      * @param ...phrases
