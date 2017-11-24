@@ -51,6 +51,7 @@ const testSuites = [
     commitActionsForAll
 ];
 
+log.setLevel(log.levels.INFO);
 
 let testcases = [];
 if (process.argv.length == 2) {
@@ -70,8 +71,6 @@ if (process.argv.length == 2) {
     }
 }
 
-if(process.env.LOG_LEVEL == "all")
-    log.log("Log level is all");
 log.log("Running test cases:",testcases);
 
 if(process.env.CONTINUE_IF_ERROR == "true"){

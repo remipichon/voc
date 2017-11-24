@@ -74,9 +74,9 @@ docker run -v $(pwd)/voc/core/app:/app runnerapptest cd /app/test; CI_PROJECT_DI
 docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/voc/core/app:/app runnerapptest 
 docker exec -ti test-runner bash
 # run tests
-cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true LOG_LEVEL= node run-tests.js
-# run one test with full log and debug on
-cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ LOG_LEVEL=all node --inspect-brk=0.0.0.0 run-tests.js One_Test
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true LOG_LEVEL=SILENT node run-tests.js
+# run one test with full app log and debug on
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ APP_LOG_LEVEL=TRACE node --inspect-brk=0.0.0.0 run-tests.js One_Test
 docker rm -f test-runner
 ````
 
