@@ -29,7 +29,5 @@ if(process.env.DEV) {
     utils.execCmdSync("rm " + configuration.repoFolder + configuration.artifactDir + configuration.resultFile, true);
 }
 
-main.main().catch(err => {
-    console.error(err);
-    process.exit(1);
-});
+main.main();
+
