@@ -1,7 +1,6 @@
 var composeUtil = require("./composeUtil");
 var configuration = require("./configuration");
 var dockerUtil = require("./dockerUtil");
-var fsService = require("./fsService");
 var fsUtil = require("./fsUtil");
 var gitlabUtil = require("./gitlabUtil");
 var gitService = require("./gitService");

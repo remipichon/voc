@@ -1,7 +1,6 @@
 var utils = require("./utils");
 //var YAML = require('yamljs');
 var _ = require("underscore");
-var fsService = require("./fsService");
 var fsUtil = require("./fsUtil");
 var resourceUtil = require("./resourceUtil");
 
@@ -30,27 +29,7 @@ function testIsResourceFile() {
 }
 
 
-async function testWalk(){
 
-    // console.log("****************************async")
-    // utils.walkResourceFile("/Users/pichr1/work2/voc/core/app", function(err,res){console.log("final res",res)})
-
-    // console.log("*****************************promise")
-    // utils.walkResourceFilePromise("/Users/remi/work/voc-configuration").then((allPaths) => {
-    //     console.log("allpath",allPaths)
-    // }).catch(error => console.error("error",error));
-    //
-    // console.log("end of method");
-
-
-    console.log("avant");
-    var res = await fsService.walkResourceFilePromise("/app/pouet")
-    console.log("rest",res);
-    console.log("apres")
-
-    return res;
-
-}
 
 function testWalkSync(){
 

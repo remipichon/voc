@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require("underscore");
-var fsService = require("./fsService");
 var resourceService = require("./resourceService");
 var gitService = require("./gitService");
 var configuration = require("./configuration");
