@@ -1,4 +1,5 @@
 
+var log = require('loglevel');
 var utils = require("./utils");
 var gitlabUtil = require("./gitlabUtil");
 var composeUtil = require("./composeUtil");
@@ -52,10 +53,10 @@ module.exports = {
             shDockerStackDeploy = "docker stack rm " + dnsStackName;
         } else {
             utils.writeResult(stackName, {error: "Action was not defined for stack"});
-            console.error(`${stackName}: Action not any of create, update or remove. Skipping`);
+            log.error(`${stackName}: Action not any of create, update or remove. Skipping`);
             return;
         }
-        console.info(`     ${stackName}: Stack ${dnsStackName} is going to be ${action} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
+        log.info(`     ${stackName}: Stack ${dnsStackName} is going to be ${action} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
         if(!dryRun)
         utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
             let state = gitlabUtil.getState(error, stderr, stdout);

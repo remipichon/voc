@@ -1,5 +1,6 @@
 'use strict';
 
+var log = require('loglevel');
 var _ = require("underscore");
 var utils = require("./utils");
 
@@ -85,7 +86,7 @@ module.exports = {
         //remove dockercomposes not used by any instances
         stackDefinitions.forEach(stackDefinition => {
             if(stackDefinition.remoteRepo){
-                console.info(`Stack definition ${stackDefinition.name} is in remote repo mode, its docker composes dependencies will be verified just before docker compose config time`);
+                log.info(`Stack definition ${stackDefinition.name} is in remote repo mode, its docker composes dependencies will be verified just before docker compose config time`);
                 return;
             }
             let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path, {encoding: 'utf-8'});
@@ -93,14 +94,14 @@ module.exports = {
                 stackDefinitionConfig.dockercomposes.forEach(dockercomposeRelativePath => {
                     let dockercomposeName = this.getTypeAndResourceName(dockercomposeRelativePath).name;
                     if (!dockercomposeName) {
-                        console.warn(`Stack definition ${stackDefinition.name} is looking for docker compose ${dockercomposeRelativePath} which is not a valid file name format. Stack def`);
+                        log.warn(`Stack definition ${stackDefinition.name} is looking for docker compose ${dockercomposeRelativePath} which is not a valid file name format. Stack def`);
                         return;
                     }
                     let usedDockercompose = dockercomposes.find(dockercompose => {
                         return dockercompose.name === dockercomposeName
                     });
                     if (!usedDockercompose) {
-                        console.warn(`Stack definition ${stackDefinition.name} is looking for docker compose ${dockercomposeRelativePath} which could'nt be found, skipping`);
+                        log.warn(`Stack definition ${stackDefinition.name} is looking for docker compose ${dockercomposeRelativePath} which could'nt be found, skipping`);
                         return;
                     }
                     usedDockercompose.used = true;
@@ -138,7 +139,7 @@ module.exports = {
         let triggeredInstances = [];
 
         if (_.where(commitActions, {action: "doAll"}).length != 0 || _.where(commitActions, {action: "buildDeployAll"}).length != 0) {
-            // console.log("build all imageconfig and build and deploy all ss and ssi")
+            // log.log("build all imageconfig and build and deploy all ss and ssi")
             imageConfigs.forEach(ic => {
                 ic.toBuild = true
             });
@@ -153,7 +154,7 @@ module.exports = {
             triggeredInstances = triggeredInstances.concat(s_ssi)
         } else {
             if (_.where(commitActions, {action: "buildAll"}).length != 0) {
-                // console.log("build all imageconfig");
+                // log.log("build all imageconfig");
                 imageConfigs.forEach(ic => {
                     ic.toBuild = true
                 });
@@ -167,7 +168,7 @@ module.exports = {
                 triggeredInstances = triggeredInstances.concat(s_ssi)
             } else {
                 if (_.where(commitActions, {action: "deployAll"}).length != 0) {
-                    // console.log("build and deploy all ss and ssi");
+                    // log.log("build and deploy all ss and ssi");
                     let s_ssi = instances.filter(i => {
                         return i.stackDefinitionName || i.dockercomposeName
                     });
@@ -177,7 +178,7 @@ module.exports = {
                     triggeredInstances = triggeredInstances.concat(s_ssi)
                 } else {
                     if (_.where(commitActions, {action: "removeAll"}).length != 0) {
-                        // console.log("remove all ss and ssi");
+                        // log.log("remove all ss and ssi");
                         let s_ssi = instances.filter(i => {
                             return i.stackDefinitionName || i.dockercomposeName
                         });
@@ -188,7 +189,7 @@ module.exports = {
                     } else {
                         let actions = _.where(commitActions, {action: "buildResourceName"});
                         actions.forEach(action => {
-                            // console.log("build image", action.resourceName);
+                            // log.log("build image", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.resourceName == action.resourceName;
                             });
@@ -199,7 +200,7 @@ module.exports = {
                         });
                         actions = _.where(commitActions, {action: "deployInstanceName"});
                         actions.forEach(action => {
-                            // console.log("build and deploy", action.resourceName);
+                            // log.log("build and deploy", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.instanceName == action.resourceName
                             });
@@ -210,7 +211,7 @@ module.exports = {
                         });
                         actions = _.where(commitActions, {action: "removeInstanceName"});
                         actions.forEach(action => {
-                            // console.log("remove", action.resourceName);
+                            // log.log("remove", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.instanceName == action.resourceName
                             });
@@ -358,7 +359,7 @@ module.exports = {
 
     _getResourceName(pattern, path, matchIndex = null){
         var match = pattern.exec(path);
-        // console.log("pattern",pattern, "path",path, "match",match)
+        // log.log("pattern",pattern, "path",path, "match",match)
         if (match) {
             if (matchIndex)
                 return match[matchIndex];

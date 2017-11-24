@@ -1,3 +1,4 @@
+var log = require('loglevel');
 var exec = require('child_process').exec;
 var execSync = require('child_process').execSync;
 var fs = require('fs');
@@ -30,7 +31,7 @@ module.exports = {
         if (!fs.existsSync(configuration.repoFolder + configuration.artifactDir)) {
             fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
         }
-        console.log(`     ${key}: Add to resultJson `, value);
+        log.log(`     ${key}: Add to resultJson `, value);
         fs.writeFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile, JSON.stringify(resultJson));
     },
 
@@ -40,13 +41,13 @@ module.exports = {
         exec(cmd, options, function (error, stdout, stderr) {
             // command output is in stdout
             if (error) {
-                console.error(`Error executing command '${cmd}': ${error.message}`);
-                console.error(`${error.stderr}`);
-                console.error(`${error.stdout}`);
+                log.error(`Error executing command '${cmd}': ${error.message}`);
+                log.error(`${error.stderr}`);
+                log.error(`${error.stdout}`);
             }
             if(printStdout)
-                console.info(`cmd ${cmd} stdout is\n${stdout}`);
-            if (stderr) console.error("stderr", stderr);
+                log.info(`cmd ${cmd} stdout is\n${stdout}`);
+            if (stderr) log.error("stderr", stderr);
             if (callback) callback(error, stdout, stderr)
         });
     },
@@ -57,9 +58,9 @@ module.exports = {
         try{
             stdout = execSync(cmd, options);
         } catch (err){
-            console.error(`Error executing command '${cmd}': ${err.message}`);
-            console.error(`${err.stderr}`);
-            console.error(`${err.stdout}`);
+            log.error(`Error executing command '${cmd}': ${err.message}`);
+            log.error(`${err.stderr}`);
+            log.error(`${err.stdout}`);
             if(!delegateError)
                 throw new Error(err);
             else
@@ -75,10 +76,10 @@ module.exports = {
             data = fs.readFileSync(path, {encoding: 'utf-8'});
         } catch (err) {
             if (err.code === 'ENOENT') {
-                console.error("File not found " + path);
+                log.error("File not found " + path);
                 throw err;
             } else {
-                console.error("Error while reading file:", err);
+                log.error("Error while reading file:", err);
                 throw err;
             }
         }

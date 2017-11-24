@@ -1,3 +1,4 @@
+var log = require('loglevel');
 var utils = require("./utils");
 //var YAML = require('yamljs');
 var _ = require("underscore");
@@ -7,7 +8,7 @@ var resourceUtil = require("./resourceUtil");
 
 
 function testIsResourceFile() {
-    console.log("testing isResourceFile");
+    log.log("testing isResourceFile");
 
     var item = [
         "simple-stack-instance.stackwithcontext.mystackwithcontext.json",
@@ -16,13 +17,13 @@ function testIsResourceFile() {
         "stack-definition.webstuff-stackwithcontext.json"
     ];
 
-    console.log("is valid \t\t resource type \t\t resource name \t\t resource suffix \t\t resource soulmate");
+    log.log("is valid \t\t resource type \t\t resource name \t\t resource suffix \t\t resource soulmate");
     item.forEach(item => {
         let typeAndResourceName = resourceUtil.getTypeAndResourceName(item);
         if (typeAndResourceName)
-            console.log(item, "\n", resourceUtil.isResourceFile(item), "\t", typeAndResourceName.type, "\t",typeAndResourceName.name, "\t",typeAndResourceName.suffix, "\t",typeAndResourceName.soulMate);
+            log.log(item, "\n", resourceUtil.isResourceFile(item), "\t", typeAndResourceName.type, "\t",typeAndResourceName.name, "\t",typeAndResourceName.suffix, "\t",typeAndResourceName.soulMate);
         else
-            console.log(item, "\n", resourceUtil.isResourceFile(item));
+            log.log(item, "\n", resourceUtil.isResourceFile(item));
     })
 
 
@@ -33,19 +34,19 @@ function testIsResourceFile() {
 
 function testWalkSync(){
 
-    // console.log("****************************async")
-    // utils.walkResourceFile("/Users/pichr1/work2/voc/core/app", function(err,res){console.log("final res",res)})
+    // log.log("****************************async")
+    // utils.walkResourceFile("/Users/pichr1/work2/voc/core/app", function(err,res){log.log("final res",res)})
 
-    // console.log("*****************************promise")
+    // log.log("*****************************promise")
     // utils.walkResourceFilePromise("/Users/remi/work/voc-configuration").then((allPaths) => {
-    //     console.log("allpath",allPaths)
-    // }).catch(error => console.error("error",error));
+    //     log.log("allpath",allPaths)
+    // }).catch(error => log.error("error",error));
     //
-    // console.log("end of method");
+    // log.log("end of method");
 
 
     var res = fsUtil.walkResourceFileSync("/voc-configuration/")
-    console.log("res",res);
+    log.log("res",res);
 
 
     return res;
@@ -54,9 +55,9 @@ function testWalkSync(){
 
 
 function testYAML(){
-    console.log(YAML.load("docker-compose_stackwithcontext.yml").services);
+    log.log(YAML.load("docker-compose_stackwithcontext.yml").services);
         YAML.load("docker-compose_stackwithcontext.yml").services.forEach(s => {
-        console.log(s.build);
+        log.log(s.build);
     })
 }
 
@@ -75,18 +76,18 @@ function testGitCmd(){
 
             allLines.forEach(line => {
                 var fileMatch = /^([ACDMRTUXB])\s+([^\s]+)$/m.exec(line);      //match  type    path/to/file
-                //console.log(fileMatch);
+                //log.log(fileMatch);
                 if(fileMatch) {
-                    console.log("match for ==", line, "== is", fileMatch[2],"which has been",fileMatch[1]);
+                    log.log("match for ==", line, "== is", fileMatch[2],"which has been",fileMatch[1]);
                     files.push({file: fileMatch[2], status: fileMatch[1]});
                 }
 
             })
 
-            console.log("*****************");
-            console.log("Git diff tree result");
-            console.log("All files found");
-            console.log(files)
+            log.log("*****************");
+            log.log("Git diff tree result");
+            log.log("All files found");
+            log.log(files)
 
         }
 
@@ -96,26 +97,26 @@ function testGitCmd(){
 
 
 function testCmdSync(){
-    console.log("start")
+    log.log("start")
     let stdout = utils.execCmdSync("lsee", true);
-    console.log("cmd result",stdout);
-    console.log("end")
+    log.log("cmd result",stdout);
+    log.log("end")
 }
 
 function multipleParam(...trucs){
-    console.log(trucs)
+    log.log(trucs)
 }
 
 // multipleParam("1","haha");
 
 
-console.log(utils.execCmdSync("ls",false, {cwd: "node_modules"}));
+log.log(utils.execCmdSync("ls",false, {cwd: "node_modules"}));
 
 
 // testCmdSync();
 
 
-//console.log(utils.isResourceFile(("stackwithcontext/marseille/Dockerfile-marseille")))
+//log.log(utils.isResourceFile(("stackwithcontext/marseille/Dockerfile-marseille")))
 
 //testGitCmd();
 // testGitCmd();
@@ -123,7 +124,7 @@ console.log(utils.execCmdSync("ls",false, {cwd: "node_modules"}));
 //testYAML()
 
 // var tr = testWalk()
-// console.log("apres apres",tr);
+// log.log("apres apres",tr);
 
 // var tr = testWalkSync()
 

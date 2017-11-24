@@ -1,6 +1,6 @@
+var log = require('loglevel');
 var _ = require("underscore");
 var fs = require('fs');
-var fse = require('fs-extra');
 var path_ = require('path');
 var utils = require("../utils");
 var main = require("../main");
@@ -160,7 +160,7 @@ module.exports = {
                     fs.mkdirSync(`${repoFolder}/${path.destination}`);
                 } catch(error){
                     if(error.code === "EEXIST"){
-                        console.log(`dir ${destPath} already exists`);
+                        log.log(`dir ${destPath} already exists`);
                     } else
                         throw new Error(error);
                 }
@@ -190,20 +190,21 @@ module.exports = {
      * @summary run the full app, currently only the NodeJs Runner App is supported
      */
     run: function (enableLog = (process.env.LOG_LEVEL == "all")) {
-        let consoleLog = console.log;
-        let consoleInfo = console.info;
+        let consoleLog = log.log;
+        let consoleInfo = log.info;
         if(!enableLog) {
-            console.info(`========================> Now running app without app log`);
-            console.log = function () {
+            log.info(`========================> Now running app without app log`);
+            log.log = function () {
             };
-            console.info = function () {
+            log.info = function () {
             };
         }
-        console.info(`========================> Now running app`);
+        log.setLevel("trace");
+        log.info(`========================> Now running app`);
         main.main();
-        console.log = consoleLog;
-        console.info = consoleInfo;
-        console.info("<======================== Running app is done");
+        log.log = consoleLog;
+        log.info = consoleInfo;
+        log.info("<======================== Running app is done");
     },
 
 
@@ -222,7 +223,7 @@ module.exports = {
         });
 
         if(count !== phrases.length){
-            console.error(`FAILURE while asserting exhaustive. ${phrases.length} phrases were submitted while ${count} results were found amongst resources.`);
+            log.error(`FAILURE while asserting exhaustive. ${phrases.length} phrases were submitted while ${count} results were found amongst resources.`);
             return false;
         }
         return true
@@ -249,10 +250,10 @@ module.exports = {
         let success = true;
         _.forEach(assertResult, (result, phrase) => {
            if(result === true){
-               console.info(`SUCCESS while asserting '${phrase}'`);
+               log.info(`SUCCESS while asserting '${phrase}'`);
                testResult.success += 1;
            } else {
-               console.error(`FAILURE while asserting '${phrase}' \n\t\t${result}. File ${caseFile}:${caseLine}`)
+               log.error(`FAILURE while asserting '${phrase}' \n\t\t${result}. File ${caseFile}:${caseLine}`)
                testResult.failure += 1;
                success = false;
            }
@@ -309,7 +310,7 @@ module.exports = {
             //words have to be exactly once amongst all results for resource
 
             let assertResult = null;
-            // console.log("phrase",phrase)
+            // log.log("phrase",phrase)
             _.forEach(testResult[targetResource], (message, type) => {
                 if(assertResult !== null) return; //break loop
                 if(type === "error") {
@@ -362,7 +363,7 @@ module.exports = {
         } else {
             throw new Error(`Test configuration error: Assert phrase ${phrase} doesn't match regexp ${phraseRegExp}`)
         }
-        // console.log("DEBUG Asserting","searchString",searchString, "targetResource", targetResource, "typeOfResult",typeOfResult);
+        // log.log("DEBUG Asserting","searchString",searchString, "targetResource", targetResource, "typeOfResult",typeOfResult);
 
         //read file where is it
         let testResult = utils.readFileSyncToJson(configuration.repoFolder + configuration.artifactDir + configuration.resultFile);

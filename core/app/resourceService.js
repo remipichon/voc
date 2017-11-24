@@ -1,5 +1,6 @@
 'use strict';
 
+var log = require('loglevel');
 var _ = require("underscore");
 var resourceUtil = require("./resourceUtil");
 var fsUtil = require("./fsUtil");
@@ -68,7 +69,7 @@ module.exports = {
             return {name: repo.name, path: repo.path}
         });
 
-        console.log("***** debug singles\n",singles,"\n********");
+        log.log("***** debug singles\n",singles,"\n********");
 
 
         //populating instances
@@ -91,7 +92,7 @@ module.exports = {
                             return stackDefinition.name == single.soulMateName
                         });
                         if (!stackDefinition) {
-                            console.warn(`File ${single.name} with path ${single.path} is looking for stack definition ${single.soulMateName} which is not defined`);
+                            log.warn(`File ${single.name} with path ${single.path} is looking for stack definition ${single.soulMateName} which is not defined`);
                             return;
                         }
                     }
@@ -104,7 +105,7 @@ module.exports = {
                             return dockercompose.name == single.soulMateName
                         });
                         if (!usedDockercompose) {
-                            console.warn(`File ${single.name} with path ${single.path} is looking for dockercompose ${single.soulMateName} which couldn't not be found, skipping`);
+                            log.warn(`File ${single.name} with path ${single.path} is looking for dockercompose ${single.soulMateName} which couldn't not be found, skipping`);
                             return;
                         }
                         usedDockercompose.used = true;
@@ -117,7 +118,7 @@ module.exports = {
                 //TODO put those tests in resourceUtil.cleanUnusedVocResources
                 if(!single.remote) {//soulmate is not there yet for remote, check is later
                     if(!_.find(dockerfiles, dc => { return dc.name == single.name })){
-                        console.warn(`File ${single.name} with path ${single.path} is looking for Dockerfile ${single.name} which couldn't not be found, skipping`);
+                        log.warn(`File ${single.name} with path ${single.path} is looking for Dockerfile ${single.name} which couldn't not be found, skipping`);
                         return;
                     }
                 }
@@ -167,7 +168,7 @@ module.exports = {
                 });
                 return null;
             }
-            console.log(`   remote dockercomposes from ${instanceConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
+            log.log(`   remote dockercomposes from ${instanceConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
             searchDC = vocResourcesRemote.dockercomposes;
         } else {
             searchDC = dockercomposes;
@@ -180,7 +181,7 @@ module.exports = {
         let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
         let configCmd = `${env} docker-compose -f ${dc.path} config > ${intermediateCompose}`;
 
-        console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
+        log.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
         let result = utils.execCmdSync(configCmd, true);
 
         if (result.error) {
@@ -201,17 +202,17 @@ module.exports = {
         let stackDefinition = stackDefinitions.find(sd => {
             return sd.name == instance.stackDefinitionName
         });
-        console.log(`   ${instance.instanceName}: About to configure intermediate compose file from stack definition ${stackDefinition.name}`);
+        log.log(`   ${instance.instanceName}: About to configure intermediate compose file from stack definition ${stackDefinition.name}`);
         let skip = false;
         if (!stackDefinition.dockercomposesCmdReady) {
             let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path);
             stackDefinition.dockercomposesCmdReady = "";
             stackDefinition.dockercomposes = [];
             if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
-                console.log(`   ${stackDefinition.name}: stack definition has 'composes' defined, looking for them`);
+                log.log(`   ${stackDefinition.name}: stack definition has 'composes' defined, looking for them`);
                 let searchDC;
                 if(stackDefinition.remote){
-                    console.log(`   stack definition ${stackDefinition.name} is in remote repo mode, now cloning ${typeof stackDefinitionConfig.repo == "string"? stackDefinitionConfig.repo: stackDefinitionConfig.repo.name} to get remote dockercomposes`);
+                    log.log(`   stack definition ${stackDefinition.name} is in remote repo mode, now cloning ${typeof stackDefinitionConfig.repo == "string"? stackDefinitionConfig.repo: stackDefinitionConfig.repo.name} to get remote dockercomposes`);
                     let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(stackDefinitionConfig, repos, instance.instanceName);
                     if(!allRemoteResourcePaths) return null;
                     let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
@@ -221,10 +222,10 @@ module.exports = {
                         });
                         return null;
                     }
-                    console.log(`   remote dockercomposes from remote repo ${stackDefinitionConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
+                    log.log(`   remote dockercomposes from remote repo ${stackDefinitionConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
                     searchDC = vocResourcesRemote.dockercomposes;
                 } else {
-                    console.log(`   stack definition ${stackDefinition.name} is in local repo mode, using local repo to get dockercomposes`);
+                    log.log(`   stack definition ${stackDefinition.name} is in local repo mode, using local repo to get dockercomposes`);
                     searchDC = dockercomposes;
                 }
                 stackDefinitionConfig.composes.forEach(composeName => {
@@ -262,7 +263,7 @@ module.exports = {
         let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
         let configCmd = `${env} docker-compose ${composeFiles} config > ${intermediateCompose}`;
 
-        console.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
+        log.log(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
         let result = utils.execCmdSync(configCmd, true);
 
         if (result.error) {
@@ -307,7 +308,7 @@ module.exports = {
                 let searchDockerfiles;
                 if(instance.remote){
                     let instanceConfig = utils.readFileSyncToJson(instance.path)
-                    console.log(`   ${instance.resourceName}: is in remote repo mode, now cloning ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name} to get remote dockercomposes`);
+                    log.log(`   ${instance.resourceName}: is in remote repo mode, now cloning ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name} to get remote dockercomposes`);
                     let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(instanceConfig, repos, instance.resourceName);
                     if(!allRemoteResourcePaths) return null;
                     let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
@@ -317,7 +318,7 @@ module.exports = {
                         });
                         return null;
                     }
-                    console.log(`   remote Dockerfiles from remote repo ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name}\n    `, vocResourcesRemote.dockercomposes);
+                    log.log(`   remote Dockerfiles from remote repo ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name}\n    `, vocResourcesRemote.dockercomposes);
                     searchDockerfiles = vocResourcesRemote.dockerfiles
 
                 } else {

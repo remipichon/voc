@@ -1,5 +1,6 @@
 'use strict';
 
+var log = require('loglevel');
 var utils = require("./utils");
 var gitlabUtil = require("./gitlabUtil");
 var fsUtil = require("./fsUtil");
@@ -8,7 +9,7 @@ module.exports = {
 
     manageImage(instance, dockerfilePath, dryRun = false) {
         if (instance.toClean) {
-            console.log("Either Dockerfile or config file for", instance.name, "has been deleted, doint nothing, GC wil be there soon... ");
+            log.log("Either Dockerfile or config file for", instance.name, "has been deleted, doint nothing, GC wil be there soon... ");
             utils.writeResult(instance.name, {result: "has been unscheduled"});
             return;
         }
@@ -33,7 +34,7 @@ module.exports = {
 
     buildImage(config, Dockerfile, dryRun = false) {
         if (!config.tag) {
-            console.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
+            log.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
         }
 
         var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " " + fsUtil.removeLastPathPart(Dockerfile) ;
