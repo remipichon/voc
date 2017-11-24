@@ -12,7 +12,7 @@ module.exports = {
     getTriggeredInstancesFromModifiedFiles: function (instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs) {
         log.info("***** Reading git commit payload to find which files has been modified *****");
         let files = this.getGitDiffModifiedFile();
-        log.log("***** All updated files *****\n    ", files);
+        log.info("***** All updated files *****\n    ", files);
         let triggeredInstances = this.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs);
 
         triggeredInstances.forEach(instance => {
@@ -26,7 +26,7 @@ module.exports = {
                     return stackDefinition.name === instance.stackDefinitionName;
                 });
                 if(stackDef.remote){
-                    log.info(`Instance ${instance.resourceName} is using a stack definition ${stackDef.name} which is in remote repo mode. Instance is flagged as 'build'. Indeed, we don't know yet if any of stack defintion docker composes has build dependencies.`);
+                    log.debug(`Instance ${instance.resourceName} is using a stack definition ${stackDef.name} which is in remote repo mode. Instance is flagged as 'build'. Indeed, we don't know yet if any of stack defintion docker composes has build dependencies.`);
                     doWeBuild = true;
                 } else
                     if (stackDef.dockercomposes)
@@ -36,7 +36,7 @@ module.exports = {
             }
             if (instance.dockercomposeName) {
                 if(instance.remote){
-                    log.info(`Instance ${instance.resourceName} is in remote mode and is using a docker compose ${instance.dockercomposeName}. Instance is flagged as 'build'. Indeed, we don't know yet if the docker composes has build dependencies.`);
+                    log.debug(`Instance ${instance.resourceName} is in remote mode and is using a docker compose ${instance.dockercomposeName}. Instance is flagged as 'build'. Indeed, we don't know yet if the docker composes has build dependencies.`);
                     doWeBuild = true;
                 } else {
                     let dockercompose = _.find(dockercomposes, dockercompose => {
@@ -72,9 +72,9 @@ module.exports = {
                 let resource = resourceUtil.getTypeAndResourceName(fileName);
                 let name = resource.name;
                 if (!name) {
-                    log.log(`file ${fileName} is not a valid resource file, trying as normal file`);
+                    log.debug(`file ${fileName} is not a valid resource file, trying as normal file`);
                 } else {
-                    log.log(`${fileName} is a resource file for ${name}`);
+                    log.debug(`${fileName} is a resource file for ${name}`);
                     let clean = false;
                     if (state == "D" || state == "U") {
                         clean = true;
@@ -85,13 +85,10 @@ module.exports = {
             }
 
             //is updated files part of resource context ?
-            log.log("fileName",fileName)
             const updatedFileDirectory = fsUtil.removeLastPathPart(fileName);
-            log.log("updatedFileDirectory",updatedFileDirectory)
             let updatedContextPaths = _.filter(contextPaths, function (context) {
                 return updatedFileDirectory.startsWith(context.directory);
             });
-            log.log("updatedContextPaths",updatedContextPaths)
 
             //on remote mode, only resource files can be found on local VOC repo
             updatedContextPaths.forEach(updatedContext => {

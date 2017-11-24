@@ -9,7 +9,7 @@ module.exports = {
 
     manageImage(instance, dockerfilePath, dryRun = false) {
         if (instance.toClean) {
-            log.log("Either Dockerfile or config file for", instance.name, "has been deleted, doint nothing, GC wil be there soon... ");
+            log.info("Either Dockerfile or config file for", instance.name, "has been deleted, doint nothing, GC wil be there soon... ");
             utils.writeResult(instance.name, {result: "has been unscheduled"});
             return;
         }
@@ -34,7 +34,8 @@ module.exports = {
 
     buildImage(config, Dockerfile, dryRun = false) {
         if (!config.tag) {
-            log.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
+            log.debug("Dockerfile", Dockerfile, "doesn't have a valid tag in its config. Skipping process");
+            return false
         }
 
         var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " " + fsUtil.removeLastPathPart(Dockerfile) ;

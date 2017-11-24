@@ -31,7 +31,7 @@ module.exports = {
         if (!fs.existsSync(configuration.repoFolder + configuration.artifactDir)) {
             fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
         }
-        log.log(`     ${key}: Add to resultJson `, value);
+        log.debug(`     ${key}: Add to resultJson `, value);
         fs.writeFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile, JSON.stringify(resultJson));
     },
 
@@ -46,7 +46,7 @@ module.exports = {
                 log.error(`${error.stdout}`);
             }
             if(printStdout)
-                log.info(`cmd ${cmd} stdout is\n${stdout}`);
+                log.debug(`cmd ${cmd} stdout is\n${stdout}`);
             if (stderr) log.error("stderr", stderr);
             if (callback) callback(error, stdout, stderr)
         });

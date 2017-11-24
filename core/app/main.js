@@ -18,7 +18,7 @@ module.exports = {
 
         log.info(`***** Reading directory to find VOC resources files: ${configuration.repoFolder} *****`);
         let allResourcePaths =  fsUtil.walkResourceFileSync(configuration.repoFolder); //for tests purposes, remove async, TODO find a clever way to combine tests and async
-        log.log("DEBUG allResourcePaths",allResourcePaths);
+        log.debug("allResourcePaths",allResourcePaths);
         let vocResources = resourceService.getVocResources(allResourcePaths);
         let instances = vocResources.instances;
         let dockercomposes = vocResources.dockercomposes;
@@ -26,17 +26,17 @@ module.exports = {
         let stackDefinitions = vocResources.stackDefinitions;
         let repos = vocResources.repos;
 
-        log.log("***** Here is what I could extract from the file system *****");
-        log.log("   instances\n    ", instances);
-        log.log("   *****                                                   *****");
-        log.log("   dockercomposes\n    ", dockercomposes);
-        log.log("   *****                                                   *****");
-        log.log("   stackDefinitions\n  ", stackDefinitions);
-        log.log("   *****                                                   *****");
-        log.log("   dockerfiles\n  ", dockerfiles);
-        log.log("   *****                                                   *****");
-        log.log("   repos\n  ", repos);
-        log.log("*****  That's all from the file system                   *****");
+        log.info("***** Here is what I could extract from the file system *****");
+        log.info("   instances\n    ", instances);
+        log.info("   *****                                                   *****");
+        log.info("   dockercomposes\n    ", dockercomposes);
+        log.info("   *****                                                   *****");
+        log.info("   stackDefinitions\n  ", stackDefinitions);
+        log.info("   *****                                                   *****");
+        log.info("   dockerfiles\n  ", dockerfiles);
+        log.info("   *****                                                   *****");
+        log.info("   repos\n  ", repos);
+        log.info("*****  That's all from the file system                   *****");
 
         vocResources = resourceUtil.cleanUnusedVocResources(instances, stackDefinitions, dockercomposes, dockerfiles, repos);
         instances = vocResources.instances;
@@ -44,19 +44,19 @@ module.exports = {
         dockerfiles = vocResources.dockerfiles;
         stackDefinitions = vocResources.stackDefinitions;
         let imageConfigs = vocResources.imageConfigs;
-        log.log("***** Here are all actually used stack definitions *****");
-        log.log("   ", stackDefinitions);
-        log.log("***** Here are all actually used docker composes *****");
-        log.log("   ", dockercomposes);
-        log.log("***** Here are all actually used dockerfiles NOT CLEANED *****");
-        log.log("   ", dockerfiles);
-        log.log("***** Here are all actually used imageConfigs  *****");
-        log.log("   ", imageConfigs);
+        log.info("***** Here are all actually used stack definitions *****");
+        log.info("   ", stackDefinitions);
+        log.info("***** Here are all actually used docker composes *****");
+        log.info("   ", dockercomposes);
+        log.info("***** Here are all actually used dockerfiles NOT CLEANED *****");
+        log.info("   ", dockerfiles);
+        log.info("***** Here are all actually used imageConfigs  *****");
+        log.info("   ", imageConfigs);
 
 
         let contextPaths = fsUtil.getContextPaths(dockercomposes, dockerfiles, imageConfigs);
-        log.log("***** Here are all the contexts used by one of the valid used docker composes or one of the valid image config *****");
-        log.log("   ", contextPaths);
+        log.info("***** Here are all the contexts used by one of the valid used docker composes or one of the valid image config *****");
+        log.info("   ", contextPaths);
 
 
         let triggeredInstances;
@@ -64,7 +64,7 @@ module.exports = {
         let commitActions = gitService.getGitCommitAction();
         if (commitActions.length != 0) {
             log.info("***** Commit actions found *****");
-            log.log(commitActions);
+            log.info(commitActions);
             log.info("*****  *****");
             triggeredInstances = resourceUtil.getTriggeredInstancesFromCommitActions(commitActions, imageConfigs, instances);
         } else {
@@ -73,7 +73,7 @@ module.exports = {
 
         triggeredInstances = _.filter(triggeredInstances, instance => { return !instance.toDiscard});
 
-        log.log("***** Summary of what is going to be effectively done according to updated files or commit actions *****");
+        log.info("***** Summary of what is going to be effectively done according to updated files or commit actions *****");
         triggeredInstances.forEach(instance => {
             let name, actions;
             if (instance.toBuild)
@@ -88,22 +88,22 @@ module.exports = {
                 if (!instance.toClean)
                     actions = `${actions? actions + " and " : ""}deployed if enabled`;
             }
-            log.log(`   - ${name} has been scheduled to be ${actions}`)
+            log.info(`   - ${name} has been scheduled to be ${actions}`)
         });
 
         let dryRun = _.filter(commitActions, action => { return action.action == gitService.commitAction.dryRun}) != null;
 
         if(triggeredInstances.length != 0) {
-            log.log("****************");
+            log.info("****************");
             if(dryRun)
-                log.log("Dry run, Moby will not be used but Git will be if remote mode");
+                log.info("Dry run, Moby will not be used but Git will be if remote mode");
             else
-                log.log("Here comes Moby (and Git if remote mode)");            log.log("****************");
+                log.info("Here comes Moby (and Git if remote mode)");            log.info("****************");
             resourceService.triggerInstance(triggeredInstances, stackDefinitions, dockercomposes, dockerfiles, repos, dryRun);
         } else {
-            log.log("****************");
-            log.log("Nothing to do, hurray, I am taking a nap");
-            log.log("****************");
+            log.info("****************");
+            log.info("Nothing to do, hurray, I am taking a nap");
+            log.info("****************");
             utils.writeResult("VOC", {
                 result: `There was nothing to do so I did nothing.`
             });

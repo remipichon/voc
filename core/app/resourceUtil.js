@@ -139,7 +139,7 @@ module.exports = {
         let triggeredInstances = [];
 
         if (_.where(commitActions, {action: "doAll"}).length != 0 || _.where(commitActions, {action: "buildDeployAll"}).length != 0) {
-            // log.log("build all imageconfig and build and deploy all ss and ssi")
+            log.debug("Trigger instance via commit action: build all images and build and deploy all ss and ssi")
             imageConfigs.forEach(ic => {
                 ic.toBuild = true
             });
@@ -154,7 +154,7 @@ module.exports = {
             triggeredInstances = triggeredInstances.concat(s_ssi)
         } else {
             if (_.where(commitActions, {action: "buildAll"}).length != 0) {
-                // log.log("build all imageconfig");
+                log.debug("Trigger instance via commit action: build all images, SI and SSI");
                 imageConfigs.forEach(ic => {
                     ic.toBuild = true
                 });
@@ -168,7 +168,7 @@ module.exports = {
                 triggeredInstances = triggeredInstances.concat(s_ssi)
             } else {
                 if (_.where(commitActions, {action: "deployAll"}).length != 0) {
-                    // log.log("build and deploy all ss and ssi");
+                    log.debug("Trigger instance via commit action: push all images and deploy all ss and ssi");
                     let s_ssi = instances.filter(i => {
                         return i.stackDefinitionName || i.dockercomposeName
                     });
@@ -178,7 +178,7 @@ module.exports = {
                     triggeredInstances = triggeredInstances.concat(s_ssi)
                 } else {
                     if (_.where(commitActions, {action: "removeAll"}).length != 0) {
-                        // log.log("remove all ss and ssi");
+                        log.debug("Trigger instance via commit action: remove all ss and ssi");
                         let s_ssi = instances.filter(i => {
                             return i.stackDefinitionName || i.dockercomposeName
                         });
@@ -189,7 +189,7 @@ module.exports = {
                     } else {
                         let actions = _.where(commitActions, {action: "buildResourceName"});
                         actions.forEach(action => {
-                            // log.log("build image", action.resourceName);
+                            log.debug("Trigger instance via commit action: build image or SI or SSI", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.resourceName == action.resourceName;
                             });
@@ -200,7 +200,7 @@ module.exports = {
                         });
                         actions = _.where(commitActions, {action: "deployInstanceName"});
                         actions.forEach(action => {
-                            // log.log("build and deploy", action.resourceName);
+                            log.debug("Trigger instance via commit action: push image or deploy SI or SSI", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.instanceName == action.resourceName
                             });
@@ -211,7 +211,7 @@ module.exports = {
                         });
                         actions = _.where(commitActions, {action: "removeInstanceName"});
                         actions.forEach(action => {
-                            // log.log("remove", action.resourceName);
+                            log.debug("Trigger instance via commit action: remove", action.resourceName);
                             let res = instances.filter(i => {
                                 return i.instanceName == action.resourceName
                             });
@@ -359,7 +359,6 @@ module.exports = {
 
     _getResourceName(pattern, path, matchIndex = null){
         var match = pattern.exec(path);
-        // log.log("pattern",pattern, "path",path, "match",match)
         if (match) {
             if (matchIndex)
                 return match[matchIndex];

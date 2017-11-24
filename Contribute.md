@@ -42,8 +42,8 @@ Want to quickly test some JS code without anything around it ? (assuming you hav
 ID=$(docker run -d -p 9229:9229 -v '/var/run/docker.sock:/var/run/docker.sock' -v $(pwd)/voc-configuration/:/voc-configuration -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null)
 docker exec -ti $ID bash
 cd /app
-DEV=true HOME=/ CI_PROJECT_DIR=/voc-configuration node --inspect --inspect-brk=0.0.0.0 app.js
-DEV=true HOME=/ CI_PROJECT_DIR=/voc-configuration node --inspect --inspect=0.0.0.0 app.js
+DEV=true HOME=/ CI_PROJECT_DIR=/voc-configuration LOG_LEVEL=DEBUG node --inspect --inspect-brk=0.0.0.0 app.js
+DEV=true HOME=/ CI_PROJECT_DIR=/voc-configuration LOG_LEVEL=DEBUG node --inspect --inspect=0.0.0.0 app.js
 docker rm -f $ID
 >>>>>>> 10f97b2db66ff3e07279284177516f07e2031d54
 ````

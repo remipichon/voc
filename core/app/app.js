@@ -16,19 +16,31 @@ var YAML = require('yamljs');
 var configuration = require("./configuration");
 
 
+let defaultLevel = "info";
+if(process.env.LOG_LEVEL){
+    let logLevels = "";
+    Object.keys(log.levels).forEach(key => {logLevels += ` ${key}`});
+    if(logLevels.indexOf(process.env.LOG_LEVEL) === -1 ){
+        console.error(`env LOG_LEVEL is set to ${process.env.LOG_LEVEL} which is not part of available levels ${logLevels}`)
+    } else {
+        defaultLevel = process.env.LOG_LEVEL;
+    }
+}
+console.log("Setting log level to", defaultLevel);
+log.setLevel(defaultLevel);
+
 if (!process.env.CI_PROJECT_DIR) {
     log.error("CI_PROJECT_DIR is not defined or empty");
     process.exit(1)
 }
 
-log.log("Starting main.main() using configuration:");
-Object.keys(configuration).forEach(key => {if(typeof configuration[key] == "string") log.log(`    ${key} : ${configuration[key]}`)});
+log.debug("Starting main.main() using configuration:");
+Object.keys(configuration).forEach(key => {if(typeof configuration[key] == "string") log.debug(`    ${key} : ${configuration[key]}`)});
 
 if(process.env.DEV) {
     log.debug("cleaning result.json");
     utils.execCmdSync("rm " + configuration.repoFolder + configuration.artifactDir + configuration.resultFile, true);
 }
 
-log.setLevel("trace");
 main.main();
 
