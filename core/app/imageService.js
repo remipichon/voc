@@ -4,6 +4,8 @@ var log = require('loglevel');
 var utils = require("./utils");
 var gitlabUtil = require("./gitlabUtil");
 var fsUtil = require("./fsUtil");
+var dockerUtils = require("./dockerUtil");
+
 
 module.exports = {
 
@@ -20,10 +22,10 @@ module.exports = {
     },
 
     pushImage(config, dryRun = false) {
-        var dockerTag = "docker tag " + config.tag + " " + config.push;
-        var dockerPush = "docker push " + config.push;
+        var dockerTag = dockerUtils.getDockerExec() + "tag " + config.tag + " " + config.push;
+        var dockerPush = dockerUtils.getDockerExec() + "push " + config.push;
         if(!dryRun)
-            utils.execCmd(dockerTag, function (error, stdout, stderr) {
+            utils.execCmdSync(dockerTag, function (error, stdout, stderr) {
                 utils.execCmd(dockerPush, function (error, stdout, stderr) {
                     utils.writeResult(config.push, gitlabUtil.getState(error, stderr, stdout));
                 })
@@ -38,7 +40,7 @@ module.exports = {
             return false
         }
 
-        var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " " + fsUtil.removeLastPathPart(Dockerfile) ;
+        var dockerBuild = dockerUtils.getDockerExec() + "build -f " + Dockerfile + " -t " + config.tag + " " + fsUtil.removeLastPathPart(Dockerfile) ;
         if(dryRun) {
             utils.writeResult(config.tag, {
                 result: `Dry run: Docker would have run '${dockerBuild}'`

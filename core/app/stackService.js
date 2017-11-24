@@ -3,6 +3,7 @@ var log = require('loglevel');
 var utils = require("./utils");
 var gitlabUtil = require("./gitlabUtil");
 var composeUtil = require("./composeUtil");
+var dockerUtils = require("./dockerUtil");
 
 module.exports = {
 
@@ -48,9 +49,9 @@ module.exports = {
         let dnsStackName = stackName.replace('.', '_');
         var shDockerStackDeploy;
         if (action == "create" || action == "update") {
-            shDockerStackDeploy = "docker stack deploy --compose-file " + composeFile + ' ' + dnsStackName;
+            shDockerStackDeploy = dockerUtils.getDockerExec() + "stack deploy --compose-file " + composeFile + ' ' + dnsStackName;
         } else if (action == "remove") {
-            shDockerStackDeploy = "docker stack rm " + dnsStackName;
+            shDockerStackDeploy = dockerUtils.getDockerExec() + "stack rm " + dnsStackName;
         } else {
             utils.writeResult(stackName, {error: "Action was not defined for stack"});
             log.error(`${stackName}: Action not any of create, update or remove. Skipping`);

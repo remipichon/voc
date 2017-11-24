@@ -8,6 +8,7 @@ var stackService = require("./stackService");
 var imageService = require("./imageService");
 var configuration = require("./configuration");
 var utils = require("./utils");
+var composeUtil = require("./composeUtil");
 
 module.exports = {
     /**
@@ -179,7 +180,7 @@ module.exports = {
         });
 
         let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
-        let configCmd = `${env} docker-compose -f ${dc.path} config > ${intermediateCompose}`;
+        let configCmd = `${env} ${composeUtil.getComposeExec()} -f ${dc.path} config > ${intermediateCompose}`;
 
         log.debug(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
         let result = utils.execCmdSync(configCmd, true);
@@ -261,7 +262,7 @@ module.exports = {
 
         let composeFiles = stackDefinition.dockercomposesCmdReady;
         let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
-        let configCmd = `${env} docker-compose ${composeFiles} config > ${intermediateCompose}`;
+        let configCmd = `${env} ${composeUtil.getComposeExec()} ${composeFiles} config > ${intermediateCompose}`;
 
         log.debug(`     ${instance.instanceName}: Building intermediate compose file with cmd ${configCmd}`);
         let result = utils.execCmdSync(configCmd, true);

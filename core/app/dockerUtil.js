@@ -11,5 +11,14 @@ var requestDockerApiVersion = ' http:/v1.30/';
 
 module.exports = {
 
+    //certs will be added there
+
+    getDockerCerts: function(){
+        return "";
+    },
+
+    getDockerExec: function(){
+        return `${this.getDockerCerts()} docker `;
+    }
 
 };
