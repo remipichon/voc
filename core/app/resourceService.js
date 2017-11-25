@@ -295,15 +295,23 @@ module.exports = {
         triggeredInstances.forEach(instance => {
 
             if (instance.dockercomposeName) {
-                let intermediateCompose = this.generateIntermediateComposeForSSI(instance, dockercomposes, repos);
-                if(intermediateCompose)
-                    stackService.manageStack(instance, intermediateCompose, dryRun);
+                if(instance.toClean){
+                    stackService.manageStack(instance, null, dryRun);
+                } else {
+                    let intermediateCompose = this.generateIntermediateComposeForSSI(instance, dockercomposes, repos);
+                    if(intermediateCompose)
+                        stackService.manageStack(instance, intermediateCompose, dryRun);
+                }
             }
             if (instance.stackDefinitionName) {
-                //clone repo and generate right dockerfile paths for stackDefintion
-                let intermediateCompose = this.generateIntermediateComposeForSI(instance, stackDefinitions, dockercomposes, repos);
-                if(intermediateCompose)
-                    stackService.manageStack(instance, intermediateCompose, dryRun);
+                if(instance.toClean){
+                    stackService.manageStack(instance, null, dryRun);
+                } else {
+                    //clone repo and generate right dockerfile paths for stackDefintion
+                    let intermediateCompose = this.generateIntermediateComposeForSI(instance, stackDefinitions, dockercomposes, repos);
+                    if(intermediateCompose)
+                        stackService.manageStack(instance, intermediateCompose, dryRun);
+                }
             }
             if (instance.isImage){
                 let searchDockerfiles;

@@ -78,6 +78,9 @@ cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/t
 # run one test with full app log and debug on
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ APP_LOG_LEVEL=TRACE node --inspect-brk=0.0.0.0 run-tests.js One_Test
 docker rm -f test-runner
+
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.6/install.sh | bash
+
 ````
 
 * LOG_LEVEL

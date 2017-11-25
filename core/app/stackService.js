@@ -25,16 +25,19 @@ module.exports = {
                     result = `${stackName}: Nothing to build from ${dockercomposePath}`;
                 utils.writeResult(stackName, {result: result});
             }
-            let instanceConfig = utils.readFileSyncToJson(instance.path);
 
-            var action;
-            if (instanceConfig.enabled) {
-                action = "update"
-            } else {
-                action = "remove"
+            if(instance.toDeploy) {
+                let instanceConfig = utils.readFileSyncToJson(instance.path);
+
+                var action;
+                if (instanceConfig.enabled) {
+                    action = "update"
+                } else {
+                    action = "remove"
+                }
+
+                this.deployStack(stackName, action, dockercomposePath, dryRun);
             }
-
-            this.deployStack(stackName, action, dockercomposePath, dryRun);
         }
     },
 

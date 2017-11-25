@@ -190,7 +190,7 @@ module.exports = {
      * @summary run the full app, currently only the NodeJs Runner App is supported
      */
     run: function (logLevel = process.env.APP_LOG_LEVEL || log.levels.SILENT) {
-        log.info(`========================> Now running app with log level ${logLevel}`);
+        log.info(`========================> Now running app with log level ${logLevel} of `,log.levels);
         log.setLevel(logLevel);
         main.main();
         log.setLevel(log.levels.INFO);

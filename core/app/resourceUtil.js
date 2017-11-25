@@ -139,9 +139,10 @@ module.exports = {
         let triggeredInstances = [];
 
         if (_.where(commitActions, {action: "doAll"}).length != 0 || _.where(commitActions, {action: "buildDeployAll"}).length != 0) {
-            log.debug("Trigger instance via commit action: build all images and build and deploy all ss and ssi")
+            log.debug("Trigger instance via commit action: build push all images and build deploy all ss and ssi")
             imageConfigs.forEach(ic => {
-                ic.toBuild = true
+                ic.toBuild = true;
+                ic.toPush = true;
             });
             triggeredInstances = triggeredInstances.concat(imageConfigs);
 
@@ -150,6 +151,7 @@ module.exports = {
             });
             s_ssi.forEach(i => {
                 i.toBuild = true;
+                i.toDeploy = true;
             });
             triggeredInstances = triggeredInstances.concat(s_ssi)
         } else {
@@ -157,6 +159,7 @@ module.exports = {
                 log.debug("Trigger instance via commit action: build all images, SI and SSI");
                 imageConfigs.forEach(ic => {
                     ic.toBuild = true
+                    ic.toPush = false;
                 });
                 triggeredInstances = triggeredInstances.concat(imageConfigs);
                 let s_ssi = instances.filter(i => {
@@ -164,27 +167,38 @@ module.exports = {
                 });
                 s_ssi.forEach(i => {
                     i.toBuild = true;
+                    i.toDeploy = false;
                 });
                 triggeredInstances = triggeredInstances.concat(s_ssi)
             } else {
                 if (_.where(commitActions, {action: "deployAll"}).length != 0) {
                     log.debug("Trigger instance via commit action: push all images and deploy all ss and ssi");
+                    imageConfigs.forEach(ic => {
+                        ic.toBuild = false;
+                        ic.toPush = true;
+                    });
                     let s_ssi = instances.filter(i => {
                         return i.stackDefinitionName || i.dockercomposeName
                     });
                     s_ssi.forEach(i => {
-                        i.toBuild = true;
+                        i.toBuild = false;
+                        i.toDeploy = true;
                     });
+                    triggeredInstances = triggeredInstances.concat(imageConfigs);
                     triggeredInstances = triggeredInstances.concat(s_ssi)
                 } else {
                     if (_.where(commitActions, {action: "removeAll"}).length != 0) {
-                        log.debug("Trigger instance via commit action: remove all ss and ssi");
+                        log.debug("Trigger instance via commit action: remove all images and ss and ssi");
+                        imageConfigs.forEach(ic => {
+                            ic.toClean = false;
+                        });
                         let s_ssi = instances.filter(i => {
                             return i.stackDefinitionName || i.dockercomposeName
                         });
                         s_ssi.forEach(i => {
                             i.toClean = true;
                         });
+                        triggeredInstances = triggeredInstances.concat(imageConfigs);
                         triggeredInstances = triggeredInstances.concat(s_ssi)
                     } else {
                         let actions = _.where(commitActions, {action: "buildResourceName"});
@@ -194,7 +208,9 @@ module.exports = {
                                 return i.resourceName == action.resourceName;
                             });
                             res.forEach(i => {
-                                i.toBuild = true
+                                i.toBuild = true;
+                                i.toDeploy = false;
+                                i.toPush = false;
                             });
                             triggeredInstances = triggeredInstances.concat(res)
                         });
@@ -205,7 +221,9 @@ module.exports = {
                                 return i.instanceName == action.resourceName
                             });
                             res.forEach(i => {
-                                i.toBuild = true
+                                i.toBuild = false;
+                                i.toDeploy = true;
+                                i.toPush = true;
                             });
                             triggeredInstances = triggeredInstances.concat(res)
                         });

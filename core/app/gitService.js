@@ -53,6 +53,8 @@ module.exports = {
                 }
             }
             instance.toBuild = doWeBuild;
+            instance.toPush = true;
+            instance.toDeploy = true;
         });
         return triggeredInstances;
     },

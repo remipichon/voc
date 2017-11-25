@@ -10,15 +10,24 @@ var dockerUtils = require("./dockerUtil");
 module.exports = {
 
     manageImage(instance, dockerfilePath, dryRun = false) {
+
         if (instance.toClean) {
             log.info("Either Dockerfile or config file for", instance.name, "has been deleted, doint nothing, GC wil be there soon... ");
             utils.writeResult(instance.name, {result: "has been unscheduled"});
             return;
         }
+
         var config = utils.readFileSyncToJson(instance.path);
-        if(this.buildImage(config, dockerfilePath, dryRun) && config.push){
-            this.pushImage(config, dryRun);
+        if (!config.tag) {
+            utils.writeResult(instance.name, {result: "Dockerfile "+ Dockerfile+ " doesn't have a valid tag in its config. Skipping process"});
+            return;
         }
+
+        if (instance.toBuild) {
+            if (this.buildImage(config, dockerfilePath, dryRun) && config.push && instance.toPush)
+                this.pushImage(config, dryRun);
+        } else if (config.push && instance.toPush)
+            this.pushImage(config, dryRun);
     },
 
     pushImage(config, dryRun = false) {
@@ -35,10 +44,7 @@ module.exports = {
     },
 
     buildImage(config, Dockerfile, dryRun = false) {
-        if (!config.tag) {
-            log.debug("Dockerfile", Dockerfile, "doesn't have a valid tag in its config. Skipping process");
-            return false
-        }
+
 
         var dockerBuild = dockerUtils.getDockerExec() + "build -f " + Dockerfile + " -t " + config.tag + " " + fsUtil.removeLastPathPart(Dockerfile) ;
         if(dryRun) {

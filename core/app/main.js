@@ -75,19 +75,21 @@ module.exports = {
 
         log.info("***** Summary of what is going to be effectively done according to updated files or commit actions *****");
         triggeredInstances.forEach(instance => {
-            let name, actions;
+            let name, actions = "";
             if (instance.toBuild)
-                actions = "build";
+                actions = "built ";
+            if (instance.toPush)
+                actions += "pushed ";
+            if (instance.toDeploy)
+                actions += "deployed ";
             if (instance.toClean)
-                actions = "cleaned";
-            if (instance.isImage) {
+                actions += "cleaned ";
+            if (instance.isImage)
                 name = instance.resourceName
-            }
             if (instance.dockercomposeName || instance.stackDefinitionName) {
                 name = instance.instanceName;
-                if (!instance.toClean)
-                    actions = `${actions? actions + " and " : ""}deployed if enabled`;
             }
+            actions = actions.replace(" "," and ");
             log.info(`   - ${name} has been scheduled to be ${actions}`)
         });
 

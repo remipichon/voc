@@ -52,7 +52,7 @@ module.exports = {
                 "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
                 //SSI
                 "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mysinominalcase.yml __for mysinominalcase __once",
-                "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mysinominalcase __for mysinominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.mysinominalcase.yml mysinominalcase __for mysinominalcase __once",
             )) throw new TestCaseError(__test_case_name_1);
 
 
@@ -88,12 +88,15 @@ module.exports = {
         if (!testUtil.assertExhaustive(
                 //image
                 "docker build [..] Dockerfile.nominalcase [..] nominalcase __for nominalcase __once",
+                "docker push registrytopush:5000/nominalcase __for registrytopush:5000/nominalcase __once",
                 //SI
                 "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
                 //SSI
                 "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mysinominalcase.yml __for mysinominalcase __once",
                 "docker-compose [..] build [..] docker-compose.intermediate.mysinominalcase.yml __for mysinominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.mysinominalcase.yml mysinominalcase __for mysinominalcase __once",
             )) throw new TestCaseError(__test_case_name_1);
 
 

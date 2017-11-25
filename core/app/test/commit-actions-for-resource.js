@@ -8,6 +8,7 @@ module.exports = {
 
         testUtil.copyGitAddFile(
             "images/image.nominalcase.json", "images/Dockerfile.nominalcase",
+            "dockercomposes/docker-compose.nominalcase.yml",
             "instances/simple-stack-instance.nominalcase.mynominalcase.json", "dockercomposes/docker-compose.nominalcase.yml",
             "instances/simple-stack-instance.withcontext.mywithcontext.json", "dockercomposes/docker-compose.withcontext.yml",
             "instances/stack-instance.nominalcase.mysinominalcase.json", "stackdefinitions/stack-definition.nominalcase.json", "dockercomposes/docker-compose.nominalcase.yml"
@@ -24,7 +25,6 @@ module.exports = {
 
         if (!testUtil.assertExhaustive(
                 "docker build [..] Dockerfile.nominalcase [..] nominalcase __for nominalcase __once",
-                "docker push registrytopush:5000/nominalcase __for registrytopush:5000/nominalcase __once",
             )) throw new TestCaseError(__test_case_name_1);
 
 
@@ -56,7 +56,6 @@ module.exports = {
 
         if (!testUtil.assertExhaustive(
                 "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
-                "docker-compose [..] build [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
                 "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
             )) throw new TestCaseError(__test_case_name_1);
 
