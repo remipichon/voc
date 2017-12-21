@@ -204,61 +204,6 @@ module.exports = {
             return sd.name == instance.stackDefinitionName
         });
         log.debug(`   ${instance.instanceName}: About to configure intermediate compose file from stack definition ${stackDefinition.name}`);
-        let skip = false;
-        if (!stackDefinition.dockercomposesCmdReady) {
-            let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path);
-            stackDefinition.dockercomposesCmdReady = "";
-            stackDefinition.dockercomposes = [];
-            if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
-                log.debug(`   ${stackDefinition.name}: stack definition has 'composes' defined, looking for them`);
-                let searchDC;
-                if(stackDefinition.remote){
-                    log.debug(`   stack definition ${stackDefinition.name} is in remote repo mode, now cloning ${typeof stackDefinitionConfig.repo == "string"? stackDefinitionConfig.repo: stackDefinitionConfig.repo.name} to get remote dockercomposes`);
-                    let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(stackDefinitionConfig, repos, instance.instanceName);
-                    if(!allRemoteResourcePaths) return null;
-                    let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
-                    if(!vocResourcesRemote){
-                        utils.writeResult(instance.instanceName, {
-                            error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} is in repo mode but repo is not correctly defined. Either the stack definition doesn't have a 'repo' name referring to a defined repo in repos.json or doesn't have a valid one shot'repo' config. Stack will not be deployed`
-                        });
-                        return null;
-                    }
-                    log.debug(`   remote dockercomposes from remote repo ${stackDefinitionConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
-                    searchDC = vocResourcesRemote.dockercomposes;
-                } else {
-                    log.debug(`   stack definition ${stackDefinition.name} is in local repo mode, using local repo to get dockercomposes`);
-                    searchDC = dockercomposes;
-                }
-                stackDefinitionConfig.composes.forEach(composeName => {
-                    let dc = searchDC.find(compose => {
-                        return compose.name == composeName
-                    });
-                    if (!dc) {
-                        composeName = resourceUtil.getTypeAndResourceName(composeName).name;
-                        dc = searchDC.find(compose => {
-                            return compose.name == composeName
-                        });
-                    }
-                    if (!dc) {
-                        utils.writeResult(instance.instanceName, {
-                            error: `${instance.instanceName}: compose file ${composeName} doesn't seem to exist. Stack will not be deployed.`
-                        });
-                        skip = true;
-                        return null;
-                    }
-
-                    stackDefinition.dockercomposesCmdReady += ` -f ${dc.path} `;
-                    stackDefinition.dockercomposes.push(dc.name);
-
-                })
-            } else {
-                utils.writeResult(instance.instanceName, {
-                    error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} doesn't have a 'composes' array with valid docker composes names. Stack will not be deployed`
-                });
-                return null;
-            }
-        }
-        if (skip) return null;
 
         let composeFiles = stackDefinition.dockercomposesCmdReady;
         let intermediateCompose = `${dir}docker-compose.intermediate.${instance.instanceName}.yml`;
@@ -348,5 +293,74 @@ module.exports = {
         });
 
     },
+
+    fetchStackDefinitionsComposes: function (stackDefinitions, dockercomposes, repos) {
+        log.debug(`   reading all stack definition to fill their dockercomposes`);
+        stackDefinitions.forEach(stackDefinition => {
+            let stackDefinitionConfig = utils.readFileSyncToJson(stackDefinition.path);
+            stackDefinition.dockercomposesCmdReady = "";
+            stackDefinition.dockercomposes = [];
+            if (stackDefinitionConfig.composes && Array.isArray(stackDefinitionConfig.composes)) {
+                log.debug(`   ${stackDefinition.name}: stack definition has 'composes' defined, looking for them`);
+                let searchDC;
+                if (stackDefinition.remote) {
+                    if (!stackDefinitionConfig.repo) {
+                        utils.writeResult(stackDefinition.name, {
+                            error: `${stackDefinition.name}: Stack definition is in repo mode but repo is not correctly defined. Either the stack definition doesn't have a 'repo' name referring to a defined repo in repos.json or doesn't have a valid one shot'repo' config`
+                        });
+                        stackDefinition.toDiscard = true;
+                        return;
+                    }
+                    log.debug(`   stack definition ${stackDefinition.name} is in remote repo mode, now cloning ${typeof stackDefinitionConfig.repo == "string" ? stackDefinitionConfig.repo : stackDefinitionConfig.repo.name} to get remote dockercomposes`);
+                    let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(stackDefinitionConfig, repos, stackDefinition.instanceName);
+                    if (!allRemoteResourcePaths) return null;
+                    let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);
+                    if (!vocResourcesRemote) {
+                        utils.writeResult(instance.instanceName, {
+                            error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} is in repo mode but repo is not correctly defined. Either the stack definition doesn't have a 'repo' name referring to a defined repo in repos.json or doesn't have a valid one shot'repo' config. Stack will not be deployed`
+                        });
+                        stackDefinition.toDiscard = true;
+                        return;
+                    }
+                    log.debug(`   remote dockercomposes from remote repo ${stackDefinitionConfig.repo}\n    `, vocResourcesRemote.dockercomposes);
+                    searchDC = vocResourcesRemote.dockercomposes;
+                } else {
+                    log.debug(`   stack definition ${stackDefinition.name} is in local repo mode, using local repo to get dockercomposes`);
+                    searchDC = dockercomposes;
+                }
+                stackDefinitionConfig.composes.forEach(composeName => {
+                    let dc = searchDC.find(compose => {
+                        return compose.name == composeName
+                    });
+                    if (!dc) {
+                        composeName = resourceUtil.getTypeAndResourceName(composeName).name;
+                        dc = searchDC.find(compose => {
+                            return compose.name == composeName
+                        });
+                    }
+                    if (!dc) {
+                        utils.writeResult(instance.instanceName, {
+                            error: `${instance.instanceName}: compose file ${composeName} doesn't seem to exist. Stack will not be deployed.`
+                        });
+                        stackDefinition.toDiscard = true;
+                        return;
+                    }
+
+                    stackDefinition.dockercomposesCmdReady += ` -f ${dc.path} `;
+                    stackDefinition.dockercomposes.push(dc.name);
+
+                })
+            } else {
+                utils.writeResult(instance.instanceName, {
+                    error: `${instance.instanceName}: Related stack definition ${stackDefinition.name} doesn't have a 'composes' array with valid docker composes names. Stack will not be deployed`
+                });
+                stackDefinition.toDiscard = true;
+                return;
+            }
+        });
+
+
+    },
+
 
 }

@@ -1,5 +1,6 @@
 'use strict';
 
+var log = require('loglevel');
 var fs = require('fs');
 var path = require('path');
 var _ = require("underscore");

@@ -38,12 +38,14 @@ module.exports = {
         log.info("   repos\n  ", repos);
         log.info("*****  That's all from the file system                   *****");
 
+        resourceService.fetchStackDefinitionsComposes(stackDefinitions, dockercomposes, repos);
         vocResources = resourceUtil.cleanUnusedVocResources(instances, stackDefinitions, dockercomposes, dockerfiles, repos);
         instances = vocResources.instances;
         dockercomposes = vocResources.dockercomposes;
         dockerfiles = vocResources.dockerfiles;
         stackDefinitions = vocResources.stackDefinitions;
         let imageConfigs = vocResources.imageConfigs;
+
         log.info("***** Here are all actually used stack definitions *****");
         log.info("   ", stackDefinitions);
         log.info("***** Here are all actually used docker composes *****");

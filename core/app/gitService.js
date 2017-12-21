@@ -13,6 +13,7 @@ module.exports = {
         log.info("***** Reading git commit payload to find which files has been modified *****");
         let files = this.getGitDiffModifiedFile();
         log.info("***** All updated files *****\n    ", files);
+
         let triggeredInstances = this.getUpdatedInstances(files, instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs);
 
         triggeredInstances.forEach(instance => {

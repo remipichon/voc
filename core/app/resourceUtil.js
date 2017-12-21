@@ -18,7 +18,7 @@ module.exports = {
      * <StackDefinition>
      *     * name   <String>
      *     * path   <String> absolute path
-     *     * dockercomposes List<DockerCompose> ??? not in object before reading file
+     *     * dockercomposes List<DockerCompose> not in object before reading file in getTriggeredInstancesFromModifiedFiles (non commit action mode)
      *     * dockercomposesCmdReady <String>  pre-formated cmd ready ( -f xxx -f yyy) ??? not in object before reading file
      *     * [remoteRepo: <Boolean>]
      *
@@ -112,6 +112,8 @@ module.exports = {
                 });
             }
         });
+
+        stackDefinitions = _.filter(stackDefinitions, instance => { return !instance.toDiscard});
 
         // dockercomposes = _.filter(dockercomposes, dockercompose => {
         //     return dockercompose.used;
