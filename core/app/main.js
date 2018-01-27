@@ -20,6 +20,7 @@ module.exports = {
         let allResourcePaths =  fsUtil.walkResourceFileSync(configuration.repoFolder); //for tests purposes, remove async, TODO find a clever way to combine tests and async
         log.debug("allResourcePaths",allResourcePaths);
         let vocResources = resourceService.getVocResources(allResourcePaths);
+        //use déstructuration let [ a, b, c ] = [ 6, 2, 9];
         let instances = vocResources.instances;
         let dockercomposes = vocResources.dockercomposes;
         var dockerfiles = vocResources.dockerfiles;
