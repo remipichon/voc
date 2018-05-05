@@ -1,0 +1,8 @@
+---
+- hosts: app
+  become: yes
+  vars:
+    - hostname: "{{ fqdn }}"
+    - name: "node_runner"
+  roles:
+    - gitlab-runner

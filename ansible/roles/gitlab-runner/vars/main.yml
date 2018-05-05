@@ -1,0 +1,8 @@
+---
+name: "node_host_docker"
+url: "http://{{ hostname }}"     # runner will use the public access to reach Gitlab (to clone the repo)
+# url=http://gitlab        # runner will use the Docker overlay network that Gitlab and the runners can share with following
+# docker_network_mode=voc_network
+token: "{{ runner_token }}" #from /admin/runners
+image: "nodedocker"
+volumes: "/var/run/docker.sock:/var/run/docker.sock"
