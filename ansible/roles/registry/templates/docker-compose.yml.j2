@@ -1,0 +1,19 @@
+version: "{{ compose_version }}"
+
+services:
+  registry:
+    image: "{{ registry_dict.image.name }}:{{ registry_dict.image.version }}"
+    networks:
+      internal:
+    ports:
+      - 5000
+    environment:
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certs/registry.crt
+      REGISTRY_HTTP_TLS_KEY: /certs/registry.key
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+    volumes:
+      - "{{ registry_dict.cert_path }}:/certs"
+      - "{{ registry_dict.data_path }}:/var/lib/registry:ro"
+      - "{{ registry_dict.data_path }}/htpasswd:/auth/htpasswd:ro"

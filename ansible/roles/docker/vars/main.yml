@@ -1,0 +1,6 @@
+---
+package:
+  - "docker-engine"
+  - "python-pip"
+  - "python-dev"
+  - "build-essential"

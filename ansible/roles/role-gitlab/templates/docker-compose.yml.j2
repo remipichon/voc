@@ -1,0 +1,60 @@
+version: "{{ _gitlab_dict.deploy.compose_version }}"
+
+services:
+  gitlab:
+    image: "{{ _gitlab_dict.image.name }}:{{ _gitlab_dict.image.version }}"
+    networks:
+      internal:
+{% for item in _gitlab_dict.deploy.networks %}
+      {{ item.name }}:
+{% if item.aliases is defined and item.aliases | length > 0 %}
+        aliases:
+{% for alias in item.aliases %}
+          - {{ alias }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+    ports:
+      - "80"
+      - "443"
+      - "{{ _gitlab_dict.git_port }}:22"
+    volumes:
+      - "{{ _gitlab_dict.data_path }}:/var/opt/gitlab"
+      - "{{ _gitlab_dict.log_path }}:/var/log/gitlab"
+      - "{{ _gitlab_dict.config_path }}:/etc/gitlab"
+{% for line in _gitlab_dict.volumes | default([]) %}
+      - "{{ line }}"
+{% endfor %}
+    environment:
+{% for key, value in _gitlab_dict.environment.items() | default([]) %}
+      - {{ key }}={{ value }}
+{% endfor %}
+{% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.deploy.definition is defined %}
+    deploy:
+      {{ _gitlab_dict.deploy.definition | to_nice_yaml(indent=2) | indent(width=6) }}
+{% endif %}
+
+{% if _gitlab_dict.db.deploy_postgresql %}
+  {{ _gitlab_dict.db.hostname }}:
+    image: "{{ _gitlab_dict.db.image.name }}:{{ _gitlab_dict.db.image.version }}"
+    networks:
+      internal:
+    volumes:
+      - "{{ _gitlab_dict.db.data_path }}:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_USER={{ _gitlab_dict.db.user }}
+      - POSTGRES_PASSWORD={{ _gitlab_dict.db.password }}
+      - POSTGRES_DB={{ _gitlab_dict.db.name }}
+{% if _gitlab_dict.deploy.mode == 'swarm' and _gitlab_dict.deploy.definition is defined %}
+    deploy:
+      {{ _gitlab_dict.deploy.definition | to_nice_yaml(indent=2) | indent(width=6) }}
+{% endif %}
+{% endif %}
+
+networks:
+  internal:
+    external: false
+{% for item in _gitlab_dict.deploy.networks %}
+  {{ item.name }}:
+    external: {{ item.isExternal | lower }}
+{% endfor %}

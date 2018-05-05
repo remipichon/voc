@@ -1,0 +1,13 @@
+---
+registry_root_path: "{{ voc_path }}/registry"
+registry_dict:
+  image:
+    name: registry
+    version: 2
+  enabled: true
+  host: "registry.{{ domain_name }}"
+  port: "5000"
+  role_path: "{{ registry_root_path }}/role"
+  config_path: "{{ registry_root_path }}/config"
+  data_path: "{{ registry_root_path }}/data"
+  cert_path: "{{ registry_root_path }}/certs"

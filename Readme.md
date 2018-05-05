@@ -91,4 +91,14 @@ curl --unix-socket /var/run/docker.sock http:/v1.27/containers/json
 # netstat for mac
 sudo lsof -iTCP -sTCP:LISTEN -n -P
 
+# Ansible
 
+First playbook to play
+ansible-playbook first_run.yml -i keizersgrasht.host -e ansible_user='root'
+
+#Some questions :)
+
+1. Gitlab files will be stored on ~/voc/core/gitlab or ~/gitlab ? Would say ~/gitlab for having a beautiful tree, but above you said "Edit your HOSTNAME in core/gitlab/gitlab.rb"
+2. I think we should split the dev and system code. All the system part (Gitlab, Docker, Runner, Registry, nginx) should be handle by ansible, so into /voc/ansible.
+   And then, all the JS code relative to the app should be stored into /voc/core. What do you think ?
+   If you agree, we have to move all the files from core to ansible except ./app which is the JS code.

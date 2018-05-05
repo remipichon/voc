@@ -1,0 +1,95 @@
+---
+username: 'voc'
+deploy_mode: 'swarm'
+compose_version: '3'
+
+domain_name: "ansible.remip.eu"
+
+
+voc_path: "/data/voc/"
+
+
+repo_url: "https://github.com/remipichon/voc.git"
+repo_version: "HEAD"
+
+swarm_master: keizersgrasht
+
+
+docker_compose_version: "1.15.0"
+
+python_packages:
+  - pyOpenSSL
+  - passlib
+
+########################
+# Gitlab configuration #
+########################
+
+gitlab_root_path: "{{ voc_path }}/gitlab/"
+gitlab_dict:
+  name: gitlab
+  image:
+    name: gitlab/gitlab-ce
+    version: 9.2.6-ce.0
+  uid: 998
+  gid: 998
+  http_port: 80
+  https_port: 443
+  git_port: 22
+  role_path: "{{ gitlab_root_path }}/role/"
+  data_path: "{{ gitlab_root_path }}/data/"
+  config_path: "{{ gitlab_root_path }}/config/"
+  log_path: "{{ gitlab_root_path }}/log/"
+  healthcheck:
+    retries: 10
+  db:
+    deploy_postgresql: true
+    image:
+      name: "postgres"
+      version: 9.5
+    hostname: postgresql
+    port: 5432
+    data_path: "{{ gitlab_root_path }}/postgresql"
+    name: gitlab
+    user: gitlab
+    password: "s3cR3t"
+  deploy:
+    networks: []
+    mode: "{{ deploy_mode }}"
+    compose_version: "{{ compose_version }}"
+    delegate_to: "{{ inventory_hostname }}"
+    force_pull: no
+  configuration:
+    external_url: "http://{{ ansible_ens3.ipv4.address }}"
+    ssh_host: "{{ ansible_ens3.ipv4.address }}"
+    time_zone: "Europe/Paris"
+    download_path: /var/opt/gitlab/tmp/repositories
+    backup:
+      enable: true
+      path: /var/opt/gitlab/backups
+      keep_time: 604800
+      cron_schedule: "0 5 * * *"
+    trusted_proxies: "localhost"
+    enable_https: false
+  environment:
+    GITLAB_ROOT_PASSWORD: "5uP325eC23t"
+    VIRTUAL_HOST: "gitlab.{{ domain_name }}"
+
+########################
+# Registry configuration #
+########################
+
+registry_root_path: "{{ voc_path }}/registry"
+registry_dict:
+  image:
+    name: registry
+    version: 2
+  enabled: true
+  host: "registry.{{ domain_name }}"
+  port: "5000"
+  role_path: "{{ registry_root_path }}/role"
+  config_path: "{{ registry_root_path }}/config"
+  data_path: "{{ registry_root_path }}/data"
+  cert_path: "{{ registry_root_path }}/certs"
+  environment:
+    VIRTUAL_HOST: "registry.{{ domain_name }}"

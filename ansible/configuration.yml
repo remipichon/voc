@@ -1,0 +1,106 @@
+---
+- hosts: app
+  become: yes
+  roles:
+    - docker
+  tasks:
+    - name: Check if 'mode' var is defined
+      fail:
+        msg: "You need to define '-e mode={host, remote, both}'"
+      when: mode is undefined
+
+    - name: Make sure we have a 'wheel' group
+      group:
+        name: wheel
+        state: present
+
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: "^%wheel"
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+        validate: visudo -cf %s
+
+    - name: Add user to wheel group
+      user:
+        name: "{{ username }}"
+        groups: wheel
+        shell: "/bin/bash"
+        append: yes
+
+    - name: Create FS
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: 0755
+      with_items:
+        - "{{ directories }}"
+
+    - name: Install Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: "/usr/local/bin/docker-compose"
+        mode: 0755
+
+    - name: Clone the project from Github
+      git:
+        repo: "{{ repo_url }}"
+        dest: "/home/{{ username }}/voc"
+        version: "{{ repo_version }}"
+        force: yes
+      become_user: "{{ username }}"
+
+    - name: Set default values for any environment variables referenced in the Compose file
+      lineinfile:
+        dest: "{{ main_dir }}/.env"
+        state: present
+        line: "HOSTNAME={{ fqdn }}"
+        create: yes
+      become_user: "{{ username }}"
+
+    - name: Edit Gitlab.conf
+      template:
+        src: gitlab.rb.j2
+        dest: "{{ main_dir }}/gitlab/gitlab.rb"
+
+    - name: Generate intermediate compose file in mode '{{ mode }}'
+      shell: "docker-compose
+      -f {{ main_dir }}/docker-compose.yml
+      -f {{ main_dir }}/docker-compose.{{ mode }}.yml
+      -f {{ main_dir }}/docker-compose.mail.yml
+      -f {{ main_dir }}/test/docker-compose.mail.test.yml
+      config > {{ main_dir }}/docker-compose.intermediate.yml"
+      when: mode in ['host','remote']
+      environment:
+        HOSTNAME: "{{ fqdn }}"
+      become_user: "{{ username }}"
+
+    - name: Generate intermediate compose file in mode '{{ mode }}'
+      shell: "docker-compose
+      -f {{ main_dir }}/docker-compose.yml
+      -f {{ main_dir }}/docker-compose.remote.yml
+      -f {{ main_dir }}/docker-compose.host.yml
+      -f {{ main_dir }}/docker-compose.mail.yml
+      -f {{ main_dir }}/test/docker-compose.mail.test.yml
+      config > {{ main_dir }}/docker-compose.intermediate.yml"
+      when: mode in ['both']
+      environment:
+        HOSTNAME: "{{ fqdn }}"
+      become_user: "{{ username }}"
+
+    - name: Build it
+      command: docker-compose -f {{ main_dir }}/docker-compose.intermediate.yml build
+
+    - name: Get Swarm status
+      shell: "docker info | grep Swarm | cut -d' ' -f2"
+      register: swarm_status
+
+    - name: Initialize Swarm master
+      command: "docker swarm init --advertise-addr {{inventory_hostname}}"
+      when: swarm_status.stdout != 'active'
+
+    - name: Run it
+      command: docker stack deploy --compose-file {{ main_dir }}/docker-compose.intermediate.yml voc
