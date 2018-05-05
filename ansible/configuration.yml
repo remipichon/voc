@@ -1,8 +1,24 @@
 ---
 - hosts: app
   become: yes
+  vars:
+    - main_dir: "/home/{{ username }}/voc/core"
+    - hostname: "{{ fqdn }}"
+    - directories:
+       - "/home/voc/srv/gitlab/logs"
+       - "/home/voc/srv/gitlab/data"
   roles:
     - docker
+
+  pre_tasks:
+    - debug:
+       msg: "hostname is {{ hostname}} (override it with -e hostname= "
+
+    - name: Check if 'hostname' var is defined
+      fail:
+        msg: "You need to define '-e hostname= ' See https://github.com/remipichon/voc/blob/master/Installation.md#gitlab"
+      when: hostname is undefined
+
   tasks:
     - name: Check if 'mode' var is defined
       fail:
@@ -33,8 +49,8 @@
       file:
         path: "{{ item }}"
         state: directory
-        owner: "{{ username }}"
-        group: "{{ username }}"
+        owner: "root" #"{{ username }}"
+        group: "root" #"{{ username }}"
         mode: 0755
       with_items:
         - "{{ directories }}"
@@ -57,7 +73,7 @@
       lineinfile:
         dest: "{{ main_dir }}/.env"
         state: present
-        line: "HOSTNAME={{ fqdn }}"
+        line: "HOSTNAME={{ hostname }}"
         create: yes
       become_user: "{{ username }}"
 
@@ -75,7 +91,7 @@
       config > {{ main_dir }}/docker-compose.intermediate.yml"
       when: mode in ['host','remote']
       environment:
-        HOSTNAME: "{{ fqdn }}"
+        HOSTNAME: "{{ hostname }}"
       become_user: "{{ username }}"
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
@@ -88,7 +104,7 @@
       config > {{ main_dir }}/docker-compose.intermediate.yml"
       when: mode in ['both']
       environment:
-        HOSTNAME: "{{ fqdn }}"
+        HOSTNAME: "{{ hostname }}"
       become_user: "{{ username }}"
 
     - name: Build it
@@ -104,3 +120,5 @@
 
     - name: Run it
       command: docker stack deploy --compose-file {{ main_dir }}/docker-compose.intermediate.yml voc
+
+            # docker service ps $(docker service ls -q) | awk '{printf $2}{printf " is "}{print $6}'
