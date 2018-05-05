@@ -1,4 +1,4 @@
-version: '3'
+version: '3.2'
 
 services:
   host_docker_runner:
@@ -9,6 +9,7 @@ services:
       - gitlab
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
+      - 'runnerconfig:/etc/gitlab-runner'
 
   node_host_docker:
     image: 'nodedocker'
@@ -17,3 +18,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-node-host-docker
+
+volumes:
+  runnerconfig:

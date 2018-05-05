@@ -1,18 +1,22 @@
+var log = require('loglevel');
 var exec = require('child_process').exec;
-// var execSync = require('child_process').execSync;
+var execSync = require('child_process').execSync;
 var fs = require('fs');
-var path = require('path')
-
+var configuration = require("./configuration");
 
 module.exports = {
 
-    writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
-        var resultFile = artifactDir + resultFile;
-        var pathResult = path.join(repoFolder, resultFile);
 
+
+
+    writeResult: function(key, value){
+        this._writeResult(configuration.artifactDir, configuration.resultFile, configuration.repoFolder, key, value);
+    },
+
+    _writeResult: function (artifactDir, resultFile, repoFolder, key, value) {
         var resultJson = {};
-        if (fs.existsSync(pathResult)) {
-            var resultTest = fs.readFileSync(resultFile).toString();
+        if (fs.existsSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile)) {
+            var resultTest = fs.readFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile).toString();
             resultJson = JSON.parse(resultTest);
         }
         if (resultJson[key]) {
@@ -23,45 +27,69 @@ module.exports = {
             }
             resultJson[key].push(value);
         } else
-            resultJson[key] = value;
-        if (!fs.existsSync(repoFolder + artifactDir)) {
-            fs.mkdirSync(repoFolder + artifactDir);
+            resultJson[key] = [value];
+        if (!fs.existsSync(configuration.repoFolder + configuration.artifactDir)) {
+            fs.mkdirSync(configuration.repoFolder + configuration.artifactDir);
         }
-        console.log("resultJson", resultJson);
-        fs.writeFileSync(pathResult, JSON.stringify(resultJson));
+        log.debug(`     ${key}: Add to resultJson `, value);
+        fs.writeFileSync(configuration.repoFolder + configuration.artifactDir + configuration.resultFile, JSON.stringify(resultJson));
     },
 
-    execCmd: function (cmd, callback) {
-        console.log("exec cmd", cmd);
-        exec(cmd, function (error, stdout, stderr) {
+    execCmd: function (cmd, options, callback, printStdout = false) {
+        if(typeof printStdout == "undefined" && typeof callback != "function" && typeof options == "function") callback = options;
+        if(!options) options = {}
+        exec(cmd, options, function (error, stdout, stderr) {
             // command output is in stdout
-            if (error) console.error("error", error);
-            console.log(cmd, "stdout is");
-            console.log(stdout);
-            if (stderr) console.error("stderr", stderr);
+            if (error) {
+                log.error(`Error executing command '${cmd}': ${error.message}`);
+                log.error(`${error.stderr}`);
+                log.error(`${error.stdout}`);
+            }
+            if(printStdout)
+                log.debug(`cmd ${cmd} stdout is\n${stdout}`);
+            if (stderr) log.error("stderr", stderr);
             if (callback) callback(error, stdout, stderr)
         });
     },
 
-    isResourceFile: function (resource, fileName) {
-        var split = fileName.split("/");
-        if (split[split.length - 1].indexOf(resource) !== -1) return true;
-        return false;
+    execCmdSync: function(cmd, delegateError = false, options = {}){
+        let stdout;
+        options["encoding"] = "UTF-8";
+        try{
+            stdout = execSync(cmd, options);
+        } catch (err){
+            log.error(`Error executing command '${cmd}': ${err.message}`);
+            log.error(`${err.stderr}`);
+            log.error(`${err.stdout}`);
+            if(!delegateError)
+                throw new Error(err);
+            else
+                return { error: err }
+        }
+
+        return stdout
     },
 
-    isComposeFile: function (fileName) {
-        return this.isResourceFile("docker-compose", fileName);
-    },
-
-    isStackConfig: function (fileName) {
-        return this.isResourceFile("stack", fileName);
-    },
-
-    isImageConfig: function (fileName) {
-        return this.isResourceFile("image", fileName);
-    },
-
-    isDockerfile: function (fileName) {
-        return this.isResourceFile("Dockerfile", fileName);
+    readFileSyncToJson: function(path){
+        var data;
+        try {
+            data = fs.readFileSync(path, {encoding: 'utf-8'});
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                log.error("File not found " + path);
+                throw err;
+            } else {
+                log.error("Error while reading file:", err);
+                throw err;
+            }
+        }
+        let json = JSON.parse(data);
+        if(!json){
+            throw new Error(`Error while reading json file at ${path}`);
+        }
+        return json;
     }
-}
+
+
+};
+

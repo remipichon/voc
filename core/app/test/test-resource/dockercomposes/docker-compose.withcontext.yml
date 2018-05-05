@@ -1,0 +1,7 @@
+version: "3"
+
+services:
+  a_service:
+    build:
+      context: context
+    image: an_image

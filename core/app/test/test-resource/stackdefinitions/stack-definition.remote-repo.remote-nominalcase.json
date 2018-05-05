@@ -1,0 +1,6 @@
+{
+  "repo": "remote-repo",
+  "composes": [
+    "docker-compose.nominalcase.yml"
+  ]
+}

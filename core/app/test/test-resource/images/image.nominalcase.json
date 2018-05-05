@@ -1,0 +1,4 @@
+{
+  "tag": "nominalcase",
+  "push": "registrytopush:5000/nominalcase"
+}

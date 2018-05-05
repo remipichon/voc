@@ -9,6 +9,9 @@
     "dockerode": "*",
     "http": "*",
     "sync-exec": "*",
-    "fs": "*"
+    "fs": "*",
+    "yamljs": "*",
+    "underscore": "*",
+    "loglevel": "*"
   }
 }

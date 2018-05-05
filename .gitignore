@@ -2,3 +2,6 @@ docker-compose.intermediate.yml
 temp
 core/mailin-mediation/app/node_modules
 .idea
+core/app/node_modules
+gitlab.rb-e
+core/app/coverage

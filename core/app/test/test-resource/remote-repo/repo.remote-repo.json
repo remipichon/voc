@@ -1,0 +1,4 @@
+{
+  "url": "ssh://root@127.0.0.1/root/git-server/remote-repo",
+  "credential": "VOC_CONF_KEY"
+}

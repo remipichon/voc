@@ -1,0 +1,5 @@
+{
+  "tag": "remote-image",
+  "repo": "remote-repo",
+  "context": "context-on-remote"
+}

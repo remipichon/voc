@@ -1,193 +1,46 @@
-// var http = require('http');
-var fs = require('fs');
-var path = require('path')
-require("dockerode/package.json"); // dockerode is a peer dependency.
-var Docker = require('dockerode');
-var docker = new Docker({socketPath: '/var/run/docker.sock'});
-
-
+var composeUtil = require("./composeUtil");
+var configuration = require("./configuration");
+var dockerUtil = require("./dockerUtil");
+var fsUtil = require("./fsUtil");
+var gitlabUtil = require("./gitlabUtil");
+var gitService = require("./gitService");
+var imageService = require("./imageService");
+var resourceUtil = require("./resourceUtil");
+var resourceService = require("./resourceService");
+var stackService = require("./stackService");
 var utils = require("./utils");
+var _ = require("underscore");
+var main = require("./main");
+var log = require('loglevel');
+var YAML = require('yamljs');
+var configuration = require("./configuration");
 
-//config var
-var curlUnixDockerSocket = 'curl --unix-socket /var/run/docker.sock '
-var requestDockerApiVersion = ' http:/v1.30/';
-var containers = 'containers/json';
-var projectName = process.env.PROJECT_NAME;
-if (!projectName) {
-    console.error("PROJECT_NAME is not defined or empty");
+
+let defaultLevel = "info";
+if(process.env.LOG_LEVEL){
+    let logLevels = "";
+    Object.keys(log.levels).forEach(key => {logLevels += ` ${key}`});
+    if(logLevels.indexOf(process.env.LOG_LEVEL) === -1 ){
+        console.error(`env LOG_LEVEL is set to ${process.env.LOG_LEVEL} which is not part of available levels ${logLevels}`)
+    } else {
+        defaultLevel = process.env.LOG_LEVEL;
+    }
+}
+console.log("Setting log level to", defaultLevel);
+log.setLevel(defaultLevel);
+
+if (!process.env.CI_PROJECT_DIR) {
+    log.error("CI_PROJECT_DIR is not defined or empty");
     process.exit(1)
 }
-var repoFolder = `/builds/root/${projectName}/`;
-var artifactDir = "/job-result/";
-var resultFile = "result.json";
 
-console.log("Starting...  ...");
+log.debug("Starting main.main() using configuration:");
+Object.keys(configuration).forEach(key => {if(typeof configuration[key] == "string") log.debug(`    ${key} : ${configuration[key]}`)});
 
-function manageStack(fileState) {
-    var stackName = getStackName(fileState.fileName);
-
-    if (fileState.state == "D") {
-        console.log(fileState.fileName, "has been deleted, remove associated stack", stackName);
-        deployStack(fileState.fileName, "remove", stackName);
-    } else {
-        var stackConfig;
-        var composeFile;
-        if (utils.isComposeFile(fileState.fileName)) {
-            composeFile = fileState.fileName;
-            stackConfig = fileState.fileName.replace("docker-compose", "stack").replace(".yml", ".json")
-        } else if (utils.isStackConfig(fileState.fileName)) {
-            stackConfig = fileState.fileName
-            composeFile = fileState.fileName.replace("stack", "docker-compose").replace(".json", ".yml")
-        }
-
-        var configFile = path.join(repoFolder, stackConfig);
-        fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
-            if (!err) {
-                console.log('Config for\n', composeFile, "\n", data);
-
-                var config = JSON.parse(data);
-                var action;
-
-                if (config.enabled) {
-                    action = "update"
-                } else {
-                    action = "remove"
-                }
-
-                deployStack(composeFile, action, stackName);
-
-            } else {
-                console.log("Config json file not found for " + composeFile, "with error", err);
-                console.log(err);
-            }
-        });
-    }
-};
-
-function manageImage(fileState) {
-    if (fileState.state == "D") {
-        console.log(fileState.fileName, "has been deleted, doint nothing, GC wil be there soon... ");
-        utils.writeResult(artifactDir, resultFile, repoFolder, fileState.fileName, {result: "has been deleted"});
-        return;
-    } else {
-        var imageConfig;
-        var Dockerfile;
-        if (utils.isDockerfile(fileState.fileName)) {
-            Dockerfile = fileState.fileName;
-            imageConfig = fileState.fileName.replace("Dockerfile", "image") + ".json"
-        } else if (utils.isImageConfig(fileState.fileName)) {
-            imageConfig = fileState.fileName;
-            Dockerfile = fileState.fileName.replace("image", "Dockerfile").replace(".json", "")
-        }
-
-        var configFile = path.join(repoFolder, imageConfig);
-        fs.readFile(configFile, {encoding: 'utf-8'}, function (err, data) {
-            if (!err) {
-                console.log('Config for\n', Dockerfile, '\n', data);
-                var config = JSON.parse(data);
-                buildPushImage(Dockerfile, config);
-            } else {
-                console.log("Config json file not found for " + Dockerfile, "with error", err);
-                console.log(err);
-            }
-        });
-    }
+if(process.env.DEV) {
+    log.debug("cleaning result.json");
+    utils.execCmdSync("rm " + configuration.repoFolder + configuration.artifactDir + configuration.resultFile, true);
 }
 
-function getGitDiffModifiedFile() {
-    var modifiedFiles = "cd " + repoFolder + "; git diff-tree --no-commit-id --name-status $(git rev-parse HEAD)"
-    utils.execCmd(modifiedFiles, function (error, stdout) {
-        if (stdout) {
-            var files = stdout.split("\n");
-            var filesState = [];
-            files.forEach(function (file) {
-                var spec = file.split("\t");
-                if (!spec[0] || !spec[1]) return;
-                filesState.push({
-                    state: spec[0],
-                    fileName: spec[1]
-                })
-            });
-            console.log("Updated files\n", filesState);
+main.main();
 
-            filesState.forEach(function (fileState) {
-                console.log(fileState.fileName, "has been", fileState.state);
-
-                if (utils.isComposeFile(fileState.fileName) || utils.isStackConfig(fileState.fileName)) {
-                    manageStack(fileState);
-                }
-
-                if (utils.isDockerfile(fileState.fileName) || utils.isImageConfig(fileState.fileName)) {
-                    manageImage(fileState)
-                }
-            })
-        }
-    });
-}
-
-function getStackName(fileName) {
-    var split = fileName.split("/");
-    var last = split[split.length - 1];
-    if (last.indexOf("docker-compose") !== -1) {
-        return last.replace("docker-compose-", "").replace(".yml", "");
-    } else if (last.indexOf("stack-") !== -1) {
-        return last.replace("stack-", "").replace(".json", "");
-    }
-}
-
-function deployStack(composeFile, action, stackName) {
-    var shDockerStackDeploy;
-    var curlDockerStackDeploy;
-    if (action == "create" || action == "update") {
-        shDockerStackDeploy = "docker stack deploy --compose-file " + repoFolder + composeFile + ' ' + stackName;
-    } else if (action == "remove") {
-        shDockerStackDeploy = "docker stack rm " + stackName;
-    } else {
-        utils.writeResult(artifactDir, resultFile, repoFolder, stackName, {error: "Action was not defined for stack"});
-        console.error("Action not any of create, update or remove for ", stackName);
-        return;
-    }
-    //if composeFile is yml => Docker API
-    //if composeFile is json => Docker HTTP API (doesn't support stack yet)
-    utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
-        utils.writeResult(artifactDir, resultFile, repoFolder, stackName, getState(error, stderr, stdout));
-    })
-}
-
-function getState(error, stderr, stdout) {
-    var state = {};
-    if (error) {
-        state.error = stderr + " : " + JSON.stringify(error);
-    } else {
-        state.result = stdout || stderr;
-    }
-    return state;
-};
-
-function pushImage(config) {
-    var dockerTag = "docker tag " + config.tag + " " + config.push;
-    utils.execCmd(dockerTag, function (error, stdout, stderr) {
-        var dockerPush = "docker push " + config.push;
-        utils.execCmd(dockerPush, function (error, stdout, stderr) {
-            utils.writeResult(artifactDir, resultFile, repoFolder, config.push, getState(error, stderr, stdout));
-        })
-    })
-}
-
-function buildPushImage(Dockerfile, config) {
-    if (!config.tag) {
-        console.log("Dockerfile", Dockerfile, "doesn't have a valid tag in its config");
-    }
-
-    var dockerBuild = "docker build -f " + Dockerfile + " -t " + config.tag + " . ";
-    utils.execCmd(dockerBuild, function (error, stdout, stderr) {
-        utils.writeResult(artifactDir, resultFile, repoFolder, config.tag, getState(error, stderr, stdout));
-
-        if (config.push) pushImage(config);
-    })
-}
-
-
-getGitDiffModifiedFile();
-
-console.log("End of script, waiting for callbacks to answer");
