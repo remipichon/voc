@@ -1,5 +1,13 @@
 # Install
 
+## Ansible install
+
+```bash
+ansible-playbook -i herencgracht.host configuration.yml -e mode=host -e hostname=gitlab.remip.eu -e gitlab_root_password=rootroot
+ansible-playbook -i herencgracht.host waitforgitlab.yml
+ansible-playbook -i herencgracht.host add_runner.yml -e hostname=gitlab.remip.eu -e runner_token=GNhcsYvUpUoZS48xusmG
+```
+
 Consider reading Config part before in order to get it right and configure quickly. 
 ## Docker stack on a Swarm node
 

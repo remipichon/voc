@@ -19,6 +19,6 @@
       register: result
       until: result.stdout.splitlines()[0].find("Running") != -1
       retries: 100
-      delay: 1000
+      delay: 5
 
 
