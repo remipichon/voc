@@ -121,7 +121,7 @@ if(process.env.CONTINUE_IF_ERROR == "true"){
         if (error instanceof TestCaseError) {
             log.error(`!!! Test case ${error.message} FAILED`);
             log.error(`!!! You can check the actual result file at ${configuration.repoFolder + configuration.artifactDir + configuration.resultFile} and re-run the test with:`)
-            log.error(`CI_PROJECT_DIR=${process.env.CI_PROJECT_DIR} TEST_RESOURCES=${process.env.TEST_RESOURCES} HOME=${process.env.HOME} LOG_LEVEL=all node run-tests.js ${error.message}`)
+            log.error(`CI_PROJECT_DIR=${process.env.CI_PROJECT_DIR} TEST_RESOURCES=${process.env.TEST_RESOURCES} HOME=${process.env.HOME} APP_LOG_LEVEL=TRACE node run-tests.js ${error.message}`)
         } else {
             throw  error;
         }

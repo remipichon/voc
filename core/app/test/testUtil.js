@@ -76,8 +76,8 @@ module.exports = {
         utils.execCmdSync(`rm -rf ${this.gitServerRemoteRepo}`);
         utils.execCmdSync(`rm -rf ${this.gitLocalForRemoteRepo}`);
         utils.execCmdSync(`rm -rf ${configuration.remoteRepoFolder}`);
-        fs.mkdirSync(this.gitServerRemoteRepo);
-        fs.mkdirSync(this.gitLocalForRemoteRepo);
+        utils.execCmdSync(`mkdir -p ${this.gitServerRemoteRepo}`);
+        utils.execCmdSync(`mkdir -p ${this.gitLocalForRemoteRepo}`);
 
         utils.execCmdSync("git init --bare", false, {cwd : this.gitServerRemoteRepo});
 
@@ -174,7 +174,8 @@ module.exports = {
             if(!fs.existsSync(sourcePath)){
                 throw new Error(`Test configuration error, file ${sourcePath} doesn't exist`);
             }
-            fs.copyFileSync(sourcePath, destPath);
+            // fs.copyFileSync(sourcePath, destPath);
+            utils.execCmdSync(`cp ${sourcePath} ${destPath}`, false, {cwd : configuration.repoFolder});
 
         })
     },
@@ -250,6 +251,33 @@ module.exports = {
         });
         return success;
     },
+
+    assertError: function(...phrases){
+        let caseName = __test_case_name_2;
+        let caseFile = __test_case_file_name;
+        let caseLine = __test_case_line;
+        let assertResult = {};
+        phrases.forEach(phrase => {
+            assertResult[phrase] = this.assertPhrase(phrase, true);
+        });
+
+        let testResult = {
+            success: 0,
+            failure: 0
+        };
+        let success = true;
+        _.forEach(assertResult, (result, phrase) => {
+            if(result === true){
+                log.info(`SUCCESS while asserting error '${phrase}'`);
+                testResult.success += 1;
+            } else {
+                log.error(`FAILURE while asserting error '${phrase}' \n\t\t${result}. File ${caseFile}:${caseLine}`)
+                testResult.failure += 1;
+                success = false;
+            }
+        });
+        return success;
+    },
     
     _assertWords: function (message, phrase) {
         let words = phrase.split("[..]");
@@ -275,7 +303,11 @@ module.exports = {
      * @returns {*}
      * @private
      */
-    _assertPhrase: function (typeOfResult, testResult, targetResource, phrase) {
+    _assertPhrase: function (typeOfResult, testResult, targetResource, phrase, assertError) {
+
+        let target = "result";
+        if(assertError)
+            target = "error";
 
         if (typeOfResult == "all") {
             //words have to be in all results for resource
@@ -287,7 +319,7 @@ module.exports = {
                     return;//continue loop
                 }
 
-                let assertWordResult = this._assertWords(message.result, phrase);
+                let assertWordResult = this._assertWords(message[target], phrase);
 
                 //all
                 if (assertWordResult !== true) {
@@ -307,7 +339,7 @@ module.exports = {
                     assertResult =  `${targetResource} has an 'error'. Only 'result' were expected `;
                     return;//continue loop
                 }
-                let assertWordResult = this._assertWords(message.result, phrase);
+                let assertWordResult = this._assertWords(message[target], phrase);
 
                 //no more than once
                 if(assertWordResult === true){
@@ -340,7 +372,7 @@ module.exports = {
      * @param phrase <String> format is <string to search in test result> _for <target resource> _<which of _all, _any_result, _any_error, _any, _once>
      * @returns if assert failed, return <String> trying to explain why assertion failed, if assert success return true
      */
-    assertPhrase: function(phrase){
+    assertPhrase: function(phrase, assertError = false){
         //<string to search in result> _for <target resource> _<which of _all, _any_result, _any_error, _any, _once>
         const phraseRegExp = /^(.*) __for (.*) __([a-z]*)/m
 
@@ -360,7 +392,7 @@ module.exports = {
 
         //using search for assert, throw error if assert not found
         if(testResult[targetResource]){
-            return this._assertPhrase(typeOfResult, testResult, targetResource, searchString);
+            return this._assertPhrase(typeOfResult, testResult, targetResource, searchString, assertError);
         } else {
             return `target resource ${targetResource} not part of result file`
         }
