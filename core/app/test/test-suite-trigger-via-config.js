@@ -9,7 +9,7 @@ module.exports = {
 
         testUtil.copyGitAddFile("images/image.nominalcase.json", "images/Dockerfile.nominalcase");
 
-        testUtil.commit(" trigger via config and Docker related files ");
+        testUtil.commit(" [dry-run] trigger via config and Docker related files ");
 
         testUtil.run();
 
@@ -32,7 +32,7 @@ module.exports = {
             "dockercomposes/docker-compose.nominalcase.yml"
         );
 
-        testUtil.commit(" trigger via config and Docker related files ");
+        testUtil.commit(" [dry-run] trigger via config and Docker related files ");
 
         testUtil.run();
 
@@ -55,7 +55,7 @@ module.exports = {
             "stackdefinitions/stack-definition.nominalcase.json",
             "dockercomposes/docker-compose.nominalcase.yml");
 
-        testUtil.commit(" trigger via config and Docker related files ");
+        testUtil.commit(" [dry-run] trigger via config and Docker related files ");
 
         testUtil.run();
 

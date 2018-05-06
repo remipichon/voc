@@ -21,6 +21,24 @@ module.exports = {
         }
     },
 
+    commit_action__non_remote_without_context__no_dry_run_fail_connect_to_docker: function () {
+
+        testUtil.prepare();
+
+        testUtil.copyGitAddFile("images/image.testdryrun.json", "images/Dockerfile.testdryrun");
+
+        testUtil.commit(" [do-all] but without dry run");
+
+        testUtil.run();
+
+        if (testUtil.assertError("Cannot connect to the Docker daemon at unix __for testdryrun __all")) {
+
+        } else {
+            throw new TestCaseError(__test_case_name_1);
+        }
+    },
+
+
     image__non_remote_without_context__trigger_via_do_all: function () {
 
         testUtil.prepare();

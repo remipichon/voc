@@ -12,7 +12,7 @@ module.exports = {
 
         testUtil.copyGitAddFileRemoteRepo("images/Dockerfile.remote");
 
-        testUtil.commit(" trigger via config and Docker related files ");
+        testUtil.commit(" [dry-run] trigger via config and Docker related files ");
 
         testUtil.run();
 
@@ -37,7 +37,7 @@ module.exports = {
 
         testUtil.copyGitAddFileRemoteRepo("dockercomposes/docker-compose.nominalcase.yml");
 
-        testUtil.commit(" trigger via config and Docker related files ");
+        testUtil.commit(" [dry-run] trigger via config and Docker related files ");
 
         testUtil.run();
 
@@ -66,7 +66,7 @@ module.exports = {
 
         testUtil.copyGitAddFileRemoteRepo("dockercomposes/docker-compose.nominalcase.yml");
 
-        testUtil.commit(" trigger via config and Docker related files ");
+        testUtil.commit(" [dry-run] trigger via config and Docker related files ");
 
         testUtil.run();
 

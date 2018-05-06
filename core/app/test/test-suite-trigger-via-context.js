@@ -11,7 +11,7 @@ module.exports = {
 
         testUtil.copyGitAddFile({source:"context/dummy_context_file", destination: "context"});
 
-        testUtil.commit(" trigger via context ");
+        testUtil.commit(" [dry-run] trigger via context ");
 
         testUtil.run();
 
@@ -36,7 +36,7 @@ module.exports = {
 
         testUtil.copyGitAddFile({source:"context/dummy_context_file", destination: "context"});
 
-        testUtil.commit(" trigger via context ");
+        testUtil.commit(" [dry-run] trigger via context ");
 
         testUtil.run();
 
@@ -62,7 +62,7 @@ module.exports = {
 
         testUtil.copyGitAddFile({source:"context/dummy_context_file", destination: "context"});
 
-        testUtil.commit(" trigger via context ");
+        testUtil.commit(" [dry-run] trigger via context ");
 
         testUtil.run();
 

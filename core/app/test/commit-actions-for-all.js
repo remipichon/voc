@@ -18,7 +18,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[build-all]");
+        testUtil.commit("[dry-run] [build-all]");
 
         testUtil.run();
 
@@ -40,7 +40,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[deploy-all]");
+        testUtil.commit("[dry-run] [deploy-all]");
 
         testUtil.run();
 
@@ -62,7 +62,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[remove-all]");
+        testUtil.commit("[dry-run] [remove-all]");
 
         testUtil.run();
 
@@ -81,7 +81,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[build-deploy-all]");
+        testUtil.commit("[dry-run] [build-deploy-all]");
 
         testUtil.run();
 

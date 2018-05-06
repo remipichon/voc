@@ -63,15 +63,22 @@ module.exports = {
 
 
         let triggeredInstances;
+        let dryRun = false;
         log.info("***** Reading git commit message to get commit actions *****");
         let commitActions = gitService.getGitCommitAction();
         if (commitActions.length != 0) {
             log.info("***** Commit actions found *****");
             log.info(commitActions);
             log.info("*****  *****");
-            triggeredInstances = resourceUtil.getTriggeredInstancesFromCommitActions(commitActions, imageConfigs, instances);
-        } else {
+            dryRun = _.filter(commitActions, action => { return action.action == "dryRun"}).length != 0;
+        }
+
+        if(commitActions.length == 0 || (commitActions.length == 1 && commitActions[0].action == "dryRun")){
+            log.info("***** When there is no commit actions or [dry-run] is the only commit actions, look at the git payload to get updated files")
             triggeredInstances = gitService.getTriggeredInstancesFromModifiedFiles(instances, stackDefinitions, contextPaths, dockercomposes, imageConfigs);
+        } else {
+            log.info("***** Using Git commit actions to trigger instances *****");
+            triggeredInstances = resourceUtil.getTriggeredInstancesFromCommitActions(commitActions, imageConfigs, instances);
         }
 
         triggeredInstances = _.filter(triggeredInstances, instance => { return !instance.toDiscard});
@@ -95,8 +102,6 @@ module.exports = {
             actions = actions.replace(" "," and ");
             log.info(`   - ${name} has been scheduled to be ${actions}`)
         });
-
-        let dryRun = _.filter(commitActions, action => { return action.action == gitService.commitAction.dryRun}) != null;
 
         if(triggeredInstances.length != 0) {
             log.info("****************");

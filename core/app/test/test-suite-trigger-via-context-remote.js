@@ -13,7 +13,7 @@ module.exports = {
         testUtil.copyGitAddFileRemoteRepo("images/Dockerfile.remote-with_context");
         testUtil.copyGitAddFileRemoteRepo({source:"context/dummy_context_file", destination: "context"});
 
-        testUtil.commit(" non trigger via context on remote repo");
+        testUtil.commit(" [dry-run] non trigger via context on remote repo");
 
         testUtil.run();
 
@@ -39,7 +39,7 @@ module.exports = {
         testUtil.copyGitAddFileRemoteRepo("dockercomposes/docker-compose.withcontext.yml");
         testUtil.copyGitAddFileRemoteRepo({source:"context/dummy_context_file", destination: "context"});
 
-        testUtil.commit(" non trigger via context on remote repo");
+        testUtil.commit(" [dry-run] non trigger via context on remote repo");
 
         testUtil.run();
 
@@ -65,7 +65,7 @@ module.exports = {
         testUtil.copyGitAddFileRemoteRepo("dockercomposes/docker-compose.nominalcase.yml");
         testUtil.copyGitAddFileRemoteRepo({source:"context/dummy_context_file", destination: "context"});
 
-        testUtil.commit(" non trigger via context on remote repo");
+        testUtil.commit(" [dry-run] non trigger via context on remote repo");
 
         testUtil.run();
 

@@ -19,7 +19,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[build-nominalcase]");
+        testUtil.commit("[dry-run] [build-nominalcase]");
 
         testUtil.run();
 
@@ -34,7 +34,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[build-mynominalcase]");
+        testUtil.commit("[dry-run] [build-mynominalcase]");
 
         testUtil.run();
 
@@ -50,7 +50,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[deploy-mynominalcase]");
+        testUtil.commit("[dry-run] [deploy-mynominalcase]");
 
         testUtil.run();
 
@@ -66,7 +66,7 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[remove-mynominalcase]");
+        testUtil.commit("[dry-run] [remove-mynominalcase]");
 
         testUtil.run();
 
