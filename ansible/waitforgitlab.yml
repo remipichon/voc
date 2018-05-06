@@ -1,0 +1,24 @@
+---
+- hosts: app
+  become: yes
+
+  tasks:
+    - name: Register Gitlab container id
+      register: gitlab_container_id
+      command: "docker service ls -q --filter \"name=voc_gitlab\""
+
+    - name: "register"
+      command: "docker service ps --format \"{% raw %}{{.CurrentState}}{% endraw %}\" {{ gitlab_container_id.stdout }}"
+      register: result
+
+    - debug:
+       msg: "Current Gitlab status: {{ result.stdout.splitlines()[0] }}"
+
+    - name: "Wait for Gitlab to be running"
+      command: "docker service ps --format \"{% raw %}{{.CurrentState}}{% endraw %}\" {{ gitlab_container_id.stdout }}"
+      register: result
+      until: result.stdout.splitlines()[0].find("Running") != -1
+      retries: 100
+      delay: 1000
+
+
