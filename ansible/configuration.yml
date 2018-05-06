@@ -19,6 +19,11 @@
         msg: "You need to define '-e hostname= ' See https://github.com/remipichon/voc/blob/master/Installation.md#gitlab"
       when: hostname is undefined
 
+    - name: "Check if 'gitlab_root_password' var is defined"
+      fail:
+        msg: "You need to define '-e gitlab_root_password= ' It will be used to configure Gitlab"
+      when: gitlab_root_password is undefined
+
   tasks:
     - name: Check if 'mode' var is defined
       fail:
@@ -92,6 +97,7 @@
       when: mode in ['host','remote']
       environment:
         HOSTNAME: "{{ hostname }}"
+        GITLAB_ROOT_PASSWORD: "{{ gitlab_root_password }}"
       become_user: "{{ username }}"
 
     - name: Generate intermediate compose file in mode '{{ mode }}'
@@ -105,6 +111,7 @@
       when: mode in ['both']
       environment:
         HOSTNAME: "{{ hostname }}"
+        GITLAB_ROOT_PASSWORD: "{{ gitlab_root_password }}"
       become_user: "{{ username }}"
 
     - name: Build it
@@ -121,4 +128,4 @@
     - name: Run it
       command: docker stack deploy --compose-file {{ main_dir }}/docker-compose.intermediate.yml voc
 
-            # docker service ps $(docker service ls -q) | awk '{printf $2}{printf " is "}{print $6}'
+      # docker service ps $(docker service ls -q) | awk '{printf $2}{printf " is "}{print $6}'
