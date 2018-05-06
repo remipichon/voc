@@ -70,10 +70,11 @@ above command already setup eveything for remote debug to work. Use your favorit
 cd core/app/test; docker build -f Dockerfile.runnerapptest -t runnerapptest .
 # run tests with code from your fs (NOT WORKING NOW, needs to create a proper entrypoint)
 docker run -v $(pwd)/voc/core/app:/app runnerapptest cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js
-# run test image with debug port open and code from your fs
+# run test image with debug port open and code from your fs, run cmd from outside repo
 docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/voc/core/app:/app runnerapptest 
 docker exec -ti test-runner bash
 # run tests
+cd /app; npm install
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true LOG_LEVEL=SILENT node run-tests.js
 # run one test with full app log and debug on
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ APP_LOG_LEVEL=TRACE node --inspect-brk=0.0.0.0 run-tests.js One_Test
