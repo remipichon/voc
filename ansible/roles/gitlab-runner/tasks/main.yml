@@ -4,7 +4,10 @@
     msg: "You need to define '-e hostname= ' See https://github.com/remipichon/voc/blob/master/Installation.md#gitlab"
   when: hostname is undefined
 
+  #this need the GITLAB_ROOT_PASSWORD
+
   # how to fetch the tokent from the password ?
+  #https://docs.gitlab.com/ce/api/oauth2.html#resource-owner-password-credentials
 
 - name: Check if 'runner_token' var is defined
   fail:
@@ -15,13 +18,11 @@
   register: host_docker_runner_id
   command: "docker ps -q --filter \"name=voc_host_docker_runner\""
 
-
 - name: "register"
-  command: "docker exec -t {{ host_docker_runner_id.stdout }} gitlab-runner register --non-interactive --name {{ name }} --url {{url}} --registration-token {{token}} --executor docker --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image {{image}} --docker-privileged true --docker-disable-cache false --docker-volumes {{volumes}}"
+  command: "docker exec -t {{ host_docker_runner_id.stdout }} gitlab-runner register --locked=false --tag-list {{ tag_list }} --non-interactive --name {{ runner_name }} --url {{url}} --registration-token {{token}} --executor docker --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image {{image}} --docker-privileged true --docker-disable-cache false --docker-volumes /var/run/docker.sock:/var/run/docker.sock "
 
-- name: "sed volume"
-  command: "docker exec -t {{ host_docker_runner_id.stdout }} sed -i \"/volumes/c\    volumes = [\\\"/cache\\\",\\\"{{volumes}}\\\"]\" /etc/gitlab-runner/config.toml"
+- name: "sed volume (because gitlab-runner register doesn't want my docker volume"
+  command: "docker exec -t {{ host_docker_runner_id.stdout }} sed -i \"/volumes/c\      volumes = [\\\"/cache\\\",\\\"/var/run/docker.sock:/var/run/docker.sock\\\"]\" /etc/gitlab-runner/config.toml"
 
 
-#Go to <your_gitlab>/admin/runners/ to add _node_host_docker_ tag and use it in your gitlab-ci.yml file.
 

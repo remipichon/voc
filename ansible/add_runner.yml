@@ -3,6 +3,7 @@
   become: yes
   vars:
     - hostname: "{{ fqdn }}"
-    - name: "node_runner"
+    - runner_name: "final_node_host_docker"
+    - runner_tag: "final_node_host_docker"
   roles:
     - gitlab-runner
