@@ -1,5 +1,6 @@
 var nominalCaseSuite = require("./test-suite-nominal-case");
 var nominalCaseSuiteRemote = require("./test-suite-nominal-case-remote");
+var testSuiteVocConfig = require("./test-suite-voc-config");
 var testSuiteTriggerViaConfig = require("./test-suite-trigger-via-config");
 var testSuiteTriggerViaConfigRemote = require("./test-suite-trigger-via-config-remote");
 var testSuiteTriggerViaContext = require("./test-suite-trigger-via-context");
@@ -41,14 +42,15 @@ if (!testUtil.assert(
  */
 
 const testSuites = [
-    nominalCaseSuite,
-    testSuiteTriggerViaConfig,
-    testSuiteTriggerViaContext,
-    nominalCaseSuiteRemote,
-    testSuiteTriggerViaConfigRemote,
-    testSuiteTriggerViaContextRemote,
-    commitActionsForResource,
-    commitActionsForAll
+   nominalCaseSuite,
+    testSuiteVocConfig,
+   testSuiteTriggerViaConfig,
+   testSuiteTriggerViaContext,
+   nominalCaseSuiteRemote,
+   testSuiteTriggerViaConfigRemote,
+   testSuiteTriggerViaContextRemote,
+   commitActionsForResource,
+   commitActionsForAll
 ];
 
 log.setLevel(log.levels.INFO);
@@ -71,7 +73,7 @@ if (process.argv.length == 2) {
     }
 }
 
-log.log("Running test cases:",testcases);
+log.info("Running test cases:",testcases);
 
 if(process.env.CONTINUE_IF_ERROR == "true"){
     let failingTests = [];

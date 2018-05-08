@@ -4,6 +4,7 @@ var fs = require('fs');
 var path_ = require('path');
 var utils = require("../utils");
 var main = require("../main");
+var fsUtil = require("../fsUtil")
 var configuration = require("../configuration");
 
 Object.defineProperty(global, '__stack', {
@@ -218,6 +219,18 @@ module.exports = {
             return false;
         }
         return true
+    },
+
+    assertTextInFile: function (path, text) {
+        let caseFile = __test_case_file_name;
+        let caseLine = __test_case_line;
+        var result = utils.execCmdSync(`grep -Fq "${text}" ${configuration.repoFolder}/${path}`, true);
+        if (result.error) {
+          log.error(`FAILURE while asserting text ${text} in file '${path}' \n\t\t${result.error}. File ${caseFile}:${caseLine}`)
+          return false;
+        }
+      log.info(`SUCCESS while asserting text ${text} in file '${path}'`);
+        return true;
     },
 
     /**

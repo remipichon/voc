@@ -91,10 +91,10 @@ Regular Dockercompose file, see Docker Compose docs.
 ````json
 {
    "enabled": true|false,
-   "parameters": {
+   "parameters": [{
        "name": "ENV name",
        "value": "value for it"
-   } 
+   }] 
 }
 ````
 * enable
@@ -136,16 +136,16 @@ Regular Dockercompose file, see Docker Compose docs.
 ````json
 {
    "enabled": true|false,
-   "parameters": {
+   "parameters": [{
      "name": "ENV name",
      "value": "value for it"
-   } 
+   }] 
 }
 ````
 * enable
   * mandatory, true or false
   * deploy or remove a stack
-* parameters
+* parameters: list
   * regular parameter for [Substituting environment variables in Compose files](https://docs.docker.com/compose/environment-variables/)
   * name: the ${NAME} in docker compose file
   * value: you can guess it...

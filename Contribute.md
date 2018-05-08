@@ -59,23 +59,24 @@ sed -i '/localhost/c\ /' ~/.ssh/known_hosts
 ### Debug runner app
 above command already setup eveything for remote debug to work. Use your favorite tool from the list https://nodejs.org/en/docs/inspector/
 * Webstorm: Chromium Remote seems to be working better than Node Remote
-* port is default, 9228
+* port is default, 9229
 * made to work with NodeJs V8
 * tested on Webstorm (Chromium Remote conf) and Chromium based Chrome (plugin)
 
 ### Test Runner app
-
+| commands to run from where this readme is
 ````
 # build test image
-cd core/app/test; docker build -f Dockerfile.runnerapptest -t runnerapptest .
+docker build -t nodedocker -f core/Dockerfile-node-host-docker  core
+docker build -f core/app/test/Dockerfile.runnerapptest -t runnerapptest  core/app/test/
 # run tests with code from your fs (NOT WORKING NOW, needs to create a proper entrypoint)
-docker run -v $(pwd)/voc/core/app:/app runnerapptest cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js
+docker run -v $(pwd)/core/app:/app runnerapptest cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js
 # run test image with debug port open and code from your fs, run cmd from outside repo
-docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/voc/core/app:/app runnerapptest 
+docker rm -f test-runner; docker run -d  -p 9229:9229  --name test-runner -v $(pwd)/core/app:/app runnerapptest 
 docker exec -ti test-runner bash
 # run tests
 cd /app; npm install
-cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true LOG_LEVEL=SILENT node run-tests.js
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true APP_LOG_LEVEL=SILENT node run-tests.js
 # run one test with full app log and debug on
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ APP_LOG_LEVEL=TRACE node --inspect-brk=0.0.0.0 run-tests.js One_Test
 docker rm -f test-runner
