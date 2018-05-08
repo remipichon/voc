@@ -85,7 +85,7 @@ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.6/install.sh | b
 
 ````
 
-* LOG_LEVEL
+* APP_LOG_LEVEL
   * ALL: enable VOC log
   * else: VOC doesn't log anything, only test framework logs
 * CONTINUE_IF_ERROR
