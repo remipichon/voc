@@ -30,6 +30,8 @@ VOC currently consist of:
 
 # How to test it ?
 
+## From existing Gitlab8 instance
+
 Voc is so easy to enable. If you already have a Gitlab 8 and a Gitlab Runner defined, you just need to create a new runner using the Voc Runner NodeJs App Docker iamage available on Docker Hub. 
 Following is the config.toml to use to create the runner: 
 ```
@@ -67,9 +69,15 @@ and voilà !
 
 Next time you commit a file, the VOC Runner App will read your commit payload to understand what needs to be done. 
  
+## From scratch (Ubuntu) 
+ 
 If you don't have Gitlab already, you can easily have it with Voc all configured via the given Ansible playbooks that does the heavy lifting. Read the [installation procedure](Install.md) to know more. 
 
+## Understand the VOC configuration
+
 Read more about the [VOC configuration](Voc-configuration.md) to discover all the available features.
+
+## Enable Email
 
 Follow the [Mailin](Mailin.md) to configure your services to easily receive emails. 
 
