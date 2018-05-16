@@ -27,8 +27,8 @@ ansible-playbook -i herencgracht.host ansible/add_runner.yml -e hostname=gitlab.
 * hostname: DNS record pointing to your host, it can be its IP. It's just less fancy but everything will work the same (expect the email feature)
 * gitlab_root_password: admin username will be 'root', can specify which password do you want. Do not update it before Ansible is done configuring
 * runner_token: so far, you need to fetch the runner token from /admin/runers
-* see [DNS configuration](Mailin.md#DNS-configuration) to enable the mail server
-* see [Remote Docker](Config-Runner.md#Remote-Docker) on how to configure your certs (but don't follow the exec part, it's done by Ansible)
+* see [DNS configuration](Mailin.md#dns-configuration) to enable the mail server
+* see [Remote Docker](Config-Runner.md#remote-docker) on how to configure your certs (but don't follow the exec part, it's done by Ansible)
 
 
 ## Runner only install
@@ -41,7 +41,7 @@ I recommend the 'Install as Docker Service' but it's up to you.
 Then configure a new Runner. For local mode, the Runner image is __vocproject/nodedocker__ and should use at least '/var/run/docker.sock' as volume. 
 For remote mode, the Runner image has to be built with the Docker certificates, no need for the Docker socket. 
 
-See examples at [Add a runner](Manual-Config-Runner.md#Add-a-runner). 
+See examples at [Add a runner](Manual-Config-Runner.md#add-a-runner). 
 
 
 
