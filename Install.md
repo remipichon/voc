@@ -28,7 +28,7 @@ ansible-playbook -i herencgracht.host ansible/add_runner.yml -e hostname=gitlab.
 * gitlab_root_password: admin username will be 'root', can specify which password do you want. Do not update it before Ansible is done configuring
 * runner_token: so far, you need to fetch the runner token from /admin/runers
 * see [DNS configuration](Mailin.md#dns-configuration) to enable the mail server
-* see [Remote Docker](Config-Runner.md#remote-docker) on how to configure your certs (but don't follow the exec part, it's done by Ansible)
+* see [Remote Docker](Manual-Config-Runner.md#remote-docker) on how to configure your certs (but don't follow the exec part, it's done by Ansible)
 
 
 ## Runner only install
