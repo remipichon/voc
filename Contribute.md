@@ -79,6 +79,7 @@ cd /app; npm install
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ CONTINUE_IF_ERROR=true APP_LOG_LEVEL=SILENT node run-tests.js
 # run one test with full app log and debug on
 cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ APP_LOG_LEVEL=TRACE node --inspect-brk=0.0.0.0 run-tests.js One_Test
+cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ APP_LOG_LEVEL=TRACE node run-tests.js simple_stack_instance_docker_composes__non_remote_without_context_with_parameters__trigger_via_do_all
 docker rm -f test-runner
 
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.6/install.sh | bash

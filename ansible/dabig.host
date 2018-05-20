@@ -1,0 +1,2 @@
+[app]
+dabig ansible_host=54.38.181.38 ansible_port=24 ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_rsa

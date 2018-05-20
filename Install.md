@@ -17,10 +17,17 @@ few GitlabCI configuration and you are ready.
 
 ## Ansible install (preferred)
 
+
+
 ```bash
-ansible-playbook -i herencgracht.host ansible/deploy_configure.yml -e mode=host -e hostname=gitlab.remip.eu -e gitlab_root_password=rootroot
-ansible-playbook -i herencgracht.host ansible/wait_for_gitlab.yml
-ansible-playbook -i herencgracht.host ansible/add_runner.yml -e hostname=gitlab.remip.eu -e runner_token=GNhcsYvUpUoZS48xusmG
+hostfile=
+hostname=
+gitlabrootpassword=
+ansible-playbook -i ansible/$hostfile.host ansible/deploy_configure.yml -e mode=host -e hostname=$hostname -e gitlab_root_password=$gitlabrootpassword
+ansible-playbook -i ansible/$hostfile.host ansible/wait_for_gitlab.yml
+# go to /admin/runners to get the runner token
+tokenrunner=
+ansible-playbook -i ansible/$hostfile.host ansible/add_runner.yml -e hostname=$hostname -e runner_token=$tokenrunner
 ```
 
 * mode: can be 'host', 'remote' or 'both'. 'remote' needs proper certificates to reach the remote Docker daemon
@@ -48,3 +55,7 @@ See examples at [Add a runner](Manual-Config-Runner.md#add-a-runner).
 ## Manual install
 
 See [Manual Install](Manual-Install.md)
+
+## Extra tooling
+
+Some extra [tools](tooling/tooling.md) are available to be deployed on VOC.

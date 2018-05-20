@@ -5,3 +5,4 @@ core/mailin-mediation/app/node_modules
 core/app/node_modules
 gitlab.rb-e
 core/app/coverage
+*.retry
