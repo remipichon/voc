@@ -1,9 +1,9 @@
 ---
-- name: Get key server
-  apt_key:
-    keyserver: hkp://p80.pool.sks-keyservers.net:80
-    id: 58118E89F3A912897C070ADBF76221572C52609D
-    state: present
+#- name: Get key server
+#  apt_key:
+#    keyserver: https://download.docker.com/linux/ubuntu/gpg
+#    id: ???
+#    state: present
 
 - name: Add docker.list to sources.list
   lineinfile:
@@ -11,7 +11,7 @@
     line: "{{item}}"
     create: yes
   with_items:
-    - "deb https://apt.dockerproject.org/repo ubuntu-{{ ansible_distribution_release }} main"
+    - "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic edge"
 
 - name: Update repositories
   apt:
@@ -27,7 +27,7 @@
 - name:
   pip:
     name: docker-compose
-    version: 1.9.0
+    version: "{{ docker_compose_version }}"
     state: present
 
 - name: Add user mod
@@ -35,8 +35,8 @@
     name: "{{ username }}"
     group: docker
 
-- name: Install Docker Compose
-  get_url:
-    url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
-    dest: "/usr/local/bin/docker-compose"
-    mode: 0755
+#- name: Install Docker Compose
+#  get_url:
+#    url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+#    dest: "/usr/local/bin/docker-compose"
+#    mode: 0755

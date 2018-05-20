@@ -2,8 +2,7 @@
 - hosts: app
   become: yes
   vars:
-    - hostname: "{{ fqdn }}"
-    - runner_name: "final_node_host_docker"
-    - runner_tag: "final_node_host_docker"
+    - runner_name: "voc_docker_host"
+    - runner_tag: "voc_docker_host"
   roles:
     - gitlab-runner
