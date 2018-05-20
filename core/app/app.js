@@ -16,6 +16,9 @@ var YAML = require('yamljs');
 var configuration = require("./configuration");
 
 
+var pjson = require('./package.json');
+console.log("running VOC Runner app version",pjson.version);
+
 let defaultLevel = "info";
 if(process.env.LOG_LEVEL){
     let logLevels = "";
