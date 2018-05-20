@@ -147,7 +147,7 @@ module.exports = {
         let env = "";
         if (instanceConfig.parameters && Array.isArray(instanceConfig.parameters)) {
             instanceConfig.parameters.forEach(param => {
-                env += `${ param.name }=${ param.value }`
+                env += `${ param.name }=${ param.value } `
             });
         }
         return env;
