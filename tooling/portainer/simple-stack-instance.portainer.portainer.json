@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "parameters": [
+    {
+      "name": "virtual_host",
+      "value": "portainer.remip.eu"
+    }
+  ]
+}

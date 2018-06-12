@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  portainer:
+    image: portainer/portainer
+    networks:
+          - voc_network
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    ports:
+      - '${public_port:-80}'
+    environment:
+     - VIRTUAL_HOST=${virtual_host} #for voc nginx-proxy
+
+volumes:
+  portainer_data:
+
+networks:
+  voc_network:
+    external: true
