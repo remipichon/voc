@@ -133,9 +133,9 @@ module.exports = {
         doAll: /(\[do\-all\])/m,    //same as buildDeployAll
         removeAll: /(\[remove\-all\])/m,
         buildDeployAll: /(\[build\-deploy\-all\])/m,
-        buildResourceName: /(\[build\-([a-zA-Z0-9]+)\])/m,
-        deployInstanceName: /(\[deploy\-([a-zA-Z0-9]+)\])/m,
-        removeInstanceName: /(\[remove\-([a-zA-Z0-9]+)\])/m,
+        buildResourceName: /(\[build\-([a-zA-Z0-9_-]+)\])/m,
+        deployInstanceName: /(\[(?:deploy|push)\-([a-zA-Z0-9_-]+)\])/m,
+        removeInstanceName: /(\[remove\-([a-zA-Z0-9_-]+)\])/m,
         dryRun: /\[dry\-run\]/m
     },
 

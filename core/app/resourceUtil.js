@@ -219,15 +219,24 @@ module.exports = {
                         actions = _.where(commitActions, {action: "deployInstanceName"});
                         actions.forEach(action => {
                             log.debug("Trigger instance via commit action: push image or deploy SI or SSI", action.resourceName);
-                            let res = instances.filter(i => {
+                            let stacks = instances.filter(i => {
                                 return i.instanceName == action.resourceName
                             });
-                            res.forEach(i => {
-                                i.toBuild = false;
-                                i.toDeploy = true;
-                                i.toPush = true;
+                            let images = instances.filter(i => {
+                                return !i.instanceName && i.resourceName == action.resourceName;
                             });
-                            triggeredInstances = triggeredInstances.concat(res)
+                            stacks.forEach(i => {
+                                i.toBuild = i.toBuild || false;
+                                i.toDeploy = true;
+                                i.toPush = false;
+                            });
+                            images.forEach(i => {
+                              i.toBuild = i.toBuild || false;
+                              i.toDeploy = false;
+                              i.toPush = true;
+                            });
+                          triggeredInstances = triggeredInstances.concat(images);
+                          triggeredInstances = triggeredInstances.concat(stacks);
                         });
                         actions = _.where(commitActions, {action: "removeInstanceName"});
                         actions.forEach(action => {

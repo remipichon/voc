@@ -67,8 +67,8 @@ above command already setup eveything for remote debug to work. Use your favorit
 | commands to run from where this readme is
 ````
 # build test image
-docker build -t vocproject/runnerapphost -f core/Dockerfile.node-host-docker  core
-docker build -f core/app/test/Dockerfile.runnerapptest -t runnerapptest  core/app/test/
+docker build -t vocproject/runnerapphost -f core/Dockerfile.runner-app-host  core
+docker build -f core/app/test/Dockerfile.runner-app-test -t runnerapptest  core/app/test/
 # run tests with code from your fs (NOT WORKING NOW, needs to create a proper entrypoint)
 docker run -v $(pwd)/core/app:/app runnerapptest cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js
 # run test image with debug port open and code from your fs, run cmd from outside repo

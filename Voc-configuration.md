@@ -284,7 +284,8 @@ Several actions are available via commit message. Commit actions are prior to ch
     * deployAll: [deploy-all]  push (if push defined) all images + deploy all Simple Stack Instances and Stack Instances (if enabled)
       * removeAll: [remove-all] remove all Simple Stack Instances and Stack Instances
          * buildResourceName: [build-\<resource-name\>] build image or Simple Stack Instances or Stack Instances 
-         * deployInstanceName: [deploy-\<instance-name\>] push image or deploy Simple Stack Instances or deploy Stack Instances 
+         * deployInstanceName: [deploy-\<instance-name\>] deploy Simple Stack Instances or deploy Stack Instances 
+         * deployInstanceName: [push-\<instance-name\>] push image 
          * removeInstanceName: [remove-\<instance-name\>] remove Simple Stack Instances or Stack Instances
 
 Above hierarchy is used. If a '[do-all]' is found, it will not ready any further actions. same for '[build-all]', 'deployAll' and 'removeAll' in that order. Instance specific actions can be grouped in one commit message (if not other common action defined of course)

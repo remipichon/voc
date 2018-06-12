@@ -7,7 +7,8 @@ module.exports = {
         testUtil.prepare();
 
         testUtil.copyGitAddFile(
-            "images/image.nominalcase.json", "images/Dockerfile.nominalcase",
+            "images/image.nominalcaseimage.json", "images/Dockerfile.nominalcaseimage",
+            "images/image.nominal-case.json", "images/Dockerfile.nominal-case",
             "dockercomposes/docker-compose.nominalcase.yml",
             "instances/simple-stack-instance.nominalcase.mynominalcase.json", "dockercomposes/docker-compose.nominalcase.yml",
             "instances/simple-stack-instance.withcontext.mywithcontext.json", "dockercomposes/docker-compose.withcontext.yml",
@@ -19,14 +20,41 @@ module.exports = {
 
         this._prepareForPerResourceCommitActions();
 
-        testUtil.commit("[dry-run] [build-nominalcase]");
+        testUtil.commit("[dry-run] [build-nominalcaseimage]");
 
         testUtil.run();
 
         if (!testUtil.assertExhaustive(
-                "docker build [..] Dockerfile.nominalcase [..] nominalcase __for nominalcase __once",
+                "docker build [..] Dockerfile.nominalcaseimage [..] nominalcaseimage __for nominalcaseimage __once",
             )) throw new TestCaseError(__test_case_name_1);
 
+    },
+
+    commit_action__non_remote_without_context__build_image_snake_name: function () {
+
+        this._prepareForPerResourceCommitActions();
+
+        testUtil.commit("[dry-run] [build-nominal-case]");
+
+        testUtil.run();
+
+        if (!testUtil.assertExhaustive(
+                "docker build [..] Dockerfile.nominal-case [..] nominal-case __for nominal-case __once",
+            )) throw new TestCaseError(__test_case_name_1);
+
+    },
+
+    commit_action__non_remote_without_context__pull_image: function () {
+
+        this._prepareForPerResourceCommitActions();
+
+        testUtil.commit("[dry-run] [push-nominalcaseimage]");
+
+        testUtil.run();
+
+        if (!testUtil.assertExhaustive(
+                "docker tag [..] nominalcaseimage [..] registrytopush:5000/nominalcaseimage [..] docker push [..] nominalcaseimage __for registrytopush:5000/nominalcaseimage __once",
+            )) throw new TestCaseError(__test_case_name_1);
 
     },
 

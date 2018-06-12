@@ -1,0 +1,4 @@
+{
+  "tag": "nominalcaseimage",
+  "push": "registrytopush:5000/nominalcaseimage"
+}

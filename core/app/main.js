@@ -95,11 +95,11 @@ module.exports = {
             if (instance.toClean)
                 actions += "cleaned ";
             if (instance.isImage)
-                name = instance.resourceName
+                name = instance.resourceName;
             if (instance.dockercomposeName || instance.stackDefinitionName) {
                 name = instance.instanceName;
             }
-            actions = actions.replace(" "," and ");
+            actions = actions.slice(0, -1).replace(" "," and ");
             log.info(`   - ${name} has been scheduled to be ${actions}`)
         });
 
