@@ -34,7 +34,7 @@ module.exports = {
         var dockerTag = dockerUtils.getDockerExec() + "tag " + config.tag + " " + config.push;
         var dockerPush = dockerUtils.getDockerExec() + "push " + config.push;
         if(!dryRun)
-            utils.execCmdSync(dockerTag, function (error, stdout, stderr) {
+            utils.execCmd(dockerTag, function (error, stdout, stderr) {
                 utils.execCmd(dockerPush, function (error, stdout, stderr) {
                     utils.writeResult(config.push, gitlabUtil.getState(error, stderr, stdout));
                 })
