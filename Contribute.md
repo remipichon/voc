@@ -13,7 +13,7 @@ name=node_host_docker
 url=http://gitlab        # runner will use the Docker overlay network that Gitlab and the runners can share with following   
 docker_network_mode=voc_network
 token=2ztntGipiY8ukcngQKzU
-image=nodedocker
+image=vocproject/runnerapphost
 volumes=/var/run/docker.sock:/var/run/docker.sock
 
 #extra volumes to share the code with the host
@@ -39,7 +39,7 @@ Each time the runner will start, it will use the latest code in the volume. Just
 
 Want to quickly test some JS code without anything around it ? (assuming you have some valid conf at 'voc-configuration' and VOC code at 'voc')
 ````
-ID=$(docker run -d -p 9229:9229 -v '/var/run/docker.sock:/var/run/docker.sock' -v $(pwd)/voc-configuration/:/voc-configuration -v $(pwd)/voc/core/app:/app nodedocker tail -f /dev/null)
+ID=$(docker run -d -p 9229:9229 -v '/var/run/docker.sock:/var/run/docker.sock' -v $(pwd)/voc-configuration/:/voc-configuration -v $(pwd)/voc/core/app:/app vocproject/runnerapphost tail -f /dev/null)
 docker exec -ti $ID bash
 cd /app
 DEV=true HOME=/ CI_PROJECT_DIR=/voc-configuration LOG_LEVEL=DEBUG node --inspect --inspect-brk=0.0.0.0 app.js
@@ -67,7 +67,7 @@ above command already setup eveything for remote debug to work. Use your favorit
 | commands to run from where this readme is
 ````
 # build test image
-docker build -t nodedocker -f core/Dockerfile-node-host-docker  core
+docker build -t vocproject/runnerapphost -f core/Dockerfile.node-host-docker  core
 docker build -f core/app/test/Dockerfile.runnerapptest -t runnerapptest  core/app/test/
 # run tests with code from your fs (NOT WORKING NOW, needs to create a proper entrypoint)
 docker run -v $(pwd)/core/app:/app runnerapptest cd /app/test; CI_PROJECT_DIR=/app/test/test-workspace TEST_RESOURCES=/app/test/test-resource HOME=/ node run-tests.js

@@ -45,7 +45,7 @@ You already have a Gitlab and only want to get the build and deploy capabilities
 You first need a running Gitlab8 with a Gitlab Runner configured. See (https://docs.gitlab.com/runner/install/index.html)[https://docs.gitlab.com/runner/install/index.html]. 
 I recommend the 'Install as Docker Service' but it's up to you. 
 
-Then configure a new Runner. For local mode, the Runner image is __vocproject/nodedocker__ and should use at least '/var/run/docker.sock' as volume. 
+Then configure a new Runner. For local mode, the Runner image is __vocproject/runnerapphost__ and should use at least '/var/run/docker.sock' as volume. 
 For remote mode, the Runner image has to be built with the Docker certificates, no need for the Docker socket. 
 
 See examples at [Add a runner](Manual-Config-Runner.md#add-a-runner). 

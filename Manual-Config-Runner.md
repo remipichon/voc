@@ -38,7 +38,7 @@ Why? Host Docker Runner needs to have Docker socket binding while Remote Docker 
 Different images, different runners. 
 
 ### Host Docker 
-Image is _nodedocker_ and should be run with a runner that has the Docker socket mounted as a volume. 
+Image is _vocproject/runnerapphost_ and should be run with a runner that has the Docker socket mounted as a volume. 
 Image is built out of the box by Docker Compose but service has to be configured by hand. 
 
 ````
@@ -49,7 +49,7 @@ url=http://<HOSTNAME>      # runner will use the public access to reach Gitlab (
 # url=http://gitlab        # runner will use the Docker overlay network that Gitlab and the runners can share with following   
 # docker_network_mode=voc_network
 token=<TOKEN> #from /admin/runners
-image=nodedocker
+image=vocproject/runnerapphost
 volumes=/var/run/docker.sock:/var/run/docker.sock
 
 gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false --docker-volumes $volumes
@@ -61,7 +61,7 @@ sed -i "/volumes/c\    volumes = [\"/cache\",\"$volumes\"]" /etc/gitlab-runner/c
 Go to <your_gitlab>/admin/runners/ to add _node_host_docker_ tag and use it in your gitlab-ci.yml file.
 
 ## Remote Docker
-Image is _noderemotedocker_. To build this image, first create yourself a set of certificates:
+Image is _vocproject/runnerappremote_. To build this image, first create yourself a set of certificates:
 https://docs.docker.com/engine/security/https/
 
 Copy the tsl ca certificate (ca.pem), the tsl certificate (cert.pem) and tsl key (key.pem) into _core/remoteDockerClientCert_.
@@ -76,7 +76,7 @@ url=http://<HOSTNAME>      # runner will use the public access to reach Gitlab (
 # url=http://gitlab        # runner will use the Docker overlay network that Gitlab and the runners can share with following   
 # docker_network_mode=voc_network
 token=<TOKEN> #from /admin/runners
-image=noderemotedocker
+image=vocproject/runnerappremote
 
 gitlab-runner register --non-interactive --name $name --url $url --registration-token $token --executor docker --docker-network-mode $docker_network_mode --docker-tlsverify=false --docker-pull-policy if-not-present --docker-image $image --docker-privileged true --docker-disable-cache false
 ````
@@ -85,7 +85,7 @@ Go to <your_gitlab>/admin/runners/ to add _node_remote_docker_ tag and use it in
 
 ### Several remote Docker
 So far not supported out of the box:
-* copy _Dockerfile-node-remote-docker_ and adapt 'remoteDockerClientCert/*.pem'
+* copy _Dockerfile.runner-app-remote_ and adapt 'remoteDockerClientCert/*.pem'
 * in _docker-compose.remote.yml_ copy _node_remote_docker_ and adapt 'context' and 'image' name.
 * add another runner using that image OR specify which remote image to use in .gitlab-ci.yml
 

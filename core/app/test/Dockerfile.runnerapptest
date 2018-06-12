@@ -1,4 +1,4 @@
-FROM nodedocker
+FROM vocproject/runnerapphost
 
 # prepare SSH
 RUN apt-get install -y openssh-server

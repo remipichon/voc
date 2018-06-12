@@ -1,4 +1,4 @@
-FROM nodedocker
+FROM vocproject/runnerapphost
 
 # copy cert
 COPY remoteDockerClientCert/*.pem /root/.docker/

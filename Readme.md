@@ -41,7 +41,7 @@ url=http://<HOSTNAME>      # runner will use the public access to reach Gitlab (
 # url=http://gitlab        # runner will use the Docker overlay network that Gitlab and the runners can share with following   
 # docker_network_mode=voc_network #if using the overlay network
 token=<TOKEN> #from /admin/runners
-image=vocproject/nodedocker
+image=vocproject/runnerapphost
 volumes=/var/run/docker.sock:/var/run/docker.sock # runner will use local Docker to build and deploy
 ```
 

@@ -1,6 +1,6 @@
 {
   "name": "git-docker-file",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Script base with Git,Docker API and File API",
   "main": "app.js",
   "author": "https://github.com/remipichon/voc",

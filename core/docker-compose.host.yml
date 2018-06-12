@@ -11,13 +11,5 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - 'runnerconfig:/etc/gitlab-runner'
 
-  node_host_docker:
-    image: 'nodedocker'
-    deploy:
-      replicas: 0
-    build:
-      context: .
-      dockerfile: Dockerfile-node-host-docker
-
 volumes:
   runnerconfig:
