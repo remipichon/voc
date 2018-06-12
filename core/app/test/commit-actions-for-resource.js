@@ -58,6 +58,21 @@ module.exports = {
 
     },
 
+  commit_action__non_remote_without_context__build_push_image: function () {
+
+    this._prepareForPerResourceCommitActions();
+
+    testUtil.commit("[dry-run] [build-nominalcaseimage] [push-nominalcaseimage]");
+
+    testUtil.run();
+
+    if (!testUtil.assertExhaustive(
+        "docker build [..] Dockerfile.nominalcaseimage [..] nominalcaseimage __for nominalcaseimage __once",
+        "docker tag [..] nominalcaseimage [..] registrytopush:5000/nominalcaseimage [..] docker push [..] nominalcaseimage __for registrytopush:5000/nominalcaseimage __once",
+      )) throw new TestCaseError(__test_case_name_1);
+
+  },
+
     commit_action__non_remote_without_context__build_ssi: function () {
 
         this._prepareForPerResourceCommitActions();

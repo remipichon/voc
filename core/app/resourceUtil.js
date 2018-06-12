@@ -223,10 +223,10 @@ module.exports = {
                                 return i.instanceName == action.resourceName
                             });
                             let images = instances.filter(i => {
-                                return !i.instanceName && i.resourceName == action.resourceName;
+                                return i.isImage && i.resourceName == action.resourceName;
                             });
                             stacks.forEach(i => {
-                                i.toBuild = i.toBuild || false;
+                                i.toBuild = false;
                                 i.toDeploy = true;
                                 i.toPush = false;
                             });
@@ -235,8 +235,8 @@ module.exports = {
                               i.toDeploy = false;
                               i.toPush = true;
                             });
-                          triggeredInstances = triggeredInstances.concat(images);
                           triggeredInstances = triggeredInstances.concat(stacks);
+                          triggeredInstances = triggeredInstances.concat(images);
                         });
                         actions = _.where(commitActions, {action: "removeInstanceName"});
                         actions.forEach(action => {
@@ -249,6 +249,22 @@ module.exports = {
                             });
                             triggeredInstances = triggeredInstances.concat(res)
                         });
+
+                        //merge instances that were concerned by more than one git commit action
+                      let instancesAsMap = {};
+                      triggeredInstances.forEach(instance => {
+                         if(instancesAsMap[instance.resourceName]) {
+                             _.each(instance, property => {
+                               if(instancesAsMap[instance.resourceName][property] && typeof triggeredInstances == "boolean" && !instancesAsMap[instance.resourceName][property])
+                                   //if property is already defined as boolean and set to false, we try to override it
+                                     instancesAsMap[instance.resourceName][property] = instance[property]
+                             })
+                         } else {
+                           instancesAsMap[instance.resourceName] = instance
+                         }
+                      });
+                      triggeredInstances = _.values(instancesAsMap);
+
                     }
                 }
             }

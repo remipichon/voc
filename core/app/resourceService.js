@@ -262,7 +262,7 @@ module.exports = {
                 let searchDockerfiles;
                 if(instance.remote){
                     let instanceConfig = utils.readFileSyncToJson(instance.path)
-                    log.debug(`   ${instance.resourceName}: is in remote repo mode, now cloning ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name} to get remote dockercomposes`);
+                    log.debug(`   ${instance.resourceName}: is in remote repo mode, now cloning ${typeof instanceConfig.repo == "string"? instanceConfig.repo: instanceConfig.repo.name} to get remote Dockerfiles`);
                     let allRemoteResourcePaths = fsUtil.cloneAndWalkRemoteRepo(instanceConfig, repos, instance.resourceName);
                     if(!allRemoteResourcePaths) return null;
                     let vocResourcesRemote = this.getVocResources(allRemoteResourcePaths);

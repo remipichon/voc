@@ -101,7 +101,7 @@ if(process.env.CONTINUE_IF_ERROR == "true"){
         log.warn(`\t\t\t Dammit, ${failingTests.length} out of ${testcases.length} tests failed...`);
         log.warn(`\t${_.reduce(failingTests, (memo, test) => { return memo + "\n\t" + test})}`);
         log.warn(`!!! You can re-run the failing tests with:`);
-        log.warn(`CI_PROJECT_DIR=${process.env.CI_PROJECT_DIR} TEST_RESOURCES=${process.env.TEST_RESOURCES} HOME=${process.env.HOME} LOG_LEVEL=all node run-tests.js ${_.reduce(failingTests, (memo, test) => { return memo + " " + test})}`)
+        log.warn(`CI_PROJECT_DIR=${process.env.CI_PROJECT_DIR} TEST_RESOURCES=${process.env.TEST_RESOURCES} HOME=${process.env.HOME} APP_LOG_LEVEL=TRACE LOG_LEVEL=all node run-tests.js ${_.reduce(failingTests, (memo, test) => { return memo + " " + test})}`)
         process.exit(1);
     } else {
         log.log(`\t\t\t Hurray, all ${testcases.length} tests were successful !!!`);
