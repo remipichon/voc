@@ -1,0 +1,4 @@
+{
+  "tag": "severalpushes",
+  "push": ["registrytopush:5000/severalpushes:version", "registrytopush:5000/severalpushes:latest"]
+}

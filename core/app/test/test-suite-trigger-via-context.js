@@ -17,7 +17,7 @@ module.exports = {
 
         if (testUtil.assert(
                 "docker build [..] Dockerfile.withcontext [..] withcontext __for withcontext __once",
-                "docker push registrytopush:5000/withcontext __for registrytopush:5000/withcontext __once",
+                "docker push registrytopush:5000/withcontext __for withcontext __once",
             )) {
 
         } else {

@@ -15,7 +15,7 @@ module.exports = {
 
         if (testUtil.assert(
                 "docker build [..] Dockerfile.nominalcase [..] nominalcase __for nominalcase __once",
-                "docker push registrytopush:5000/nominalcase __for registrytopush:5000/nominalcase __once",
+                "docker push registrytopush:5000/nominalcase __for nominalcase __once",
             )) {
 
         } else {

@@ -53,7 +53,7 @@ module.exports = {
         testUtil.run();
 
         if (!testUtil.assertExhaustive(
-                "docker tag [..] nominalcaseimage [..] registrytopush:5000/nominalcaseimage [..] docker push [..] nominalcaseimage __for registrytopush:5000/nominalcaseimage __once",
+                "docker tag [..] nominalcaseimage [..] registrytopush:5000/nominalcaseimage [..] docker push [..] nominalcaseimage __for nominalcaseimage __once",
             )) throw new TestCaseError(__test_case_name_1);
 
     },
@@ -68,7 +68,7 @@ module.exports = {
 
     if (!testUtil.assertExhaustive(
         "docker build [..] Dockerfile.nominalcaseimage [..] nominalcaseimage __for nominalcaseimage __once",
-        "docker tag [..] nominalcaseimage [..] registrytopush:5000/nominalcaseimage [..] docker push [..] nominalcaseimage __for registrytopush:5000/nominalcaseimage __once",
+        "docker tag [..] nominalcaseimage [..] registrytopush:5000/nominalcaseimage [..] docker push [..] nominalcaseimage __for nominalcaseimage __once",
       )) throw new TestCaseError(__test_case_name_1);
 
   },

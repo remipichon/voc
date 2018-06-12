@@ -51,7 +51,7 @@ module.exports = {
 
         if (testUtil.assert(
                 "docker build [..] Dockerfile.nominalcase [..] nominalcase __for nominalcase __once",
-                "docker push registrytopush:5000/nominalcase __for registrytopush:5000/nominalcase __once",
+                "docker push registrytopush:5000/nominalcase __for nominalcase __once",
             )) {
 
         } else {
@@ -59,7 +59,29 @@ module.exports = {
         }
     },
 
-    simple_stack_instance_docker_composes__non_remote_without_context__trigger_via_do_all: function () {
+  image_several_pushes__non_remote_without_context__trigger_via_do_all: function () {
+
+    testUtil.prepare();
+
+    testUtil.copyGitAddFile("images/image.severalpushes.json", "images/Dockerfile.severalpushes");
+
+    testUtil.commit("[dry-run] [do-all]");
+
+    testUtil.run();
+
+    if (testUtil.assert(
+        "docker build [..] Dockerfile.severalpushes [..] severalpushes __for severalpushes __once",
+        "docker tag [..] severalpushes [..] registrytopush:5000/severalpushes:version [..] docker push [..] registrytopush:5000/severalpushes:version __for severalpushes __once",
+        "docker tag [..] severalpushes [..] registrytopush:5000/severalpushes:latest [..] docker push [..] registrytopush:5000/severalpushes:latest __for severalpushes __once",
+      )) {
+
+    } else {
+      throw new TestCaseError(__test_case_name_1);
+    }
+  },
+
+
+  simple_stack_instance_docker_composes__non_remote_without_context__trigger_via_do_all: function () {
 
         testUtil.prepare();
 

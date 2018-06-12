@@ -45,7 +45,7 @@ Regular Dockerfile, see Docker docs.
 ````json
 {
   "tag": "alpinette",
-  "push": "registry:5000/alpinette",
+  "push": "registry:5000/alpinette" | ["registry:5000/alpinette:version", "registry:5000/alpinette:latest"]
   "context": "relative/path/to/context",
 }
 ````
@@ -55,7 +55,8 @@ Regular Dockerfile, see Docker docs.
 * push
   * non mandatory
   * built image will be pushed to the 'push' value, it has to be a valid Docker Registry
-  * currently not supporting 'docker login' nor unsecure registry
+  * it can be an array to push several remote at once (typically to push _latest_ as well as a version)
+  * currently not supporting 'docker login' (has to be done in _gitlab-ci.yml_ using Gitlab secrests) nor unsecure registry
 * context
   * relative path from where **configuration** file is found
   * should be a valid Dockefile context, it will be given as PATH to [Docker build](https://docs.docker.com/engine/reference/commandline/build/#usage)

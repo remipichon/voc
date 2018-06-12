@@ -24,23 +24,29 @@ module.exports = {
         }
 
         if (instance.toBuild) {
-            if (this.buildImage(config, dockerfilePath, dryRun) && config.push && instance.toPush)
-                this.pushImage(config, dryRun);
+            if (this.buildImage(config, dockerfilePath, dryRun) && config.push && instance.toPush) {
+                if(Array.isArray(config.push)){
+                  config.push.forEach(remote => {
+                       this.pushImage(config.tag, remote, dryRun);
+                    });
+                } else
+                    this.pushImage(config.tag, config.push, dryRun);
+            }
         } else if (config.push && instance.toPush)
-            this.pushImage(config, dryRun);
+            this.pushImage(config.tag, config.push, dryRun);
     },
 
-    pushImage(config, dryRun = false) {
-        var dockerTag = dockerUtils.getDockerExec() + "tag " + config.tag + " " + config.push;
-        var dockerPush = dockerUtils.getDockerExec() + "push " + config.push;
+    pushImage(tag, pushRemote, dryRun = false) {
+      var dockerTag = dockerUtils.getDockerExec() + "tag " + tag + " " + pushRemote;
+        var dockerPush = dockerUtils.getDockerExec() + "push " + pushRemote;
         if(!dryRun)
             utils.execCmd(dockerTag, function (error, stdout, stderr) {
                 utils.execCmd(dockerPush, function (error, stdout, stderr) {
-                    utils.writeResult(config.push, gitlabUtil.getState(error, stderr, stdout));
+                    utils.writeResult(tag, gitlabUtil.getState(error, stderr, stdout));
                 })
             });
         else
-            utils.writeResult(config.push, {result: `Dry run: Docker would have run '${dockerTag}' then '${dockerPush}'`});
+            utils.writeResult(tag, {result: `Dry run: Docker would have run '${dockerTag}' then '${dockerPush}'`});
     },
 
     buildImage(config, Dockerfile, dryRun = false) {
