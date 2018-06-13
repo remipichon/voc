@@ -47,6 +47,10 @@ Regular Dockerfile, see Docker docs.
   "tag": "alpinette",
   "push": "registry:5000/alpinette" | ["registry:5000/alpinette:version", "registry:5000/alpinette:latest"]
   "context": "relative/path/to/context",
+  "parameters": [{
+       "name": "ENV name",
+       "value": "value for it"
+  }] 
 }
 ````
 * tag
@@ -60,6 +64,10 @@ Regular Dockerfile, see Docker docs.
 * context
   * relative path from where **configuration** file is found
   * should be a valid Dockefile context, it will be given as PATH to [Docker build](https://docs.docker.com/engine/reference/commandline/build/#usage)
+* parameters
+  * regular parameter for [Parametrized Dockerfile](https://docs.docker.com/engine/reference/builder/#arg)
+  * name: the ${NAME} in Dockerfile
+  * value: any string, if starting with dollar sign `$` value will be read from the host (== the Gitlab Job)
 
 
 > For remote repo, see common section [Repos](#Repos) 
@@ -104,7 +112,7 @@ Regular Dockercompose file, see Docker Compose docs.
 * parameters
   * regular parameter for [Substituting environment variables in Compose files](https://docs.docker.com/compose/environment-variables/)
   * name: the ${NAME} in docker compose file
-  * value: you can guess it...
+  * value: any string, if starting with dollar sign `$` value will be read from the host (== the Gitlab Job)
 
 ## Stack Instance and Stack Definition
 

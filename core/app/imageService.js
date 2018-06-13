@@ -51,8 +51,25 @@ module.exports = {
 
     buildImage(config, Dockerfile, dryRun = false) {
 
-
-        var dockerBuild = dockerUtils.getDockerExec() + "build -f " + Dockerfile + " -t " + config.tag + " " + fsUtil.removeLastPathPart(Dockerfile) ;
+        let containsPotentialSensitiveValue = false;
+        let buildArgs = "";
+        if(config.parameters) {
+            config.parameters.forEach(param => {
+                let value = param.value;
+                if(param.value.startsWith('$')){
+                    containsPotentialSensitiveValue = false;
+                    value = process.env[param.value.substring(1)];
+                    if(!value){
+                      utils.writeResult(config.tag, {
+                        warning: `value for config parameters ${param.name} refers to an env ${param.value.substring(1)} which couldn't be found. If Dockerfile has a default, it will be okay. Else, it will fail. `
+                      });
+                    }
+                }
+                if(value)
+                    buildArgs += ` --build-arg ${param.name}=${value} `
+            });
+        }
+        var dockerBuild = `${dockerUtils.getDockerExec()}build ${buildArgs} -f ${Dockerfile} -t ${config.tag} ${fsUtil.removeLastPathPart(Dockerfile)}` ;
         if(dryRun) {
             utils.writeResult(config.tag, {
                 result: `Dry run: Docker would have run '${dockerBuild}'`
@@ -60,7 +77,7 @@ module.exports = {
             return true;
         }
 
-        let result = utils.execCmdSync(dockerBuild, true);
+        let result = utils.execCmdSync(dockerBuild, true, {}, containsPotentialSensitiveValue);
 
         if (result.error) {
             utils.writeResult(config.tag, {

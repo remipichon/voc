@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "parameters": [{
+    "name": "image_param",
+    "value": "$COOL_BASE"
+  }]
+}

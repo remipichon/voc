@@ -1,0 +1,8 @@
+{
+  "tag": "withparametersenv",
+  "push": "registrytopush:5000/withparametersenv",
+  "parameters": [{
+    "name": "coolBaseImage",
+    "value": "$COOL_BASE"
+  }]
+}

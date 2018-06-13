@@ -52,13 +52,16 @@ module.exports = {
         });
     },
 
-    execCmdSync: function(cmd, delegateError = false, options = {}){
+    execCmdSync: function(cmd, delegateError = false, options = {}, sensitiveInformation = false){
         let stdout;
         options["encoding"] = "UTF-8";
         try{
             stdout = execSync(cmd, options);
         } catch (err){
-            log.error(`Error executing command '${cmd}': ${err.message}`);
+            if(sensitiveInformation)
+                log.error(`Error executing command 'command not displayed': ${err.message}`)
+            else
+                log.error(`Error executing command '${cmd}': ${err.message}`);
             log.error(`${err.stderr}`);
             log.error(`${err.stdout}`);
             if(!delegateError)

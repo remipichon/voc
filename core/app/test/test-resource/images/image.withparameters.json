@@ -1,0 +1,8 @@
+{
+  "tag": "withparameters",
+  "push": "registrytopush:5000/withparameters",
+  "parameters": [{
+    "name": "coolBaseImage",
+    "value": "this_is_base"
+  }]
+}
