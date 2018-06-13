@@ -90,7 +90,7 @@ module.exports = {
                 actions = "built ";
             if (instance.toPush)
                 actions += "pushed ";
-            if (instance.toDeploy)
+            if (!instance.isImage && instance.toDeploy)
                 actions += "deployed (or removed if disabled) "; //we don't know yet the status of the stack as configuration as not been retrieved yet
             if (instance.toClean)
                 actions += "cleaned ";

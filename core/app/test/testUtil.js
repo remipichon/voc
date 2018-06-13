@@ -93,7 +93,7 @@ module.exports = {
     },
 
     /**
-     * @summary copy and commit file to test repo defined by configuration.repoFolder 
+     * @summary copy and commit file to test repo defined by configuration.repoFolder
      * @param fileNames List<String|<source,destination>>
      *     if <source,destination>, source is where the file is (full path to the file), destination is the folder in which the file will be copied with same name
      *
@@ -103,7 +103,10 @@ module.exports = {
         fileNames.forEach(path => {
             let fileName;
             if(typeof path == 'object'){
-                fileName = `${path.destination}/${path_.basename(path.source)}`;
+                if(path.destinationFile)
+                    fileName = `${path.destinationFile}`;
+                else
+                    fileName = `${path.destination}/${path_.basename(path.source)}`;
             } else {
                 fileName = path_.basename(path);
             }
@@ -122,7 +125,10 @@ module.exports = {
         fileNames.forEach(path => {
             let fileName;
             if(typeof path == 'object'){
-                fileName = `${path.destination}/${path_.basename(path.source)}`;
+                if(path.destinationFile)
+                    fileName = `${path.destinationFile}`;
+                else
+                    fileName = `${path.destination}/${path_.basename(path.source)}`;
             } else {
                 fileName = path_.basename(path);
             }
@@ -155,10 +161,16 @@ module.exports = {
             if(typeof path === "object"){
                 let fileName = path_.basename(path.source);
                 sourcePath = `${this.testResourceLocation}/${path.source}`;
-                destPath = `${repoFolder}/${path.destination}/${fileName}`;
+                if(path.destinationFile)
+                    destPath = `${repoFolder}/${path.destinationFile}`;
+                else
+                    destPath = `${repoFolder}/${path.destination}/${fileName}`;
 
                 try {
-                    fs.mkdirSync(`${repoFolder}/${path.destination}`);
+                    if(path.destinationFile)
+                        fs.mkdirSync(`${repoFolder}/${path_.dirname(path.destinationFile)}`);
+                    else
+                        fs.mkdirSync(`${repoFolder}/${path.destination}`);
                 } catch(error){
                     if(error.code === "EEXIST"){
                         log.log(`dir ${destPath} already exists`);
@@ -167,7 +179,11 @@ module.exports = {
                 }
 
             } else {
-                let fileName = path_.basename(path);
+                let fileName
+                if(path.destinationFile)
+                    fileName = path.destinationFile;
+                else
+                    fileName = path_.basename(path);
                 sourcePath = `${this.testResourceLocation}/${path}`;
                 destPath = `${repoFolder}/${fileName}`;
             }
@@ -291,7 +307,7 @@ module.exports = {
         });
         return success;
     },
-    
+
     _assertWords: function (message, phrase) {
         let words = phrase.split("[..]");
 
@@ -410,6 +426,6 @@ module.exports = {
             return `target resource ${targetResource} not part of result file`
         }
     },
-    
+
 };
 

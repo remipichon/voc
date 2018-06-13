@@ -45,7 +45,6 @@ cd /app
 DEV=true HOME=/ CI_PROJECT_DIR=/voc-configuration LOG_LEVEL=DEBUG node --inspect --inspect-brk=0.0.0.0 app.js
 DEV=true HOME=/ CI_PROJECT_DIR=/voc-configuration LOG_LEVEL=DEBUG node --inspect --inspect=0.0.0.0 app.js
 docker rm -f $ID
->>>>>>> 10f97b2db66ff3e07279284177516f07e2031d54
 ````
 I will run and exec into a container using the same image as the runner. Remove '--inspect-brk=0.0.0.0' if you don't want to connect a debugger.
 

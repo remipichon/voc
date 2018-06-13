@@ -52,18 +52,22 @@ module.exports = {
         });
     },
 
-    execCmdSync: function(cmd, delegateError = false, options = {}, sensitiveInformation = false){
+    execCmdSync: function(cmd, delegateError = false, options = {}, extra){
+        let silent = extra.silent || false;
+        let sensitiveInformation = extra.sensitiveInformation || false;
         let stdout;
         options["encoding"] = "UTF-8";
         try{
             stdout = execSync(cmd, options);
         } catch (err){
-            if(sensitiveInformation)
-                log.error(`Error executing command 'command not displayed': ${err.message}`)
-            else
-                log.error(`Error executing command '${cmd}': ${err.message}`);
-            log.error(`${err.stderr}`);
-            log.error(`${err.stdout}`);
+            if(!silent) {
+                if(sensitiveInformation)
+                    log.error(`Error executing command 'command not displayed': ${err.message}`)
+                else
+                    log.error(`Error executing command '${cmd}': ${err.message}`);
+                log.error(`${err.stderr}`);
+                log.error(`${err.stdout}`);
+            }
             if(!delegateError)
                 throw new Error(err);
             else

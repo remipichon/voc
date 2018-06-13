@@ -45,7 +45,6 @@ module.exports = {
         _.filter(imageConfigs, ic => { return !ic.remote }).forEach(imageConfig => {
             let dockerfile = _.find(dockerfiles, dc => { return dc.name == imageConfig.resourceName});
             let config = JSON.parse(fs.readFileSync(imageConfig.path, {encoding: 'utf-8'}));
-            //TODO path should be the Dockerfile, not the imageconfig  #7 "context to build image, relative from where the Dockerfile is found," => to test
             let path = this.removeLastPathPart(dockerfile.path);
             if(config.context){
                 path = `${path}${config.context}`

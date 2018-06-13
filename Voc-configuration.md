@@ -62,7 +62,7 @@ Regular Dockerfile, see Docker docs.
   * it can be an array to push several remote at once (typically to push _latest_ as well as a version)
   * currently not supporting 'docker login' (has to be done in _gitlab-ci.yml_ using Gitlab secrests) nor unsecure registry
 * context
-  * relative path from where **configuration** file is found
+  * relative path from where **dockerfile** is found, if not set, context will be where the dockerfile if found
   * should be a valid Dockefile context, it will be given as PATH to [Docker build](https://docs.docker.com/engine/reference/commandline/build/#usage)
 * parameters
   * regular parameter for [Parametrized Dockerfile](https://docs.docker.com/engine/reference/builder/#arg)
