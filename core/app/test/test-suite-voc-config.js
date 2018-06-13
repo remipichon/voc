@@ -84,4 +84,31 @@ module.exports = {
       throw new TestCaseError(__test_case_name_1);
     }
   },
+
+
+
+  simple_stack_instance_disabled__non_remote_without_context__trigger_via_do_all: function () {
+
+    testUtil.prepare();
+
+    testUtil.copyGitAddFile(
+      "instances/simple-stack-instance.nominalcase.mydisablednominalcase.json",
+      "dockercomposes/docker-compose.nominalcase.yml"
+    );
+
+    testUtil.commit("[dry-run] [do-all]");
+
+    testUtil.run();
+
+    //It's debatable, should we generate intermediate compose file when deleting the stack?
+    if (testUtil.assertExhaustive(
+        "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mydisablednominalcase.yml __for mydisablednominalcase __once",
+        "docker stack rm [..] mydisablednominalcase __for mydisablednominalcase __once",
+      )) {
+
+    } else {
+      throw new TestCaseError(__test_case_name_1);
+    }
+  },
+
 };

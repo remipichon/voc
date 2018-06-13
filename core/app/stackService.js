@@ -13,7 +13,9 @@ module.exports = {
         if (instance.toClean) {
             this.deployStack(stackName, "remove", null, dryRun);
         } else {
-            if(instance.toBuild){
+          let instanceConfig = utils.readFileSyncToJson(instance.path);
+
+          if(instanceConfig.enabled && instance.toBuild){
                 let result = composeUtil.build(dockercomposePath, dryRun);
                 if(result.error){
                     utils.writeResult(stackName, {
@@ -27,8 +29,6 @@ module.exports = {
             }
 
             if(instance.toDeploy) {
-                let instanceConfig = utils.readFileSyncToJson(instance.path);
-
                 var action;
                 if (instanceConfig.enabled) {
                     action = "update"
@@ -62,13 +62,13 @@ module.exports = {
         }
         log.info(`     ${stackName}: Stack ${dnsStackName} is going to be ${action} using docker compose file ${composeFile}. Command is:\n${shDockerStackDeploy}`);
         if(!dryRun)
-        utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
-            let state = gitlabUtil.getState(error, stderr, stdout);
-            if(action === "remove")
-                if(state.result && state.result.indexOf("Nothing found in stack") !== -1)
-                    state.result = `Stack ${stackName} has already been removed, nothing has be done because there was nothing to do`;
-            utils.writeResult(stackName, state);
-        })
+            utils.execCmd(shDockerStackDeploy, function (error, stdout, stderr) {
+                let state = gitlabUtil.getState(error, stderr, stdout);
+                if(action === "remove")
+                    if(state.result && state.result.indexOf("Nothing found in stack") !== -1)
+                        state.result = `Stack ${stackName} has already been removed, nothing has be done because there was nothing to do`;
+                utils.writeResult(stackName, state);
+            });
         else
             utils.writeResult(stackName, {result: `Dry run: Docker would have run '${shDockerStackDeploy}'`});
     }
