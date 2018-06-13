@@ -77,7 +77,7 @@ module.exports = {
             return true;
         }
 
-        let result = utils.execCmdSync(dockerBuild, true, {}, containsPotentialSensitiveValue);
+        let result = utils.execCmdSync(dockerBuild, true, {}, { sensitiveInformation: containsPotentialSensitiveValue });
 
         if (result.error) {
             utils.writeResult(config.tag, {
