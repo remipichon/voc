@@ -52,7 +52,7 @@ module.exports = {
         });
     },
 
-    execCmdSync: function(cmd, delegateError = false, options = {}, extra){
+    execCmdSync: function(cmd, delegateError = false, options = {}, extra = {}){
         let silent = extra.silent || false;
         let sensitiveInformation = extra.sensitiveInformation || false;
         let stdout;

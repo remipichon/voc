@@ -10,6 +10,6 @@ RUN apt-get update; apt-get install -y docker-ce
 RUN curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose; chmod +x /usr/local/bin/docker-compose
 
 # copy node app code
-COPY app/package.json /root/app/package.json
+COPY package.json /root/app/package.json
 RUN cd /root/app/; npm install;
-COPY app /root/app/
+COPY . /root/app/
