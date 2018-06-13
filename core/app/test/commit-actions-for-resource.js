@@ -73,6 +73,21 @@ module.exports = {
 
   },
 
+  commit_action__non_remote_without_context__build_push_image_snake_name: function () {
+
+    this._prepareForPerResourceCommitActions();
+
+    testUtil.commit("[dry-run] [build-nominal-case] [push-nominal-case]");
+
+    testUtil.run();
+
+    if (!testUtil.assertExhaustive(
+        "docker build [..] Dockerfile.nominal-case [..] nominal-case __for nominal-case __once",
+        "docker tag [..] nominal-case [..] registrytopush:5000/nominal-case [..] docker push [..] nominal-case __for nominal-case __once",
+      )) throw new TestCaseError(__test_case_name_1);
+
+  },
+
     commit_action__non_remote_without_context__build_ssi: function () {
 
         this._prepareForPerResourceCommitActions();
