@@ -46,6 +46,55 @@ module.exports = {
         }
     },
 
+    simple_stack_instance_docker_composes__non_remote_without_context__trigger_via_dockercompose: function () {
+
+        testUtil.prepare();
+
+        testUtil.copyFile("instances/simple-stack-instance.nominalcase.mynominalcase.json")
+
+        testUtil.copyGitAddFile(
+            "dockercomposes/docker-compose.nominalcase.yml"
+        );
+
+        testUtil.commit(" [dry-run] trigger via config and docker-compose file");
+
+        testUtil.run();
+
+        if (testUtil.assertExhaustive(
+                "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.mynominalcase.yml __for mynominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.mynominalcase.yml mynominalcase __for mynominalcase __once",
+            )) {
+
+        } else {
+            throw new TestCaseError(__test_case_name_1);
+        }
+    },
+
+    simple_stack_instance_docker_composes_names_matches__non_remote_without_context__trigger_via_dockercompose: function () {
+
+        testUtil.prepare();
+
+        testUtil.copyFile("instances/simple-stack-instance.nominalcase.nominalcase.json")
+
+        testUtil.copyGitAddFile(
+            "dockercomposes/docker-compose.nominalcase.yml"
+        );
+
+        testUtil.commit(" [dry-run] trigger via config and docker-compose file");
+
+        testUtil.run();
+
+        if (testUtil.assertExhaustive(
+                "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.nominalcase.yml __for nominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.nominalcase.yml nominalcase __for nominalcase __once",
+            )) {
+
+        } else {
+            throw new TestCaseError(__test_case_name_1);
+        }
+    },
+
+
     stack_instance_stack_definition_docker_compose__non_remote_without_context__trigger_via_config: function () {
 
         testUtil.prepare();

@@ -105,6 +105,30 @@ module.exports = {
         }
     },
 
+    simple_stack_instance_docker_composes_names_matches__non_remote_without_context__trigger_via_do_all: function () {
+
+        testUtil.prepare();
+
+        testUtil.copyGitAddFile(
+            "instances/simple-stack-instance.nominalcase.nominalcase.json",
+            "dockercomposes/docker-compose.nominalcase.yml"
+        );
+
+        testUtil.commit("[dry-run] [do-all]");
+
+        testUtil.run();
+
+        if (testUtil.assert(
+                "Successfully config [..]  docker-compose.nominalcase.yml [..] docker-compose.intermediate.nominalcase.yml __for nominalcase __once",
+                "docker-compose [..] build [..] docker-compose.intermediate.nominalcase.yml __for nominalcase __once",
+                "docker stack deploy [..] docker-compose.intermediate.nominalcase.yml nominalcase __for nominalcase __once",
+            )) {
+
+        } else {
+            throw new TestCaseError(__test_case_name_1);
+        }
+    },
+
     stack_instance_stack_definition_docker_compose__non_remote_without_context__trigger_via_do_all: function () {
 
         testUtil.prepare();
