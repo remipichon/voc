@@ -69,6 +69,8 @@ Regular Dockerfile, see Docker docs.
   * name: the ${NAME} in Dockerfile
   * value: any string, if starting with dollar sign `$` value will be read from the host (== the Gitlab Job)
 
+> the '$' notation allows you to work with [Gitlab Variable as well as Gitlab Secrets](https://docs.gitlab.com/ee/ci/variables/#variables)
+
 
 > For remote repo, see common section [Repos](#Repos) 
 
@@ -114,6 +116,8 @@ Regular Dockercompose file, see Docker Compose docs.
   * name: the ${NAME} in docker compose file
   * value: any string, if starting with dollar sign `$` value will be read from the host (== the Gitlab Job)
 
+> the '$' notation allows you to work with [Gitlab Variable as well as Gitlab Secrets](https://docs.gitlab.com/ee/ci/variables/#variables)
+
 ## Stack Instance and Stack Definition
 
 Files for stack
@@ -157,8 +161,10 @@ Regular Dockercompose file, see Docker Compose docs.
 * parameters: list
   * regular parameter for [Substituting environment variables in Compose files](https://docs.docker.com/compose/environment-variables/)
   * name: the ${NAME} in docker compose file
-  * value: you can guess it...
+  * value: any string, if starting with dollar sign `$` value will be read from the host (== the Gitlab Job)
  
+> the '$' notation allows you to work with [Gitlab Variable as well as Gitlab Secrets](https://docs.gitlab.com/ee/ci/variables/#variables)
+
 
 # Repository mode
 
